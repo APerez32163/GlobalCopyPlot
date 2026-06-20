@@ -1,0 +1,191 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Configuración{% endblock %}
+{% block content %}
+<h2 class="mb-4">Configuración del sistema</h2>
+
+<form method="POST">
+    <ul class="nav nav-pills mb-4" id="configTabs" role="tablist">
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#negocio" type="button">Datos del negocio</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#pago" type="button">Métodos de pago</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#correos" type="button">Correos y notificaciones</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#politicas" type="button">Políticas y términos</button></li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#historial" type="button">Historial</button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- Datos del negocio -->
+        <div class="tab-pane fade show active" id="negocio">
+            <div class="glass-card p-4">
+                <div class="mb-3">
+                    <label class="form-label">Nombre del negocio</label>
+                    <input type="text" name="config_nombre_negocio" class="form-control" value="{{ config.get('nombre_negocio', '') }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Dirección</label>
+                    <input type="text" name="config_direccion" class="form-control" value="{{ config.get('direccion', '') }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Teléfono</label>
+                    <input type="text" name="config_telefono_negocio" class="form-control" value="{{ config.get('telefono_negocio', '') }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">WhatsApp (número internacional sin +)</label>
+                    <input type="text" name="config_whatsapp" class="form-control" value="{{ config.get('whatsapp', '') }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Usuario de Instagram</label>
+                    <input type="text" name="config_instagram" class="form-control" value="{{ config.get('instagram', '') }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Correo del negocio</label>
+                    <input type="email" name="config_email_negocio" class="form-control" value="{{ config.get('email_negocio', '') }}">
+                </div>
+            </div>
+        </div>
+
+        <!-- Métodos de pago -->
+        <div class="tab-pane fade" id="pago">
+            <div class="glass-card p-4">
+                <h5>Datos de PagoMóvil</h5>
+                <div class="mb-3">
+                    <label class="form-label">Banco</label>
+                    <input type="text" name="config_pago_movil_banco" class="form-control" value="{{ config.get('pago_movil_banco', '') }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Cédula</label>
+                    <input type="text" name="config_pago_movil_cedula" class="form-control" value="{{ config.get('pago_movil_cedula', '') }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Teléfono</label>
+                    <input type="text" name="config_pago_movil_telefono" class="form-control" value="{{ config.get('pago_movil_telefono', '') }}">
+                </div>
+            </div>
+        </div>
+
+        <!-- Correos y notificaciones -->
+        <div class="tab-pane fade" id="correos">
+            <div class="glass-card p-4">
+                <div class="mb-3">
+                    <label class="form-label">Correo para notificaciones</label>
+                    <input type="email" name="config_correo_notificaciones" class="form-control" value="{{ config.get('correo_notificaciones', '') }}">
+                </div>
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" name="config_notificar_pedido_listo" value="1" 
+                           {% if config.get('notificar_pedido_listo') == '1' %}checked{% endif %}>
+                    <label class="form-check-label">Notificar cuando un pedido esté listo</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Políticas y términos -->
+        <div class="tab-pane fade" id="politicas">
+            <div class="glass-card p-4">
+                <div class="mb-3">
+                    <label class="form-label">Texto de políticas y términos</label>
+                    <textarea name="config_politicas" class="form-control" rows="10">{{ config.get('politicas', '') }}</textarea>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pestaña Historial -->
+        <div class="tab-pane fade" id="historial">
+            <div class="glass-card p-4">
+                <h5>Administración del historial</h5>
+                <p class="text-muted">Puedes eliminar todos los pedidos, detalles, archivos y mensajes de chat del sistema. Esta acción no se puede deshacer.</p>
+                
+                <button type="button" class="btn btn-danger rounded-pill" id="btnVaciarHistorial">
+                    <i class="fas fa-trash-alt me-2"></i> Vaciar historial completo
+                </button>
+            </div>
+        </div>
+
+        <!-- Modal de confirmación para vaciar historial -->
+        <div class="modal fade" id="modalVaciarHistorial" tabindex="-1" aria-labelledby="modalVaciarHistorialLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content glass-card">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalVaciarHistorialLabel">Confirmar eliminación total</h5>
+                    </div>
+                    <div class="modal-body">
+                        <p>¿Estás completamente seguro de vaciar todo el historial?</p>
+                        <p class="text-danger"><strong>Se borrarán permanentemente todos los pedidos, detalles, archivos subidos y mensajes de chat.</strong></p>
+                        <p>Los usuarios y la configuración no se verán afectados.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill" id="btnCancelarVaciado">Cancelar</button>
+                        <button type="button" class="btn btn-danger rounded-pill" id="btnConfirmarVaciado">
+                            <i class="fas fa-trash-alt me-1"></i> Sí, vaciar todo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // Variable para almacenar la instancia del modal
+            var modalVaciar = null;
+
+            // Abrir el modal
+            document.getElementById('btnVaciarHistorial').addEventListener('click', function() {
+                modalVaciar = new bootstrap.Modal(document.getElementById('modalVaciarHistorial'), {
+                    backdrop: 'static',
+                    keyboard: false
+                });
+                modalVaciar.show();
+            });
+
+            // Cancelar: cierra el modal y elimina cualquier backdrop sobrante
+            document.getElementById('btnCancelarVaciado').addEventListener('click', function() {
+                if (modalVaciar) {
+                    modalVaciar.hide();
+                    // Forzar la eliminación del backdrop después de la animación
+                    setTimeout(function() {
+                        var backdrops = document.querySelectorAll('.modal-backdrop');
+                        backdrops.forEach(function(backdrop) {
+                            backdrop.remove();
+                        });
+                        // También quitar la clase que bloquea el scroll
+                        document.body.classList.remove('modal-open');
+                        document.body.style.overflow = '';
+                        document.body.style.paddingRight = '';
+                    }, 300);
+                }
+            });
+
+            // Confirmar vaciado
+            document.getElementById('btnConfirmarVaciado').addEventListener('click', function() {
+                fetch("{{ url_for('admin_vaciar_historial') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).then(response => {
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                    } else {
+                        location.reload();
+                    }
+                }).catch(error => {
+                    alert('Error al intentar vaciar el historial.');
+                });
+            });
+        </script>
+
+        <script>
+            document.getElementById('btnVaciarHistorial').addEventListener('click', function() {
+                var myModal = new bootstrap.Modal(document.getElementById('modalVaciarHistorial'), {
+                    backdrop: 'static',
+                    keyboard: false
+                });
+                myModal.show();
+            });
+        </script>
+    </div>
+
+    <div class="mt-4">
+        <button type="submit" class="btn btn-solicitar px-5">Guardar toda la configuración</button>
+    </div>
+</form>
+{% endblock %}

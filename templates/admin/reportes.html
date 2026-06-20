@@ -1,0 +1,379 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Reportes{% endblock %}
+{% block content %}
+<h2 class="mb-4">Reportes</h2>
+
+<ul class="nav nav-pills mb-4" id="reportesTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link {% if tab_activa == 'ventas' %}active{% endif %}" data-bs-toggle="pill" data-bs-target="#ventas" type="button">Ventas</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link {% if tab_activa == 'fecha' %}active{% endif %}" data-bs-toggle="pill" data-bs-target="#fecha" type="button">Solicitudes por fecha</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link {% if tab_activa == 'servicios' %}active{% endif %}" data-bs-toggle="pill" data-bs-target="#servicios" type="button">Servicios más solicitados</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link {% if tab_activa == 'ingresos' %}active{% endif %}" data-bs-toggle="pill" data-bs-target="#ingresos" type="button">Ingresos</button>
+    </li>
+</ul>
+
+<div class="tab-content">
+    <!-- Ventas -->
+    <div class="tab-pane fade {% if tab_activa == 'ventas' %}show active{% endif %}" id="ventas">
+        <div class="glass-card p-3">
+            <h5>Todas las ventas</h5>
+            
+            <!-- Barra de búsqueda -->
+            <form class="row g-2 mb-3" method="GET" action="{{ url_for('admin_reportes') }}">
+                <div class="col-md-6">
+                    <input type="text" name="buscar" class="form-control" placeholder="Buscar por cédula, nombre, apellido o email" value="{{ buscar }}">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-solicitar w-100">Buscar</button>
+                </div>
+                {% if buscar %}
+                <div class="col-md-2">
+                    <a href="{{ url_for('admin_reportes', tab='ventas') }}" class="btn btn-outline-secondary w-100 rounded-pill">Limpiar</a>
+                </div>
+                {% endif %}
+                <input type="hidden" name="tab" value="ventas">
+            </form>
+
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Pedido</th>
+                            <th>Ticket</th>
+                            <th>Cédula</th>
+                            <th>Nombre</th>
+                            <th>Apellido</th>
+                            <th>Fecha</th>
+                            <th>Total</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in ventas %}
+                        {% set pedido = item.pedido %}
+                        {% set usuario = item.usuario %}
+                        {% from "admin/helpers.html" import badge_estado %}
+                        <tr>
+                            <td>#{{ pedido.ID }}</td>
+                            <td>
+                                {% if pedido.CODIGO_TICKET %}
+                                    <span class="badge bg-light text-dark">{{ pedido.CODIGO_TICKET }}</span>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ usuario.ID_USUARIO if usuario else 'N/A' }}</td>
+                            <td>{{ usuario.NOMBRE if usuario else 'N/A' }}</td>
+                            <td>{{ usuario.APELLIDO if usuario else 'N/A' }}</td>
+                            <td>{{ pedido.FECHA.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>Bs. {{ "%.2f"|format(pedido.TOTAL) }}</td>
+                            <td>{{ badge_estado(item.pedido.ESTADO) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Solicitudes por fecha -->
+    <div class="tab-pane fade {% if tab_activa == 'fecha' %}show active{% endif %}" id="fecha">
+        <div class="glass-card p-3">
+            <h5>Solicitudes por fecha</h5>
+            
+            <form class="row g-2 mb-3" method="GET" action="{{ url_for('admin_reportes') }}" id="filtroFechasForm">
+                <div class="col-md-3">
+                    <label class="form-label">Desde</label>
+                    <div class="position-relative">
+                        <input type="text" id="fechaDesdeVisible" class="form-control" placeholder="dd/mm/aaaa" readonly required style="cursor:pointer; background: rgba(255,255,255,0.8);">
+                        <i class="fas fa-calendar-alt position-absolute top-50 end-0 translate-middle-y me-3" style="color: var(--azul-claro); pointer-events: none;"></i>
+                    </div>
+                    <input type="hidden" name="desde" id="fechaDesde" value="{{ desde }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Hasta</label>
+                    <div class="position-relative">
+                        <input type="text" id="fechaHastaVisible" class="form-control" placeholder="dd/mm/aaaa" readonly required style="cursor:pointer; background: rgba(255,255,255,0.8);">
+                        <i class="fas fa-calendar-alt position-absolute top-50 end-0 translate-middle-y me-3" style="color: var(--azul-claro); pointer-events: none;"></i>
+                    </div>
+                    <input type="hidden" name="hasta" id="fechaHasta" value="{{ hasta }}">
+                </div>
+                <div class="col-md-2 align-self-end">
+                    <button type="submit" class="btn btn-solicitar w-100">Filtrar</button>
+                </div>
+                <input type="hidden" name="tab" value="fecha">
+            </form>
+
+            {% if desde or hasta %}
+            <div class="mb-3">
+                <a href="{{ url_for('admin_reportes', tab='fecha') }}" class="btn btn-sm btn-outline-secondary rounded-pill">
+                    <i class="fas fa-times me-1"></i> Limpiar filtro
+                </a>
+            </div>
+            {% endif %}
+
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Pedido</th>
+                        <th>Ticket</th>
+                        <th>Fecha</th>
+                        <th>Total</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pedido in solicitudes_fecha %}
+                    <tr>
+                        <td>#{{ pedido.ID }}</td>
+                        <td>
+                            {% if pedido.CODIGO_TICKET %}
+                                <span class="badge bg-light text-dark">{{ pedido.CODIGO_TICKET }}</span>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ pedido.FECHA.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>Bs. {{ "%.2f"|format(pedido.TOTAL) }}</td>
+                        <td><span class="badge bg-{{ 'warning' if pedido.ESTADO == 'Pendiente de pago' else 'info' }}">{{ pedido.ESTADO }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Servicios más solicitados -->
+    <div class="tab-pane fade {% if tab_activa == 'servicios' %}show active{% endif %}" id="servicios">
+        <div class="glass-card p-4">
+            <h5>Servicios más solicitados</h5>
+            {% if ranking %}
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mt-2">
+                    {% for item in ranking %}
+                    <div class="col">
+                        <div class="card bg-light border-0 rounded-4 p-3 h-100 position-relative">
+                            <!-- Insignia de posición -->
+                            <div class="position-absolute top-0 end-0 mt-2 me-2">
+                                {% if item.posicion == 1 %}
+                                    <span class="badge bg-warning text-dark fs-6">🔥 #1</span>
+                                {% elif item.posicion == 2 %}
+                                    <span class="badge bg-secondary fs-6">🥈 #2</span>
+                                {% elif item.posicion == 3 %}
+                                    <span class="badge fs-6" style="background-color: #cd7f32; color: white;">🥉 #3</span>
+                                {% else %}
+                                    <span class="badge bg-light text-dark">#{{ item.posicion }}</span>
+                                {% endif %}
+                            </div>
+                            <h5 class="fw-bold mb-1">{{ item.titulo }}</h5>
+                            {% if item.descripcion %}
+                                <p class="text-muted small mb-2">{{ item.descripcion }}</p>
+                            {% endif %}
+                            <div class="mt-auto">
+                                <span class="fw-bold text-primary">{{ item.total }}</span> solicitudes
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted">No hay servicios solicitados aún.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Ingresos -->
+    <div class="tab-pane fade {% if tab_activa == 'ingresos' %}show active{% endif %}" id="ingresos">
+        <div class="glass-card p-3">
+            <h5>Ingresos</h5>
+            
+            <!-- Selector de período -->
+            <div class="d-flex justify-content-end mb-3">
+                <div class="periodo-selector">
+                    <a href="?periodo=diario&tab=ingresos" 
+                       class="periodo-btn {% if periodo_actual == 'diario' %}active{% endif %}">
+                       <i class="fas fa-sun me-1"></i> Hoy
+                    </a>
+                    <a href="?periodo=semanal&tab=ingresos" 
+                       class="periodo-btn {% if periodo_actual == 'semanal' %}active{% endif %}">
+                       <i class="fas fa-calendar-week me-1"></i> Semana
+                    </a>
+                    <a href="?periodo=mensual&tab=ingresos" 
+                       class="periodo-btn {% if periodo_actual == 'mensual' %}active{% endif %}">
+                       <i class="fas fa-calendar-alt me-1"></i> Mes
+                    </a>
+                    <a href="?periodo=anual&tab=ingresos" 
+                       class="periodo-btn {% if periodo_actual == 'anual' %}active{% endif %}">
+                       <i class="fas fa-calendar me-1"></i> Año
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Total del período seleccionado -->
+            <div class="text-center mb-4">
+                <h4>Total: Bs. {{ "%.2f"|format(ingresos_periodo) }}</h4>
+            </div>
+            
+            <!-- Tabla de ingresos mensuales (histórico) -->
+            <table class="table">
+                <thead><tr><th>Año</th><th>Mes</th><th>Total (Bs.)</th></tr></thead>
+                <tbody>
+                    {% for i in ingresos_mensuales %}
+                    <tr>
+                        <td>{{ i.anio }}</td>
+                        <td>{{ i.mes }}</td>
+                        <td>{{ "%.2f"|format(i.total) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function validarFechas() {
+        const desde = document.getElementById('desdeInput').value;
+        const hasta = document.getElementById('hastaInput').value;
+        if (desde && hasta && desde > hasta) {
+            alert('La fecha "Desde" no puede ser mayor que "Hasta".');
+            return false;
+        }
+        return true;
+    }
+</script>
+
+<!-- Contenedor del calendario personalizado -->
+<div id="calendario-container" class="calendario-container" style="display: none;">
+    <div class="calendario-header">
+        <button type="button" id="cal-prev" class="cal-nav-btn"><i class="fas fa-chevron-left"></i></button>
+        <span id="cal-titulo" class="cal-titulo"></span>
+        <button type="button" id="cal-next" class="cal-nav-btn"><i class="fas fa-chevron-right"></i></button>
+    </div>
+    <div class="cal-dias-semana">
+        <span>Dom</span><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span>
+    </div>
+    <div id="cal-grid" class="cal-grid"></div>
+</div>
+
+<script>
+(function() {
+    // Configuración compartida del calendario
+    const hoy = new Date();
+    hoy.setHours(0,0,0,0);
+
+    function formatearFechaISO(date) {
+        const dia = String(date.getDate()).padStart(2, '0');
+        const mes = String(date.getMonth() + 1).padStart(2, '0');
+        const anio = date.getFullYear();
+        return `${anio}-${mes}-${dia}`;
+    }
+
+    function formatearFechaLegible(date) {
+        const dia = String(date.getDate()).padStart(2, '0');
+        const mes = String(date.getMonth() + 1).padStart(2, '0');
+        const anio = date.getFullYear();
+        return `${dia}/${mes}/${anio}`;
+    }
+
+    function crearCalendario(inputVisible, inputHidden) {
+        const container = document.getElementById('calendario-container');
+        const titulo = document.getElementById('cal-titulo');
+        const grid = document.getElementById('cal-grid');
+        const btnPrev = document.getElementById('cal-prev');
+        const btnNext = document.getElementById('cal-next');
+
+        let fechaActual = new Date(hoy);
+        let fechaSeleccionada = null;
+
+        function renderizar(date) {
+            const year = date.getFullYear();
+            const month = date.getMonth();
+            const nombresMeses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+            titulo.textContent = `${nombresMeses[month]} ${year}`;
+            const primerDia = new Date(year, month, 1).getDay();
+            const ultimoDia = new Date(year, month + 1, 0).getDate();
+            grid.innerHTML = '';
+
+            for (let i = 0; i < primerDia; i++) {
+                const div = document.createElement('div');
+                div.className = 'cal-dia vacio';
+                grid.appendChild(div);
+            }
+
+            for (let dia = 1; dia <= ultimoDia; dia++) {
+                const fechaCelda = new Date(year, month, dia);
+                const div = document.createElement('div');
+                div.className = 'cal-dia';
+                div.textContent = dia;
+
+                // Sin restricciones de fecha (admin puede seleccionar cualquier día)
+                div.addEventListener('click', function() {
+                    grid.querySelectorAll('.cal-dia.seleccionado').forEach(d => d.classList.remove('seleccionado'));
+                    div.classList.add('seleccionado');
+                    inputVisible.value = formatearFechaLegible(fechaCelda);
+                    inputHidden.value = formatearFechaISO(fechaCelda);
+                    container.style.display = 'none';
+                });
+
+                if (fechaCelda.getTime() === hoy.getTime()) div.classList.add('hoy');
+                if (inputHidden.value === formatearFechaISO(fechaCelda)) div.classList.add('seleccionado');
+                grid.appendChild(div);
+            }
+
+            btnPrev.disabled = false;
+            btnNext.disabled = false;
+        }
+
+        inputVisible.addEventListener('click', function(e) {
+            e.stopPropagation();
+            container.style.display = container.style.display === 'block' ? 'none' : 'block';
+            if (container.style.display === 'block') {
+                // Posicionar debajo del input
+                const rect = inputVisible.getBoundingClientRect();
+                container.style.top = (rect.bottom + window.scrollY + 8) + 'px';
+                container.style.left = (rect.left + window.scrollX) + 'px';
+                renderizar(fechaActual);
+            }
+        });
+
+        btnPrev.addEventListener('click', function(e) {
+            e.stopPropagation();
+            fechaActual.setMonth(fechaActual.getMonth() - 1);
+            renderizar(fechaActual);
+        });
+
+        btnNext.addEventListener('click', function(e) {
+            e.stopPropagation();
+            fechaActual.setMonth(fechaActual.getMonth() + 1);
+            renderizar(fechaActual);
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!container.contains(e.target) && e.target !== inputVisible) {
+                container.style.display = 'none';
+            }
+        });
+
+        // Inicializar con el valor existente si hay
+        if (inputHidden.value) {
+            const partes = inputHidden.value.split('-');
+            if (partes.length === 3) {
+                const fecha = new Date(partes[0], partes[1] - 1, partes[2]);
+                inputVisible.value = formatearFechaLegible(fecha);
+            }
+        }
+    }
+
+    // Vincular a los inputs de Desde y Hasta
+    crearCalendario(document.getElementById('fechaDesdeVisible'), document.getElementById('fechaDesde'));
+    crearCalendario(document.getElementById('fechaHastaVisible'), document.getElementById('fechaHasta'));
+})();
+</script>
+
+{% endblock %}

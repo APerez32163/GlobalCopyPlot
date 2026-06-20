@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+    <script>
+        // Aplicar modo oscuro inmediatamente (sobre <html>) para que no parpadee
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.documentElement.classList.add('dark-mode');
+        }
+    </script>
+
+    <meta charset="UTF-8">
+    <title>{% block title %}Panel Admin{% endblock %} - GlobalCopyPlot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}">
+    <style>
+        :root {
+            --sidebar-width: 260px;
+        }
+        .admin-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: var(--sidebar-width);
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(15px);
+            border-right: 1px solid rgba(255,255,255,0.5);
+            padding: 1.5rem 1rem;
+            transition: transform 0.3s ease;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 1040;
+        }
+        .sidebar.hidden {
+            transform: translateX(-100%);
+        }
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 2rem;
+            transition: margin-left 0.3s ease;
+        }
+        .main-content.expanded {
+            margin-left: 0;
+        }
+        .hamburger-btn {
+        position: fixed;
+        top: 15px;
+        right: 15px;                 
+        z-index: 1050;
+        background: var(--azul-claro);
+        border: none;
+        color: white;
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;             
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        transition: all 0.3s ease;
+        font-size: 1.2rem;
+        }
+        .hamburger-btn:hover {
+            background: var(--azul-oscuro);
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        }
+        
+        .sidebar .nav-link {
+            color: var(--texto);
+            border-radius: 12px;
+            padding: 0.6rem 1rem;
+            margin-bottom: 0.3rem;
+            transition: all 0.2s;
+        }
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: rgba(91,155,213,0.2);
+            color: var(--azul-oscuro);
+        }
+        .sidebar .submenu .nav-link {
+            padding-left: 2rem;
+            font-size: 0.9rem;
+        }
+        .sidebar hr {
+            margin: 1rem 0;
+            border-color: rgba(0,0,0,0.1);
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="hamburger-btn" id="toggleSidebar">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="admin-wrapper">
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <div class="d-flex align-items-center mb-4">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" width="35" class="rounded-circle me-2">
+                <span class="fw-bold text-azul-oscuro">Admin</span>
+            </div>
+            <ul class="nav flex-column">
+                <!-- Dashboard -->
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/admin' %}active{% endif %}" 
+                       href="{{ url_for('panel_admin') }}">
+                        <i class="fas fa-chart-pie me-2"></i> Dashboard
+                    </a>
+                </li>
+
+                <!-- Solicitudes -->
+                <li class="nav-item">
+                    <a class="nav-link {% if '/admin/solicitudes' in request.path or '/admin/solicitud/' in request.path %}active{% endif %}" 
+                       data-bs-toggle="collapse" href="#subSolicitudes" role="button">
+                        <i class="fas fa-file-invoice me-2"></i> Solicitudes
+                    </a>
+                    <div class="collapse submenu {% if '/admin/solicitudes' in request.path or '/admin/solicitud/' in request.path %}show{% endif %}" 
+                         id="subSolicitudes">
+                        <a class="nav-link {% if request.path == '/admin/solicitudes' %}active{% endif %}" 
+                           href="{{ url_for('admin_solicitudes') }}">Todas</a>
+                        <a class="nav-link" href="{{ url_for('admin_solicitudes', estado='Pendiente de pago') }}">Nuevas</a>
+                        <a class="nav-link" href="{{ url_for('admin_solicitudes', estado='En proceso') }}">En proceso</a>
+                        <a class="nav-link" href="{{ url_for('admin_solicitudes', estado='Listo') }}">Listas</a>
+                        <a class="nav-link" href="{{ url_for('admin_solicitudes', estado='Cancelado') }}">Canceladas</a>
+                    </div>
+                </li>
+
+                <!-- Catálogos -->
+                <li class="nav-item">
+                    <a class="nav-link {% if '/admin/catalogos' in request.path %}active{% endif %}" 
+                       href="{{ url_for('admin_catalogos') }}">
+                        <i class="fas fa-images me-2"></i> Catálogos
+                    </a>
+                </li>
+
+                <!-- Usuarios -->
+                <li class="nav-item">
+                    <a class="nav-link {% if '/admin/usuarios' in request.path or '/admin/usuario/' in request.path or '/admin/perfil' in request.path %}active{% endif %}" 
+                       data-bs-toggle="collapse" href="#subUsuarios" role="button">
+                        <i class="fas fa-users me-2"></i> Usuarios
+                    </a>
+                    <div class="collapse submenu {% if '/admin/usuarios' in request.path or '/admin/usuario/' in request.path or '/admin/perfil' in request.path %}show{% endif %}" 
+                         id="subUsuarios">
+                        <a class="nav-link {% if request.path == '/admin/usuarios' %}active{% endif %}" 
+                           href="{{ url_for('admin_usuarios') }}">Clientes</a>
+                        <a class="nav-link {% if request.path == '/admin/operadores' %}active{% endif %}" 
+                            href="{{ url_for('admin_operadores') }}">Operadores</a>
+                    </div>
+                </li>
+
+                <!-- Reportes -->
+                <li class="nav-item">
+                    <a class="nav-link {% if '/admin/reportes' in request.path %}active{% endif %}" 
+                       href="{{ url_for('admin_reportes') }}">
+                        <i class="fas fa-chart-bar me-2"></i> Reportes
+                    </a>
+                </li>
+
+                <!-- Configuración -->
+                <li class="nav-item">
+                    <a class="nav-link {% if '/admin/configuracion' in request.path %}active{% endif %}" 
+                       href="{{ url_for('admin_configuracion') }}">
+                        <i class="fas fa-cog me-2"></i> Configuración
+                    </a>
+                </li>
+
+                <hr>
+                <!-- Ir al inicio -->
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('index') }}">
+                        <i class="fas fa-home me-2"></i> Ir al inicio
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Contenido principal -->
+        <main class="main-content" id="mainContent">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const toggleBtn = document.getElementById('toggleSidebar');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+
+        toggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('hidden');
+            mainContent.classList.toggle('expanded');
+        });
+
+        // En móviles, alternar la clase 'show'
+        if (window.innerWidth <= 768) {
+            sidebar.classList.add('hidden');
+            sidebar.classList.remove('show');
+            toggleBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('show');
+            });
+        }
+    </script>
+
+<!-- Botón Modo Oscuro -->
+<button class="dark-mode-toggle" id="darkModeToggle" title="Modo oscuro">
+    <i class="fas fa-moon"></i>
+</button>
+
+<script>
+    const toggle = document.getElementById('darkModeToggle');
+    if (toggle) {
+        // Sincronizar icono al cargar
+        if (document.documentElement.classList.contains('dark-mode')) {
+            toggle.innerHTML = '<i class="fas fa-sun"></i>';
+        } else {
+            toggle.innerHTML = '<i class="fas fa-moon"></i>';
+        }
+
+        toggle.addEventListener('click', function() {
+            const html = document.documentElement;
+            const isDark = html.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', isDark);
+            toggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        });
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,98 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Clientes{% endblock %}
+{% block content %}
+<h2 class="mb-4">Clientes</h2>
+
+<!-- Buscador -->
+<form class="row g-2 mb-4" method="GET" action="{{ url_for('admin_usuarios') }}">
+    <div class="col-md-6">
+        <input type="text" name="buscar" class="form-control" placeholder="Buscar por cédula, nombre, apellido o email" value="{{ busqueda }}">
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-solicitar w-100">Buscar</button>
+    </div>
+    {% if busqueda %}
+    <div class="col-md-2">
+        <a href="{{ url_for('admin_usuarios') }}" class="btn btn-outline-secondary w-100 rounded-pill">Limpiar</a>
+    </div>
+    {% endif %}
+</form>
+
+<div class="glass-card p-3">
+    <table class="table table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Cédula</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Email</th>
+                <th>Teléfono</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for usuario in usuarios %}
+            <tr>
+                <td>{{ usuario.ID_USUARIO }}</td>
+                <td>{{ usuario.NOMBRE }}</td>
+                <td>{{ usuario.APELLIDO }}</td>
+                <td>{{ usuario.EMAIL }}</td>
+                <td>{{ usuario.TELEFONO }}</td>
+                <td>
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('admin_usuario_detalle', user_id=usuario.ID) }}" 
+                           class="btn btn-sm btn-outline-primary rounded-pill">
+                            <i class="fas fa-eye me-1"></i> Ver detalle
+                        </a>
+                        <button type="button" 
+                                class="btn btn-sm btn-outline-danger rounded-pill"
+                                onclick="confirmarEliminacion({{ usuario.ID }}, '{{ usuario.NOMBRE }} {{ usuario.APELLIDO }}')">
+                            <i class="fas fa-trash me-1"></i> Eliminar
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal de confirmación para eliminar usuario -->
+<div class="modal fade" id="modalEliminarUsuario" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card p-3">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar al usuario <strong id="nombreUsuario"></strong>?</p>
+                <p class="text-danger small">Esta acción eliminará todos sus datos: pedidos, archivos y configuración. No se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                <form id="formEliminarUsuario" method="POST" action="">
+                    <button type="submit" class="btn btn-danger rounded-pill">
+                        <i class="fas fa-trash me-1"></i> Eliminar definitivamente
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function confirmarEliminacion(userId, nombreCompleto) {
+        // Configurar el formulario con la URL correcta
+        const form = document.getElementById('formEliminarUsuario');
+        form.action = '/admin/usuario/' + userId + '/eliminar';
+        
+        // Mostrar el nombre del usuario en el modal
+        document.getElementById('nombreUsuario').textContent = nombreCompleto;
+        
+        // Mostrar el modal
+        const modal = new bootstrap.Modal(document.getElementById('modalEliminarUsuario'));
+        modal.show();
+    }
+</script>
+{% endblock %}

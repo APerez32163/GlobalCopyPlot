@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Ticket · GlobalCopyPlot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive-imprimir.css') }}">
+    <style>
+        :root {
+            --azul-claro: #5B9BD5;
+            --azul-oscuro: #2F5496;
+            --crema: #F5F0E1;
+            --texto: #1e293b;
+        }
+
+        body {
+            background: url("{{ url_for('static', filename='img/fondoimprimir.png') }}") center/cover no-repeat;
+            background-attachment: fixed;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--texto);
+        }
+
+        .ticket-card {
+            background: rgba(255, 255, 255, 0.55);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 32px;
+            padding: 24px 20px;
+            box-shadow: 0 12px 28px rgba(0,0,0,0.06);
+            max-width: 380px;
+            width: 100%;
+            text-align: center;
+            background: linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(245,240,225,0.7) 100%);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .ticket-icon {
+            font-size: 2.6rem;
+            color: var(--azul-oscuro);
+            margin-bottom: 6px;
+        }
+
+        h4 {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--azul-oscuro);
+            margin: 0 0 2px;
+        }
+
+        .ticket-subtitle {
+            font-size: 0.9rem;
+            color: #5a6c7d;
+            margin-bottom: 16px;
+        }
+
+        .codigo-box {
+            background: rgba(91, 155, 213, 0.08);
+            border: 2px dashed rgba(91, 155, 213, 0.4);
+            border-radius: 20px;
+            padding: 8px 20px;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .codigo-ticket {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: var(--azul-oscuro);
+        }
+
+        .data-list {
+            background: rgba(255,255,240,0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.7);
+            border-radius: 24px;
+            padding: 10px 16px;
+            text-align: left;
+            margin-bottom: 14px;
+        }
+
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 7px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.04);
+            font-size: 0.95rem;
+        }
+
+        .data-row:last-child {
+            border-bottom: none;
+        }
+
+        .data-row .label {
+            color: #5a6c7d;
+            font-weight: 500;
+        }
+
+        .data-row .value {
+            font-weight: 600;
+            color: var(--texto);
+            text-align: right;
+        }
+
+        .estado-badge {
+            background: rgba(16, 185, 129, 0.2);
+            color: #065f46;
+            font-weight: 600;
+            font-size: 0.8rem;
+            padding: 3px 12px;
+            border-radius: 20px;
+        }
+
+        .aviso {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            border-radius: 18px;
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            color: #92400e;
+            margin-bottom: 16px;
+            backdrop-filter: blur(4px);
+        }
+
+        .btn-inicio {
+            background: var(--azul-claro);
+            border: none;
+            border-radius: 50px;
+            padding: 13px 20px;
+            font-weight: 700;
+            font-size: 1rem;
+            color: white;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 14px rgba(47,84,150,0.2);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+
+        .btn-inicio:hover {
+            background: var(--azul-oscuro);
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(47,84,150,0.3);
+            color: white;
+        }
+
+        @media (max-width: 380px) {
+            .ticket-card {
+                padding: 20px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="ticket-card">
+        <i class="fas fa-check-circle ticket-icon"></i>
+        <h4>¡Pedido listo!</h4>
+        <p class="ticket-subtitle">GlobalCopyPlot</p>
+
+        <div class="codigo-box">
+            <span class="codigo-ticket">{{ pedido.CODIGO_TICKET }}</span>
+        </div>
+
+        <div class="data-list">
+            <div class="data-row">
+                <span class="label">Cliente</span>
+                <span class="value">{{ usuario.NOMBRE }} {{ usuario.APELLIDO }}</span>
+            </div>
+            <div class="data-row">
+                <span class="label">Cédula</span>
+                <span class="value">{{ usuario.ID_USUARIO }}</span>
+            </div>
+            <div class="data-row">
+                <span class="label">Pedido #</span>
+                <span class="value">{{ pedido.ID }}</span>
+            </div>
+            <div class="data-row">
+                <span class="label">Retiro</span>
+                <span class="value">
+                    {{ pedido.FECHA_RETIRO.strftime('%d/%m/%Y') if pedido.FECHA_RETIRO else '—' }}
+                    · {{ pedido.HORA_RETIRO.strftime('%I:%M %p') if pedido.HORA_RETIRO else '—' }}
+                </span>
+            </div>
+            <div class="data-row">
+                <span class="label">Total</span>
+                <span class="value">Bs. {{ "%.2f"|format(pedido.TOTAL) }}</span>
+            </div>
+            <div class="data-row">
+                <span class="label">Estado</span>
+                <span class="value"><span class="estado-badge">{{ pedido.ESTADO }}</span></span>
+            </div>
+        </div>
+
+        <div class="aviso">
+            <i class="fas fa-camera me-1"></i> Captura este ticket y muéstralo con tu cédula al retirar.
+        </div>
+
+        <a href="{{ url_for('index') }}" class="btn-inicio">
+            <i class="fas fa-home"></i> Volver al inicio
+        </a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,298 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Catálogos{% endblock %}
+{% block content %}
+<h2 class="mb-4">Catálogos</h2>
+
+{# Script para activar la pestaña correcta si se recibe el parámetro tab #}
+{% if tab_activa %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var tabPill = document.querySelector('#catalogoTabs button[data-bs-target="#{{ tab_activa }}"]');
+        if (tabPill) {
+            // Desactivar todos
+            document.querySelectorAll('#catalogoTabs .nav-link').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('show', 'active'));
+            // Activar el deseado
+            tabPill.classList.add('active');
+            var targetPane = document.querySelector('#{{ tab_activa }}');
+            if (targetPane) {
+                targetPane.classList.add('show', 'active');
+            }
+        }
+    });
+</script>
+{% endif %}
+
+<ul class="nav nav-pills mb-4" id="catalogoTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#servicios" type="button">Servicios (imágenes)</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#serviciosImpresion" type="button">Servicios de impresión</button>
+    </li>
+</ul>
+
+<div class="tab-content">
+    
+    <!-- SERVICIOS IMAGENES -->
+    <div class="tab-pane fade show active" id="servicios">
+        <div class="glass-card p-4">
+            <div class="d-flex justify-content-end mb-3">
+                <button class="btn btn-solicitar" data-bs-toggle="modal" data-bs-target="#modalAgregar">
+                    <i class="fas fa-plus me-2"></i> Agregar imagen
+                </button>
+            </div>
+
+            <div class="row row-cols-2 row-cols-md-4 row-cols-lg-6 g-4">
+                {% for img in imagenes %}
+                <div class="col">
+                    <div class="card bg-light border-0 rounded-3 overflow-hidden position-relative">
+                        <img src="{{ url_for('static', filename='img/' + img.IMAGEN) }}" class="card-img-top" alt="Servicio" style="height: 150px; object-fit: cover;">
+                        <div class="card-body text-center p-2">
+                            <small class="text-muted">{{ img.IMAGEN }}</small>
+                        </div>
+                        <div class="d-flex justify-content-center gap-2 p-2">
+                            <button class="btn btn-sm btn-outline-primary rounded-pill" data-bs-toggle="modal" data-bs-target="#modalEditar{{ img.ID }}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger rounded-pill" onclick="confirmarEliminar({{ img.ID }})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Agregar imagen -->
+    <div class="modal fade" id="modalAgregar" tabindex="-1">
+        <div class="modal-dialog"><div class="modal-content glass-card p-3">
+            <h5>Agregar nueva imagen</h5>
+            <form method="POST" action="{{ url_for('admin_agregar_imagen') }}" enctype="multipart/form-data">
+                <input type="file" name="imagen" class="form-control mb-2" accept="image/*" required>
+                <button type="submit" class="btn btn-solicitar w-100">Subir imagen</button>
+            </form>
+        </div></div>
+    </div>
+
+    <!-- Modales Editar (uno por imagen) -->
+    {% for img in imagenes %}
+    <div class="modal fade" id="modalEditar{{ img.ID }}" tabindex="-1">
+        <div class="modal-dialog"><div class="modal-content glass-card p-3">
+            <h5>Editar imagen</h5>
+            <p class="text-muted">Selecciona un nuevo archivo para reemplazar <strong>{{ img.IMAGEN }}</strong>.</p>
+            <form method="POST" action="{{ url_for('admin_actualizar_imagen', imagen_id=img.ID) }}" enctype="multipart/form-data">
+                <input type="file" name="imagen" class="form-control mb-2" accept="image/*" required>
+                <button type="submit" class="btn btn-solicitar w-100">Reemplazar imagen</button>
+            </form>
+        </div></div>
+    </div>
+    {% endfor %}
+
+    <!-- Modal de confirmación para eliminar -->
+    <div class="modal fade" id="modalEliminar" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-card p-3">
+                <h5>Confirmar eliminación</h5>
+                <p>¿Estás seguro de eliminar esta imagen del catálogo? También se borrará el archivo.</p>
+                <form id="formEliminar" method="POST" action="">
+                    <div class="d-flex gap-2 justify-content-end">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger rounded-pill">Eliminar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function confirmarEliminar(imagenId) {
+            const form = document.getElementById('formEliminar');
+            form.action = '/admin/catalogos/eliminar/' + imagenId;
+            new bootstrap.Modal(document.getElementById('modalEliminar')).show();
+        }
+    </script>
+
+    <!-- SERVICIOS DE IMPRESION  -->
+    <div class="tab-pane fade" id="serviciosImpresion">
+        <div class="glass-card p-4">
+            <div class="d-flex justify-content-end mb-3">
+                <button class="btn btn-solicitar" data-bs-toggle="modal" data-bs-target="#modalAgregarServicio">
+                    <i class="fas fa-plus me-2"></i> Agregar servicio
+                </button>
+            </div>
+
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                {% for srv in servicios %}
+                <div class="col">
+                    <div class="card bg-light border-0 rounded-4 p-3 h-100">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5 class="fw-bold mb-1">{{ srv.TITULO }}</h5>
+                                {% if srv.DESCRIPCION %}
+                                    <p class="text-muted small mb-2">{{ srv.DESCRIPCION }}</p>
+                                {% endif %}
+                            </div>
+                            <div>
+                                {% if srv.ACTIVO %}
+                                    <span class="badge bg-success">Activo</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactivo</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <ul class="list-unstyled mb-0 mt-2">
+                            {% for t in srv.tamanos %}
+                                <li class="d-flex justify-content-between">
+                                    <span>{{ t.NOMBRE }}</span>
+                                    <strong>{{ "%.2f"|format(t.PRECIO) }} Bs.</strong>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        <div class="d-flex gap-2 mt-3">
+                            <button class="btn btn-sm btn-outline-primary rounded-pill"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalEditarServicio{{ srv.ID }}">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger rounded-pill"
+                                    onclick="confirmarEliminarServicio({{ srv.ID }})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Agregar Servicio -->
+    <div class="modal fade" id="modalAgregarServicio" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content glass-card p-4">
+                <h5>Agregar servicio de impresión</h5>
+                <form method="POST" action="{{ url_for('admin_agregar_servicio_impresion') }}">
+                    <div class="mb-3">
+                        <label>Título *</label>
+                        <input type="text" name="titulo" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Descripción</label>
+                        <textarea name="descripcion" class="form-control" rows="2"></textarea>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input type="checkbox" name="activo" class="form-check-input" checked>
+                        <label class="form-check-label">Activo</label>
+                    </div>
+
+                    <h6>Tamaños y precios</h6>
+                    <div id="contenedorTamanosAgregar">
+                        <!-- Las filas se agregan dinámicamente -->
+                    </div>
+                    <button type="button" class="btn btn-outline-secondary btn-sm mb-3"
+                            onclick="agregarFilaTamano('contenedorTamanosAgregar')">
+                        <i class="fas fa-plus"></i> Agregar tamaño
+                    </button>
+
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-solicitar">Guardar servicio</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modales de edición (uno por servicio) -->
+    {% for srv in servicios %}
+    <div class="modal fade" id="modalEditarServicio{{ srv.ID }}" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content glass-card p-4">
+                <h5>Editar servicio</h5>
+                <form method="POST" action="{{ url_for('admin_editar_servicio_impresion', servicio_id=srv.ID) }}">
+                    <div class="mb-3">
+                        <label>Título *</label>
+                        <input type="text" name="titulo" class="form-control" value="{{ srv.TITULO }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Descripción</label>
+                        <textarea name="descripcion" class="form-control" rows="2">{{ srv.DESCRIPCION or '' }}</textarea>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input type="checkbox" name="activo" class="form-check-input" {% if srv.ACTIVO %}checked{% endif %}>
+                        <label class="form-check-label">Activo</label>
+                    </div>
+
+                    <h6>Tamaños y precios</h6>
+                    <div id="contenedorEditar{{ srv.ID }}">
+                        {% for t in srv.tamanos %}
+                        <div class="input-group mb-2">
+                            <input type="text" name="tam_nombre[]" class="form-control" placeholder="Nombre" value="{{ t.NOMBRE }}">
+                            <input type="number" step="0.01" name="tam_precio[]" class="form-control" placeholder="Precio" value="{{ t.PRECIO }}">
+                            <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <button type="button" class="btn btn-outline-secondary btn-sm mb-3"
+                            onclick="agregarFilaTamano('contenedorEditar{{ srv.ID }}')">
+                        <i class="fas fa-plus"></i> Agregar tamaño
+                    </button>
+
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-solicitar">Guardar cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- Modal confirmar eliminación -->
+    <div class="modal fade" id="modalEliminarServicio" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-card p-3">
+                <h5>Confirmar eliminación</h5>
+                <p>¿Eliminar este servicio y todos sus tamaños?</p>
+                <form id="formEliminarServicio" method="POST" action="">
+                    <div class="d-flex gap-2 justify-content-end">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger rounded-pill">Eliminar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function agregarFilaTamano(contenedorId) {
+            const div = document.createElement('div');
+            div.className = 'input-group mb-2';
+            div.innerHTML = `
+                <input type="text" name="tam_nombre[]" class="form-control" placeholder="Nombre" required>
+                <input type="number" step="0.01" name="tam_precio[]" class="form-control" placeholder="Precio" required>
+                <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            document.getElementById(contenedorId).appendChild(div);
+        }
+
+        function confirmarEliminarServicio(servicioId) {
+            const form = document.getElementById('formEliminarServicio');
+            form.action = '/admin/servicio-impresion/' + servicioId + '/eliminar';
+            new bootstrap.Modal(document.getElementById('modalEliminarServicio')).show();
+        }
+
+        // Inicializar con una fila vacía para el modal de agregar
+        document.addEventListener('DOMContentLoaded', function() {
+            const contAgregar = document.getElementById('contenedorTamanosAgregar');
+            if (contAgregar && contAgregar.children.length === 0) {
+                agregarFilaTamano('contenedorTamanosAgregar');
+            }
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,1643 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GlobalCopyPlot – Soluciones Impresas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* ===================== TOKENS ===================== */
+        :root {
+            --azul:        #5B9BD5;
+            --azul-deep:   #2F5496;
+            --azul-pale:   #D6E8F7;
+            --beige:       #F5F0E5;
+            --beige-warm:  #EDE8DC;
+            --white:       #FFFFFF;
+            --ink:         #1C2B3A;
+            --ink-mid:     #4A5C6A;
+            --glass-bg:    rgba(255,255,255,0.18);
+            --glass-border:rgba(255,255,255,0.38);
+            --glass-shadow:0 8px 40px rgba(47,84,150,0.10);
+            --radius-lg:   28px;
+            --radius-md:   18px;
+            --radius-sm:   10px;
+            --transition:  0.35s cubic-bezier(0.25,0.46,0.45,0.94);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--beige);
+            color: var(--ink);
+            overflow-x: hidden;
+        }
+
+        /* ===================== NAVBAR ===================== */
+        .site-nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1000;
+            padding: 14px 0;
+            background: rgba(255,255,255,0.55);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(22px);
+            border-bottom: 1px solid rgba(91,155,213,0.15);
+            transition: box-shadow var(--transition);
+        }
+        .site-nav.scrolled {
+            box-shadow: 0 4px 30px rgba(47,84,150,0.10);
+        }
+        .nav-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+        .nav-brand img {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--azul-pale);
+        }
+        .nav-brand-name {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 1.15rem;
+            color: var(--azul-deep);
+            letter-spacing: 0.3px;
+        }
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .nav-links a {
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: var(--ink-mid);
+            text-decoration: none;
+            padding: 7px 16px;
+            border-radius: 50px;
+            transition: all var(--transition);
+        }
+        .nav-links a:hover {
+            background: var(--azul-pale);
+            color: var(--azul-deep);
+        }
+        .nav-links .nav-cta {
+            background: var(--azul);
+            color: #fff;
+            padding: 8px 20px;
+        }
+        .nav-links .nav-cta:hover {
+            background: var(--azul-deep);
+            color: #fff;
+        }
+        .nav-hamburger {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            color: var(--azul-deep);
+            font-size: 1.25rem;
+        }
+
+        /* ===================== DROPDOWN MI CUENTA ===================== */
+        .nav-links .dropdown-menu {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 22px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+            padding: 10px 0;
+            margin-top: 8px;
+            min-width: 200px;
+        }
+        .nav-links .dropdown-item {
+            font-size: 0.9rem;
+            font-weight: 500;
+            padding: 10px 20px;
+            margin: 2px 10px;
+            border-radius: 30px;
+            color: var(--ink-mid);
+            transition: all 0.2s ease;
+        }
+        .nav-links .dropdown-item:hover {
+            background: rgba(91, 155, 213, 0.12);
+            color: var(--azul-deep);
+        }
+        /* Estilo específico para Cerrar sesión */
+        .nav-links .dropdown-item.text-danger {
+            color: #dc3545;
+        }
+        .nav-links .dropdown-item.text-danger:hover {
+            background: rgba(220, 53, 69, 0.1);
+            color: #b02a37;
+        }
+        .nav-links .dropdown-divider {
+            border-color: rgba(0,0,0,0.06);
+            margin: 6px 20px;
+        }
+        .nav-links .dropdown-toggle {
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: var(--ink-mid);
+            text-decoration: none;
+            padding: 7px 16px;
+            border-radius: 50px;
+            transition: all var(--transition);
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        .nav-links .dropdown-toggle:hover,
+        .nav-links .dropdown-toggle:focus {
+            background: var(--azul-pale);
+            color: var(--azul-deep);
+        }
+
+        /* ---------- OFFCANVAS DEFINITIVO ---------- */
+        .menu-offcanvas-link {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 18px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-decoration: none;
+            transition: all 0.25s ease;
+            letter-spacing: 0.3px;
+        }
+
+        .menu-offcanvas-link:hover {
+            background: rgba(91, 155, 213, 0.35);
+            border-color: #5B9BD5;
+            transform: translateX(4px);
+            color: white;
+            text-decoration: none;
+        }
+
+        /* Enlace Destacado: Centro de Impresión */
+        .menu-offcanvas-link-destacado {
+            background: linear-gradient(135deg, #5B9BD5, #2F5496);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 15px rgba(91, 155, 213, 0.3);
+            font-size: 1rem;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+        }
+
+        .menu-offcanvas-link-destacado:hover {
+            background: linear-gradient(135deg, #2F5496, #1e3c6e);
+            border-color: white;
+            box-shadow: 0 6px 18px rgba(91, 155, 213, 0.5);
+            transform: translateX(4px);
+            color: white;
+        }
+
+        /* Botón Cerrar Sesión (Rojo Elegante) */
+        .btn-offcanvas-logout {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 12px;
+            background: rgba(220, 53, 69, 0.7);  /* rojo más intenso */
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50px;
+            color: white;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            margin-top: 8px;
+        }
+
+        .btn-offcanvas-logout:hover {
+            background: #dc3545;
+            border-color: #dc3545;
+            color: white;
+            text-decoration: none;
+        }
+
+        /* Botón Iniciar Sesión */
+        .btn-offcanvas-login {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #5B9BD5, #2F5496);
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s;
+            margin-top: 8px;
+        }
+
+        .btn-offcanvas-login:hover {
+            background: linear-gradient(135deg, #2F5496, #1e3c6e);
+            color: white;
+            text-decoration: none;
+        }
+
+        /* ===================== RESTO DE SECCIONES  ===================== */
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            background-image: url('/static/img/fondo.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            overflow: hidden;
+        }
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                135deg,
+                rgba(47,84,150,0.65) 0%,
+                rgba(91,155,213,0.45) 60%,
+                rgba(47,84,150,0.30) 100%
+            );
+        }
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 120px 24px 80px;
+        }
+        .hero-logo {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid rgba(255,255,255,0.5);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.20);
+            margin-bottom: 24px;
+            transition: transform var(--transition);
+        }
+        .hero-logo:hover { transform: scale(1.05); }
+        .hero-eyebrow {
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #fff;
+            margin-bottom: 12px;
+        }
+        .hero-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.2rem, 5.5vw, 4rem);
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.08;
+            margin-bottom: 16px;
+        }
+        .hero-subtitle {
+            font-size: 1.15rem;
+            color: #fff;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            margin-bottom: 36px;
+            line-height: 1.6;
+            opacity: 0.95;
+        }
+        .btn-hero {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: #fff;
+            color: var(--azul-deep);
+            font-weight: 600;
+            font-size: 0.95rem;
+            padding: 14px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.18);
+            transition: all var(--transition);
+        }
+        .btn-hero:hover {
+            background: var(--azul-pale);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 32px rgba(0,0,0,0.22);
+            color: var(--azul-deep);
+        }
+        .btn-hero i { transition: transform var(--transition); }
+        .btn-hero:hover i { transform: translateX(4px); }
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 28px 32px;
+            box-shadow: var(--glass-shadow);
+            color: #fff;
+        }
+        .glass-panel h5 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 14px;
+            color: #fff;
+        }
+        .glass-panel p {
+            font-size: 0.92rem;
+            margin-bottom: 7px;
+            color: rgba(255,255,255,0.90);
+        }
+        .glass-panel p:last-child { margin-bottom: 0; }
+        .hero-scroll {
+            position: absolute;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            color: rgba(255,255,255,0.6);
+            font-size: 0.72rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .scroll-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.5);
+            animation: scrollBounce 1.6s ease-in-out infinite;
+        }
+        .scroll-dot:nth-child(2) { animation-delay: 0.2s; }
+        .scroll-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes scrollBounce {
+            0%, 100% { opacity: 0.3; transform: translateY(0); }
+            50% { opacity: 1; transform: translateY(5px); }
+        }
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: linear-gradient(to bottom, transparent, #ffffff);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* ===================== ESTADISTICAS ===================== */
+        .stats-strip {
+            background: var(--white);
+            padding: 48px 0;
+            border-bottom: 1px solid var(--beige-warm);
+            position: relative;
+            z-index: 2;  
+        }
+        .stat-item {
+            text-align: center;
+            padding: 0 16px;
+        }
+        .stat-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.6rem;
+            font-weight: 700;
+            color: var(--azul-deep);
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+        .stat-label {
+            font-size: 0.82rem;
+            color: var(--ink-mid);
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .stat-divider {
+            width: 1px;
+            background: var(--beige-warm);
+            height: 50px;
+            align-self: center;
+        }
+        .stats-strip::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: linear-gradient(to bottom, #ffffff, var(--beige));
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        /* ===================== CARRUSEL  ===================== */
+        #servicios {
+            background: linear-gradient(180deg, var(--beige) 0%, var(--white) 100%);
+            padding: 90px 0;
+            position: relative;
+        }
+        .section-eyebrow {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--azul);
+            margin-bottom: 12px;
+        }
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.9rem, 4vw, 2.8rem);
+            font-weight: 700;
+            color: var(--azul-deep);
+            margin-bottom: 12px;
+            line-height: 1.15;
+        }
+        .section-subtitle {
+            font-size: 1rem;
+            color: var(--ink-mid);
+            font-weight: 400;
+            max-width: 500px;
+        }
+        .carousel-wrapper {
+            position: relative;
+            padding: 0 60px;
+            margin-top: 50px;
+        }
+        .carousel-track-outer {
+            overflow: hidden;
+            border-radius: var(--radius-lg);
+        }
+        .carousel-track {
+            display: flex;
+            gap: 24px;
+            transition: transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94);
+        }
+        .carousel-slide {
+            flex: 0 0 calc(33.333% - 16px);
+            min-width: 0;
+        }
+        .servicio-card {
+            background: var(--white);
+            border-radius: 0;         
+            overflow: hidden;
+            box-shadow: 0 2px 16px rgba(47,84,150,0.07);
+            transition: all var(--transition);
+            cursor: pointer;
+            position: relative;
+            aspect-ratio: 3 / 4;      
+            width: 100%;
+        }
+        .servicio-card:hover {
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 14px 40px rgba(47,84,150,0.14);
+            z-index: 5;                       /* se superpone a las demás */
+            position: relative;
+        }
+        .servicio-card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            display: block;
+        }
+        .servicio-card:hover {
+            transform: translateY(-8px) scale(1.04);
+            box-shadow: 0 20px 40px rgba(47,84,150,0.25);
+            z-index: 10;               
+        }
+        .servicio-card-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(47,84,150,0.75) 0%, transparent 55%);
+            opacity: 0;
+            transition: opacity var(--transition);
+            display: flex;
+            align-items: flex-end;
+            padding: 20px;
+        }
+        .servicio-card:hover .servicio-card-overlay {
+            opacity: 1;
+        }
+        .servicio-ver-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.92);
+            color: var(--azul-deep);
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 50px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--white);
+            border: 1.5px solid var(--azul-pale);
+            color: var(--azul-deep);
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(47,84,150,0.12);
+            transition: all var(--transition);
+            z-index: 10;
+        }
+        .carousel-btn:hover {
+            background: var(--azul);
+            color: #fff;
+            border-color: var(--azul);
+            transform: translateY(-50%) scale(1.08);
+        }
+        .carousel-prev { left: 0; }
+        .carousel-next { right: 0; }
+        .carousel-btn:disabled {
+            opacity: 0.35;
+            cursor: default;
+            pointer-events: none;
+        }
+        .carousel-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 32px;
+        }
+        .carousel-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--azul-pale);
+            border: none;
+            cursor: pointer;
+            transition: all var(--transition);
+            padding: 0;
+        }
+        .carousel-slide {
+            overflow: visible;   
+        }
+        .carousel-dot.active {
+            background: var(--azul);
+            width: 24px;
+            border-radius: 4px;
+        }
+        #servicios::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: linear-gradient(to bottom, #ffffff, #2F5496);
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* ===================== POR QUE NOSOTROS ===================== */
+        #por-que {
+            background: linear-gradient(160deg, var(--azul-deep) 0%, var(--azul) 100%);
+            padding: 90px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        #por-que::before {
+            content: '';
+            position: absolute;
+            top: -80px; right: -80px;
+            width: 360px; height: 360px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+        }
+        #por-que::after {
+            content: '';
+            position: absolute;
+            bottom: -100px; left: -60px;
+            width: 280px; height: 280px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.04);
+        }
+        #por-que .section-eyebrow { color: rgba(255,255,255,0.65); }
+        #por-que .section-title { color: #fff; }
+        #por-que .section-subtitle { color: rgba(255,255,255,0.7); }
+        .feature-glass {
+            background: rgba(255,255,255,0.11);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.22);
+            border-radius: var(--radius-lg);
+            padding: 32px 28px;
+            transition: all var(--transition);
+            height: 100%;
+        }
+        .feature-glass:hover {
+            background: rgba(255,255,255,0.17);
+            transform: translateY(-4px);
+            box-shadow: 0 16px 48px rgba(0,0,0,0.15);
+        }
+        .feature-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            background: rgba(255,255,255,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            color: #fff;
+            margin-bottom: 18px;
+        }
+        .feature-title {
+            font-weight: 600;
+            font-size: 1.05rem;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+        .feature-desc {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.72);
+            line-height: 1.65;
+        }
+
+        /* ===================== CONTACTO ===================== */
+        #contacto {
+            background: var(--white);
+            padding: 90px 0;
+            position: relative;
+        }
+        .contact-card {
+            background: var(--beige);
+            border: 1px solid var(--beige-warm);
+            border-radius: var(--radius-lg);
+            padding: 36px 28px;
+            text-align: center;
+            transition: all var(--transition);
+            height: 100%;
+        }
+        .contact-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 36px rgba(47,84,150,0.10);
+            border-color: var(--azul-pale);
+        }
+        .contact-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--azul-pale);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--azul-deep);
+            margin: 0 auto 16px;
+            transition: all var(--transition);
+        }
+        .contact-card:hover .contact-icon {
+            background: var(--azul);
+            color: #fff;
+            transform: scale(1.08);
+        }
+        .contact-card a {
+            text-decoration: none;
+            color: inherit;
+        }
+        .contact-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--azul);
+            margin-bottom: 6px;
+        }
+        .contact-value {
+            font-size: 0.95rem;
+            color: var(--ink-mid);
+            font-weight: 500;
+        }
+        .btn-maps {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--beige);
+            border: 1.5px solid var(--azul-pale);
+            color: var(--azul-deep);
+            font-weight: 600;
+            font-size: 0.92rem;
+            padding: 13px 28px;
+            border-radius: 50px;
+            text-decoration: none;
+            transition: all var(--transition);
+        }
+        .btn-maps:hover {
+            background: var(--azul);
+            border-color: var(--azul);
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(91,155,213,0.30);
+        }
+        #contacto::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: linear-gradient(to bottom, #5B9BD5, transparent);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* ===================== FOOTER ===================== */
+        footer {
+            background: linear-gradient(160deg, var(--azul-deep) 0%, var(--azul) 100%);
+            color: rgba(255,255,255,0.9);
+            padding: 36px 0 24px;
+        }
+        .footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .footer-brand {
+            font-family: 'Playfair Display', serif;
+            color: #fff;
+            font-size: 1.05rem;
+            font-weight: 600;
+        }
+        .footer-copy {
+            font-size: 0.82rem;
+        }
+        .footer-links {
+            display: flex;
+            gap: 20px;
+        }
+        .footer-links a {
+            color: rgba(255,255,255,0.45);
+            text-decoration: none;
+            font-size: 0.82rem;
+            transition: color var(--transition);
+        }
+        .footer-links a:hover { color: var(--azul-pale); }
+
+        /* ===================== LIGHTBOX ===================== */
+        .lightbox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(28,43,58,0.92);
+            backdrop-filter: blur(8px);
+            z-index: 9000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .lightbox.active {
+            display: flex;
+        }
+        .lightbox-inner {
+            position: relative;
+            max-width: 90vw;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: transparent;
+            border-radius: 0;
+            box-shadow: none;
+            overflow: visible;
+        }
+        .lightbox-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.5);
+            border: none;
+            color: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            transition: background 0.2s;
+        }
+        .lightbox-close:hover {
+            background: rgba(0,0,0,0.8);
+        }
+        .lightbox-img {
+            max-width: 100%;
+            max-height: 70vh;
+            object-fit: contain;
+            display: block;
+            border-radius: 0;
+        }
+        .lightbox-footer {
+            width: 100%;
+            padding: 20px 0 0;
+            text-align: center;
+            background: transparent;
+        }
+        .lightbox-footer p {
+            font-size: 1rem;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 16px;
+        }
+        .btn-lightbox {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--azul);
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.95rem;
+            padding: 12px 28px;
+            border-radius: 50px;
+            text-decoration: none;
+            transition: all var(--transition);
+        }
+        .btn-lightbox:hover {
+            background: var(--azul-deep);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        /* ===================== RESPONSIVE ===================== */
+        @media (max-width: 600px) {
+            .hero-content {
+                padding: 100px 20px 70px;
+                text-align: center;
+            }
+            .hero-title {
+                font-size: clamp(1.8rem, 8vw, 2.6rem);
+                word-break: break-word;
+                line-height: 1.15;
+            }
+            .hero-subtitle {
+                font-size: 0.95rem;
+            }
+            .hero-logo {
+                width: 90px;
+                height: 90px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .glass-panel {
+                padding: 20px 22px;
+                text-align: center;
+                margin-bottom: 30px;
+            }
+            .hero-scroll {
+                color: #fff;
+                bottom: 30px;
+            }
+            .scroll-dot {
+                background: rgba(255,255,255,0.8);
+            }
+        }
+
+        @media (max-width: 991px) {
+            .nav-links { display: none; }
+            .nav-hamburger { display: block; }
+            .carousel-slide { flex: 0 0 calc(50% - 12px); }
+            .carousel-wrapper { padding: 0 48px; }
+        }
+        @media (max-width: 600px) {
+            .carousel-slide { flex: 0 0 100%; }
+            .carousel-wrapper { padding: 0 40px; }
+            .hero-content { padding: 100px 20px 70px; }
+            .stat-divider { display: none; }
+            footer .footer-inner { flex-direction: column; text-align: center; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        }
+    </style>
+
+</head>
+<body>
+
+<!-- ===================== NAVBAR ===================== -->
+<nav class="site-nav" id="site-nav">
+    <div class="nav-inner">
+        <a class="nav-brand" href="/">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo GlobalCopyPlot">
+            <span class="nav-brand-name">GlobalCopyPlot</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="#servicios">Servicios</a></li>
+            <li><a href="#por-que">Nosotros</a></li>
+            <li><a href="#contacto">Contacto</a></li>
+            <li><a href="/politicas">Politicas</a></li>
+
+            {% if current_user.is_authenticated %}
+                <li><a href="/imprimir" class="nav-cta"><i class="fas fa-print me-1"></i> Imprimir</a></li>
+
+                {% if current_user.ES_ADMIN %}
+                    <li><a href="/admin"><i class="fas fa-cog me-1"></i>Admin</a></li>
+                {% endif %}
+                {% if current_user.ES_OPERADOR or current_user.ES_ADMIN %}
+                    <li><a href="/operador"><i class="fas fa-print me-1"></i>Operador</a></li>
+                {% endif %}
+
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-user-circle me-1"></i> {{ current_user.NOMBRE }}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                        <li><a class="dropdown-item" href="/mis-solicitudes"><i class="fas fa-list-check me-2"></i>Mis Solicitudes</a></li>
+                        <li><a class="dropdown-item" href="/mi-perfil"><i class="fas fa-user-edit me-2"></i>Mi Perfil</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="/logout"><i class="fas fa-sign-out-alt me-2"></i>Cerrar sesión</a></li>
+                    </ul>
+                </li>
+            {% else %}
+                <li><a href="/login" class="nav-cta"><i class="fas fa-sign-in-alt me-1"></i> Iniciar Sesión</a></li>
+            {% endif %}
+        </ul>
+        <button class="nav-hamburger" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuOffcanvas" aria-label="Menú">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+</nav>
+
+<!-- ================== OFFCANVAS MÓVIL DEFINITIVO ================== -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="menuOffcanvas" 
+     style="background: rgba(47, 84, 150, 0.15); backdrop-filter: blur(24px); 
+            -webkit-backdrop-filter: blur(24px); border-left: 1px solid rgba(255,255,255,0.4);
+            width: 280px !important; border-radius: 28px 0 0 28px; box-shadow: -10px 0 30px rgba(0,0,0,0.25);">
+    
+    <!-- Cabecera -->
+    <div class="d-flex flex-column align-items-center pt-3 px-3">
+        <button type="button" class="btn-close btn-close-white align-self-end mb-2" data-bs-dismiss="offcanvas"></button>
+        <h5 class="fw-bold text-white mb-2" style="font-size: 1.5rem; letter-spacing: 0.5px;">Menú</h5>
+        <div style="width: 50px; height: 3px; background: #5B9BD5; border-radius: 2px; margin-bottom: 16px;"></div>
+    </div>
+
+    <!-- Cuerpo -->
+    <div class="offcanvas-body d-flex flex-column pt-0 px-3">
+        <ul class="list-unstyled flex-grow-1">
+            <!-- 1. Centro de Impresión (Destacado) -->
+            <li>
+                <a class="menu-offcanvas-link menu-offcanvas-link-destacado" href="/imprimir">
+                    <i class="fas fa-print me-3" style="color: #ffffff;"></i>Centro de Impresión
+                </a>
+            </li>
+            <!-- Enlaces normales -->
+            <li>
+                <a class="menu-offcanvas-link" href="#servicios">
+                    <i class="fas fa-th-large me-3" style="color: #5B9BD5;"></i>Servicios
+                </a>
+            </li>
+            <li>
+                <a class="menu-offcanvas-link" href="#por-que">
+                    <i class="fas fa-star me-3" style="color: #5B9BD5;"></i>Nosotros
+                </a>
+            </li>
+            <li>
+                <a class="menu-offcanvas-link" href="#contacto">
+                    <i class="fas fa-envelope me-3" style="color: #5B9BD5;"></i>Contacto
+                </a>
+            </li>
+            <li>
+                <a class="menu-offcanvas-link" href="/politicas">
+                    <i class="fas fa-file-alt me-3" style="color: #5B9BD5;"></i>Políticas y Términos
+                </a>
+            </li>
+            {% if current_user.is_authenticated %}
+                <li>
+                    <a class="menu-offcanvas-link" href="/mis-solicitudes">
+                        <i class="fas fa-list-check me-3" style="color: #5B9BD5;"></i>Mis Solicitudes
+                    </a>
+                </li>
+                {% if current_user.ES_ADMIN %}
+                <li>
+                    <a class="menu-offcanvas-link" href="/admin">
+                        <i class="fas fa-cog me-3" style="color: #5B9BD5;"></i>Panel Admin
+                    </a>
+                </li>
+                {% endif %}
+                {% if current_user.ES_OPERADOR or current_user.ES_ADMIN %}
+                <li>
+                    <a class="menu-offcanvas-link" href="/operador">
+                        <i class="fas fa-print me-3" style="color: #5B9BD5;"></i>Panel Operador
+                    </a>
+                </li>
+                {% endif %}
+                <li>
+                    <a class="menu-offcanvas-link" href="/mi-perfil">
+                        <i class="fas fa-user-edit me-3" style="color: #5B9BD5;"></i>Mi Perfil
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+
+        <!-- Zona inferior (perfil o login) -->
+        <div class="mt-auto pt-3 border-top" style="border-color: rgba(255,255,255,0.3) !important;">
+            {% if current_user.is_authenticated %}
+                <p class="text-white fw-semibold mb-2 text-center" style="font-size:0.9rem;">
+                    <i class="fas fa-user-circle me-1" style="color:#ffffff;"></i> {{ current_user.NOMBRE }} {{ current_user.APELLIDO }}
+                </p>
+                <a href="/logout" class="btn-offcanvas-logout">
+                    <i class="fas fa-sign-out-alt me-2"></i>Cerrar sesión
+                </a>
+            {% else %}
+                <a href="/login" class="btn-offcanvas-login">
+                    <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ===================== HERO ===================== -->
+<header class="hero">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-container" style="position: relative; z-index: 10; max-width: 500px; margin: 0 auto 30px auto;">
+              {% for category, message in messages %}
+                <div class="flash-alert flash-{{ category }}">
+                  <div class="flash-icon">
+                    {% if category == 'success' %}
+                      <i class="fas fa-check-circle"></i>
+                    {% elif category == 'danger' or category == 'error' %}
+                      <i class="fas fa-times-circle"></i>
+                    {% elif category == 'warning' %}
+                      <i class="fas fa-exclamation-triangle"></i>
+                    {% else %}
+                      <i class="fas fa-info-circle"></i>
+                    {% endif %}
+                  </div>
+                  <div class="flash-content">{{ message }}</div>
+                  <span class="flash-close-btn" onclick="this.closest('.flash-alert').style.display='none'">
+                    <i class="fas fa-times"></i>
+                  </span>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+        <div class="row align-items-center gy-5">
+            <div class="col-lg-6">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="GlobalCopyPlot" class="hero-logo d-block">
+                <p class="hero-eyebrow">Centro de Copiado e Impresión</p>
+                <h1 class="hero-title">GLOBALCOPYPLOT</h1>
+                <p class="hero-subtitle">Soluciones impresas con calidad profesional,<br>rápidas y a tu medida.</p>
+                {% if current_user.is_authenticated %}
+                    <a href="/imprimir" class="btn-hero">
+                        Comenzar ahora <i class="fas fa-arrow-right"></i>
+                    </a>
+                {% else %}
+                    <a href="/login" class="btn-hero">
+                        Comenzar ahora <i class="fas fa-arrow-right"></i>
+                    </a>
+                {% endif %}
+            </div>
+            <div class="col-lg-5 ms-auto">
+                <div class="glass-panel">
+                    <p style="margin-bottom: 12px; font-size:0.88rem; opacity:0.85;">
+                        <i class="fas fa-map-marker-alt me-1"></i> {{ config.get('direccion', '') }}
+                    </p>
+                    <h5><i class="far fa-clock me-2"></i>Horarios de Atención</h5>
+                    <p><strong>Lunes a Viernes</strong><br>6:40 a.m. – 5:30 p.m.</p>
+                    <p><strong>Sábados</strong><br>8:00 a.m. – 1:00 p.m.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="hero-scroll">
+        <span>Explorar</span>
+        <div class="scroll-dot"></div>
+        <div class="scroll-dot"></div>
+        <div class="scroll-dot"></div>
+    </div>
+</header>
+
+<!-- ===================== STATS STRIP ===================== -->
+<section class="stats-strip">
+    <div class="container">
+        <div class="row justify-content-center align-items-stretch g-0">
+            <div class="col-6 col-md-3">
+                <div class="stat-item">
+                    <div class="stat-number">+10<span style="font-size:1.5rem">k</span></div>
+                    <div class="stat-label">Trabajos entregados</div>
+                </div>
+            </div>
+            <div class="col-auto d-none d-md-block"><div class="stat-divider"></div></div>
+            <div class="col-6 col-md-3">
+                <div class="stat-item">
+                    <div class="stat-number">A3+</div>
+                    <div class="stat-label">Formatos disponibles</div>
+                </div>
+            </div>
+            <div class="col-auto d-none d-md-block"><div class="stat-divider"></div></div>
+            <div class="col-auto d-none d-md-block"><div class="stat-divider"></div></div>
+            <div class="col-6 col-md-3">
+                <div class="stat-item">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">Clientes satisfechos</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===================== CATÁLOGO / CARRUSEL ===================== -->
+<section id="servicios">
+    <div class="container">
+        <div class="row align-items-end mb-0">
+            <div class="col-lg-7">
+                <span class="section-eyebrow">Catálogo</span>
+                <h2 class="section-title">Nuestros Servicios</h2>
+                <p class="section-subtitle">Impresión, ploteo, encuadernado y más — todo en un solo lugar.</p>
+            </div>
+            <div class="col-lg-5 text-lg-end mt-3 mt-lg-0">
+                <span style="font-size:0.85rem;color:var(--ink-mid);">Desliza para explorar</span>
+            </div>
+        </div>
+
+        <div class="carousel-wrapper mt-5" id="servicios-carousel">
+            <button class="carousel-btn carousel-prev" id="prev-btn" aria-label="Anterior">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <div class="carousel-track-outer">
+                <div class="carousel-track" id="carousel-track">
+                    <!-- Las tarjetas se generan aquí con Jinja -->
+                    {% if imagenes %}
+                        {% for img in imagenes %}
+                        <div class="carousel-slide">
+                            <div class="servicio-card" data-img="{{ url_for('static', filename='img/' + img) }}">
+                                <div style="overflow:hidden;">
+                                    <img class="servicio-card-img" 
+                                         src="{{ url_for('static', filename='img/' + img) }}" 
+                                         alt="Servicio {{ loop.index }}" 
+                                         loading="lazy">
+                                </div>
+                                <div class="servicio-card-overlay">
+                                    <span class="servicio-ver-btn">
+                                        <i class="fas fa-expand-alt"></i> Ver servicio
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <!-- Placeholders de demostración cuando no hay imágenes -->
+                        {% for n in range(1, 7) %}
+                        <div class="carousel-slide">
+                            <div class="servicio-card">
+                                <div style="overflow:hidden;background:var(--beige);aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;">
+                                    <i class="fas fa-image fa-3x" style="color:var(--azul-pale);"></i>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+            <button class="carousel-btn carousel-next" id="next-btn" aria-label="Siguiente">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+        <div class="carousel-dots" id="carousel-dots"></div>
+    </div>
+</section>
+
+<!-- ===================== POR QUÉ ELEGIRNOS ===================== -->
+<section id="por-que">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="section-eyebrow">¿Por qué nosotros?</span>
+            <h2 class="section-title">Calidad que habla por sí sola</h2>
+            <p class="section-subtitle mx-auto" style="color:rgba(255,255,255,0.65);">Cada trabajo se trata con atención al detalle y compromiso real.</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-glass">
+                    <div class="feature-icon"><i class="fas fa-bolt"></i></div>
+                    <div class="feature-title">Entrega Rápida</div>
+                    <div class="feature-desc">Tiempo de respuesta ágil para que nunca pierdas plazos importantes.</div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-glass">
+                    <div class="feature-icon"><i class="fas fa-palette"></i></div>
+                    <div class="feature-title">Alta Calidad</div>
+                    <div class="feature-desc">Impresión en color real y escala de grises con materiales de primera.</div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-glass">
+                    <div class="feature-icon"><i class="fas fa-upload"></i></div>
+                    <div class="feature-title">Envío Digital</div>
+                    <div class="feature-desc">Sube tu archivo desde donde estés y recoge tu pedido listo.</div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-glass">
+                    <div class="feature-icon"><i class="fas fa-headset"></i></div>
+                    <div class="feature-title">Atención Directa</div>
+                    <div class="feature-desc">Equipo disponible para orientarte en cada detalle de tu proyecto.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===================== CONTACTO ===================== -->
+<section id="contacto">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="section-eyebrow">Contáctanos</span>
+            <h2 class="section-title">Estamos para ayudarte</h2>
+        </div>
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-4">
+                {% set whatsapp_num = config.get('whatsapp', '584122826746') %}
+                <div class="contact-card">
+                    <a href="https://wa.me/{{ whatsapp_num }}" target="_blank">
+                        <div class="contact-icon"><i class="fab fa-whatsapp"></i></div>
+                        <div class="contact-label">WhatsApp</div>
+                        <div class="contact-value">{{ config.get('telefono_negocio', '0412-282.67.46') }}</div>
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                {% set insta_user = config.get('instagram', 'globalcopyplot') %}
+                <div class="contact-card">
+                    <a href="https://www.instagram.com/{{ insta_user }}" target="_blank">
+                        <div class="contact-icon"><i class="fab fa-instagram"></i></div>
+                        <div class="contact-label">Instagram</div>
+                        <div class="contact-value">@{{ insta_user }}</div>
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                {% set email_contacto = config.get('email_negocio', 'globalcopyplot@gmail.com') %}
+                <div class="contact-card">
+                    <a href="mailto:{{ email_contacto }}">
+                        <div class="contact-icon"><i class="far fa-envelope"></i></div>
+                        <div class="contact-label">Correo</div>
+                        <div class="contact-value">{{ email_contacto }}</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-5">
+            <a href="https://maps.app.goo.gl/bde6fFFGYYThoqJL6?g_st=aw" target="_blank" class="btn-maps">
+                <i class="fas fa-map-marker-alt"></i> Ver en Google Maps
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<footer>
+    <div class="footer-inner">
+        <span class="footer-brand">GlobalCopyPlot</span>
+        <p class="footer-copy mb-0">&copy; 2026 – Soluciones Impresas</p>
+        <div class="footer-links">
+            <a href="#servicios">Servicios</a>
+            <a href="#contacto">Contacto</a>
+            <a href="/politicas">Políticas y Términos</a>
+        </div>
+    </div>
+</footer>
+<!-- ===================== LIGHTBOX ===================== -->
+<div id="lightbox" class="lightbox" role="dialog" aria-modal="true">
+    <div class="lightbox-inner">
+        <button class="lightbox-close" id="lightbox-close" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+        <img class="lightbox-img" id="lightbox-img" src="" alt="Imagen del servicio">
+        <div class="lightbox-footer">
+            <p>¿Te interesa este servicio? Accede al centro de impresión.</p>
+            {% if current_user.is_authenticated %}
+                <a href="/imprimir" class="btn-lightbox"><i class="fas fa-print me-2"></i>Ir a imprimir</a>
+            {% else %}
+                <a href="/login" class="btn-lightbox"><i class="fas fa-sign-in-alt me-2"></i>Iniciar sesión</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ===================== SCRIPTS ===================== -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    /* ---- Navbar scroll shadow ---- */
+    const nav = document.getElementById('site-nav');
+    window.addEventListener('scroll', () => {
+        nav.classList.toggle('scrolled', window.scrollY > 30);
+    });
+
+    /* ---- Offcanvas logic ---- */
+    const offcanvasEl = document.getElementById('menuOffcanvas');
+    const offcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl) || new bootstrap.Offcanvas(offcanvasEl);
+
+    document.querySelectorAll('.menu-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href').substring(1);
+            const target = document.getElementById(targetId);
+            offcanvas.hide();
+            offcanvasEl.addEventListener('hidden.bs.offcanvas', function handler() {
+                offcanvasEl.removeEventListener('hidden.bs.offcanvas', handler);
+                if (target) target.scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+    });
+
+    document.querySelectorAll('[data-offcanvas-link]').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const href = this.getAttribute('href');
+            offcanvas.hide();
+            offcanvasEl.addEventListener('hidden.bs.offcanvas', function handler() {
+                offcanvasEl.removeEventListener('hidden.bs.offcanvas', handler);
+                window.location.href = href;
+            });
+        });
+    });
+
+    /* ---- Carrusel ---- */
+    (function () {
+        const track   = document.getElementById('carousel-track');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const dotsContainer = document.getElementById('carousel-dots');
+        if (!track) return;
+
+        const slides = Array.from(track.querySelectorAll('.carousel-slide'));
+        if (!slides.length) return;
+
+        let currentIndex = 0;
+
+        function getSlidesVisible() {
+            const w = window.innerWidth;
+            if (w < 600) return 1;
+            if (w < 992) return 2;
+            return 3;
+        }
+
+        function totalPages() {
+            return Math.ceil(slides.length / getSlidesVisible());
+        }
+
+        function buildDots() {
+            dotsContainer.innerHTML = '';
+            const pages = totalPages();
+            for (let i = 0; i < pages; i++) {
+                const dot = document.createElement('button');
+                dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+                dot.setAttribute('aria-label', 'Página ' + (i + 1));
+                dot.addEventListener('click', () => goTo(i));
+                dotsContainer.appendChild(dot);
+            }
+        }
+
+        function updateDots() {
+            const page = Math.round(currentIndex / getSlidesVisible());
+            dotsContainer.querySelectorAll('.carousel-dot').forEach((dot, i) => {
+                dot.classList.toggle('active', i === page);
+            });
+        }
+
+        function goTo(pageIndex) {
+            const visible = getSlidesVisible();
+            currentIndex = pageIndex * visible;
+            if (currentIndex > slides.length - visible) {
+                currentIndex = slides.length - visible;
+            }
+            const slideWidth = slides[0].offsetWidth + 24; // 24 = gap
+            track.style.transform = `translateX(-${currentIndex * slideWidth}px)`;
+            prevBtn.disabled = currentIndex === 0;
+            nextBtn.disabled = currentIndex >= slides.length - visible;
+            updateDots();
+        }
+
+        prevBtn.addEventListener('click', () => {
+            const visible = getSlidesVisible();
+            const currentPage = Math.round(currentIndex / visible);
+            goTo(Math.max(0, currentPage - 1));
+        });
+
+        nextBtn.addEventListener('click', () => {
+            const visible = getSlidesVisible();
+            const currentPage = Math.round(currentIndex / visible);
+            goTo(Math.min(totalPages() - 1, currentPage + 1));
+        });
+
+        buildDots();
+        goTo(0);
+
+        window.addEventListener('resize', () => { buildDots(); goTo(0); });
+    })();
+
+    /* ---- Lightbox ---- */
+    (function () {
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightbox-img');
+        const closeBtn = document.getElementById('lightbox-close');
+        if (!lightbox) return;
+
+        document.querySelectorAll('.servicio-card').forEach(card => {
+            card.addEventListener('click', function () {
+                const src = this.getAttribute('data-img');
+                if (src) {
+                    lightboxImg.src = src;
+                    lightbox.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                }
+            });
+        });
+
+        function closeLightbox() {
+            lightbox.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        if (closeBtn) closeBtn.addEventListener('click', closeLightbox);
+        lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+    })();
+
+    /* ---- Calculadora flotante ---- */
+    (function () {
+        const fab = document.getElementById('calc-fab');
+        const panel = document.getElementById('calc-panel');
+        const closeBtn = document.getElementById('calc-close');
+        let isOpen = false;
+
+        fab.addEventListener('click', () => {
+            isOpen = !isOpen;
+            panel.classList.toggle('open', isOpen);
+        });
+        if (closeBtn) closeBtn.addEventListener('click', () => {
+            isOpen = false;
+            panel.classList.remove('open');
+        });
+    })();
+
+    /* ---- Calculadora básica ---- */
+    let calcExpression = '';
+    function calcInput(val) {
+        calcExpression += val;
+        document.getElementById('calc-display').textContent = calcExpression.replace(/\*/g,'×').replace(/\//g,'÷');
+    }
+    function calcClear() {
+        calcExpression = '';
+        document.getElementById('calc-display').textContent = '0';
+    }
+    function calcCalculate() {
+        try {
+            const result = eval(calcExpression.replace(/×/g,'*').replace(/÷/g,'/'));
+            document.getElementById('calc-display').textContent = result;
+            calcExpression = result.toString();
+        } catch (e) {
+            document.getElementById('calc-display').textContent = 'Error';
+            calcExpression = '';
+        }
+    }
+
+    /* ---- Presupuesto ---- */
+    function actualizarPresupuesto() {
+        const totalSpan = document.getElementById('calc-presupuesto-total');
+        const msg = document.querySelector('#calc-presupuesto-content p');
+        if (!totalSpan || !msg) return;
+
+        if (!window.paginasDetectadas) {
+            msg.style.display = 'block';
+            totalSpan.style.display = 'none';
+            return;
+        }
+        const paginas = window.paginasDetectadas;
+        const precios = window.preciosFrontend;
+        if (!precios) return;
+
+        const color = document.getElementById('colorSelect')?.value;
+        const tamanoSelect = document.getElementById('tamanoSelect');
+        const tamanoOption = tamanoSelect?.options[tamanoSelect?.selectedIndex];
+        const multiplicador = tamanoOption ? parseFloat(tamanoOption.text.match(/\(([\d.]+)x\)/)[1]) : 1.0;
+
+        let total = 0;
+        if (color === 'bn') {
+            total = precios.bn * paginas * multiplicador;
+        } else if (color === 'color') {
+            total = precios.color * paginas * multiplicador;
+        } else if (color === 'mixto') {
+            const input = document.getElementById('paginasColor')?.value;
+            if (input) {
+                const arr = parsePaginas(input, paginas);
+                if (arr) {
+                    const totalColor = arr.length;
+                    const totalBN = paginas - totalColor;
+                    total = (precios.color * totalColor + precios.bn * totalBN) * multiplicador;
+                }
+            }
+        }
+
+        let costoExtras = 0;
+        document.querySelectorAll('input[name="extras[]"]:checked').forEach(cb => {
+            costoExtras += parseFloat(cb.getAttribute('data-precio') || 0);
+        });
+        total += costoExtras;
+
+        const papelSelect = document.getElementById('tipoPapelSelect');
+        const papelOption = papelSelect?.options[papelSelect?.selectedIndex];
+        const precioPapel = papelOption ? parseFloat(papelOption.getAttribute('data-precio') || 0) : 0;
+        total += precioPapel * paginas;
+
+        totalSpan.textContent = 'Bs. ' + total.toFixed(2);
+        msg.style.display = 'none';
+        totalSpan.style.display = 'block';
+    }
+</script>
+
+<!-- Botón Volver arriba (bonito) -->
+<div id="btn-scroll-top" style="
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: rgba(91, 155, 213, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: white;
+    font-size: 20px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 99999;
+    box-shadow: 0 6px 20px rgba(47, 84, 150, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: transform 0.3s, background-color 0.3s;
+" onmouseover="this.style.backgroundColor='rgba(47, 84, 150, 0.9)'; this.style.transform='translateY(-3px)';" 
+   onmouseout="this.style.backgroundColor='rgba(91, 155, 213, 0.85)'; this.style.transform='translateY(0)';"
+   onclick="window.scrollTo({top:0,behavior:'smooth'})">
+    <i class="fas fa-chevron-up"></i>
+</div>
+
+<script>
+(function() {
+    var btn = document.getElementById('btn-scroll-top');
+    if (!btn) return;
+    window.addEventListener('scroll', function() {
+        btn.style.display = (window.scrollY > 400) ? 'flex' : 'none';
+    });
+})();
+</script>
+
+</body>
+</html>

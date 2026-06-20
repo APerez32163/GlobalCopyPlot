@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+    <script>
+        // Aplicar modo oscuro inmediatamente (sobre <html>) para que no parpadee
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.documentElement.classList.add('dark-mode');
+        }
+    </script>
+
+    <meta charset="UTF-8">
+    <title>Panel Operador - GlobalCopyPlot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}">
+
+    <style>
+        body { background: #f8f9fa; font-family: 'Inter', sans-serif; }
+        .glass-card { background: rgba(255,255,255,0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.8); border-radius: 20px; padding: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
+        .btn-accion { background: #5B9BD5; color: white; border-radius: 25px; padding: 0.4rem 1.5rem; font-weight: 500; border: none; }
+        .btn-accion:hover { background: #2F5496; color: white; }
+        .badge-nuevo { background: #dc3545; color: white; font-size: 0.7rem; padding: 3px 10px; border-radius: 12px; }
+        .contador-nuevos { background: rgba(220,53,69,0.1); border: 1px solid rgba(220,53,69,0.3); border-radius: 16px; padding: 12px 20px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold" style="color: #2F5496;"><i class="fas fa-print me-2"></i>Panel de Operador</h2>
+            <div>
+                <a href="/" class="btn btn-outline-secondary rounded-pill me-2">Inicio</a>
+                <a href="/logout" class="btn btn-outline-danger rounded-pill">Cerrar sesión</a>
+            </div>
+        </div>
+
+        <!-- Contador de pedidos nuevos -->
+        {% if nuevos_operador > 0 %}
+        <div class="contador-nuevos text-center">
+            <i class="fas fa-bell me-2 text-danger"></i> 
+            Tienes <strong>{{ nuevos_operador }}</strong> pedidos nuevos por revisar
+        </div>
+        {% endif %}
+
+        {% if mensaje %}
+        <div class="alert alert-success glass-card p-2 mb-3 text-center" style="border-radius: 16px;">
+            <i class="fas fa-check-circle me-2"></i> {{ mensaje }}
+        </div>
+        {% endif %}
+
+        <!-- Pestañas -->
+        <ul class="nav nav-pills mb-4">
+            <li class="nav-item">
+                <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#pendientes" type="button">Pendientes de impresión</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#historial" type="button">Historial reciente</button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- Pestaña Pendientes -->
+            <div class="tab-pane fade show active" id="pendientes">
+                {% if pedidos %}
+                    <div class="row g-4">
+                        {% for item in pedidos %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="glass-card h-100">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h5>Pedido #{{ item.pedido.ID }}</h5>
+                                        {% if not item.pedido.VISTO_OPERADOR %}
+                                            <span class="badge-nuevo">Nuevo</span>
+                                        {% endif %}
+                                    </div>
+                                    <span class="badge bg-info">{{ item.pedido.ESTADO }}</span>
+                                </div>
+                                <p><strong>Cliente:</strong> {{ item.usuario.NOMBRE }} {{ item.usuario.APELLIDO }}</p>
+                                <p><strong>Cédula:</strong> {{ item.usuario.ID_USUARIO }}</p>
+                                <p><strong>Páginas:</strong> {{ item.detalles[0].CANTIDAD if item.detalles else 'N/A' }}</p>
+                                <p><strong>Color:</strong> 
+                                    {% if item.pedido.COLOR == 'bn' %} B/N
+                                    {% elif item.pedido.COLOR == 'color' %} Color
+                                    {% elif item.pedido.COLOR == 'mixto' %} Mixto
+                                    {% else %} — {% endif %}
+                                </p>
+                                <p><strong>Tamaño:</strong> {{ item.pedido.TAMANO or '—' }}</p>
+                                <a href="{{ url_for('operador_detalle', pedido_id=item.pedido.ID) }}" class="btn btn-accion w-100 mt-2">Ver detalle completo</a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No hay pedidos pendientes de impresión.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Pestaña Historial -->
+            <div class="tab-pane fade" id="historial">
+                {% if historial %}
+                    <div class="table-responsive glass-card p-3">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Pedido</th>
+                                    <th>Cliente</th>
+                                    <th>Fecha</th>
+                                    <th>Total</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pedido in historial %}
+                                <tr>
+                                    <td>#{{ pedido.ID }}</td>
+                                    <td>{{ pedido.ID_USUARIO }}</td>
+                                    <td>{{ pedido.FECHA.strftime('%d/%m/%Y %H:%M') if pedido.FECHA else '' }}</td>
+                                    <td>Bs. {{ "%.2f"|format(pedido.TOTAL) }}</td>
+                                    <td><span class="badge bg-{{ 'success' if pedido.ESTADO == 'Listo' else 'secondary' }}">{{ pedido.ESTADO }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No hay historial reciente.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Botón Modo Oscuro -->
+<button class="dark-mode-toggle" id="darkModeToggle" title="Modo oscuro">
+    <i class="fas fa-moon"></i>
+</button>
+
+<script>
+    const toggle = document.getElementById('darkModeToggle');
+    if (toggle) {
+        // Sincronizar icono al cargar
+        if (document.documentElement.classList.contains('dark-mode')) {
+            toggle.innerHTML = '<i class="fas fa-sun"></i>';
+        } else {
+            toggle.innerHTML = '<i class="fas fa-moon"></i>';
+        }
+
+        toggle.addEventListener('click', function() {
+            const html = document.documentElement;
+            const isDark = html.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', isDark);
+            toggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        });
+    }
+</script>
+    
+</body>
+</html>

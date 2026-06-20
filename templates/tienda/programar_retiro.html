@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Programar retiro · GlobalCopyPlot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive-imprimir.css') }}">
+    <style>
+        :root {
+            --azul-claro: #5B9BD5;
+            --azul-oscuro: #2F5496;
+            --glass-bg: rgba(255, 255, 255, 0.45);
+            --glass-border: rgba(255, 255, 255, 0.7);
+            --texto: #1e293b;
+        }
+
+        body {
+            background: url("{{ url_for('static', filename='img/fondoimprimir.png') }}") center/cover no-repeat;
+            background-attachment: fixed;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: var(--texto);
+        }
+
+        .container {
+            max-width: 550px;
+            margin: 0 auto;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 32px;
+            padding: 28px 24px;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+        }
+
+        h2 {
+            font-weight: 700;
+            font-size: 1.9rem;
+            letter-spacing: -0.5px;
+            color: var(--azul-oscuro);
+            margin-bottom: 0.75rem;
+        }
+
+        .archivo-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 20px;
+            padding: 14px 18px;
+            margin-bottom: 28px;
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+
+        .archivo-info i {
+            font-size: 2rem;
+            color: var(--azul-claro);
+        }
+
+        .archivo-info .detalle {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .archivo-info .nombre-archivo {
+            font-weight: 600;
+            color: var(--texto);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+            max-width: 100%;
+        }
+
+        .archivo-info .paginas-badge {
+            background: var(--azul-claro);
+            color: white;
+            border-radius: 20px;
+            padding: 2px 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 4px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--azul-oscuro);
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+
+        .input-glass {
+            background: rgba(255,255,255,0.7);
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 18px;
+            padding: 14px 18px;
+            font-size: 1rem;
+            width: 100%;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%232F5496' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 18px center;
+            padding-right: 40px;
+        }
+
+        .input-glass:focus {
+            outline: none;
+            border-color: var(--azul-claro);
+            box-shadow: 0 0 0 4px rgba(91,155,213,0.15);
+            background: white;
+        }
+
+        #fechaRetiroVisible.input-glass {
+            background-image: none !important;  
+            padding-right: 18px;              
+            cursor: pointer;                 
+            user-select: none;                
+        }
+
+        .btn-guardar {
+            background: linear-gradient(135deg, #5B9BD5, #2F5496);
+            border: none;
+            border-radius: 50px;
+            padding: 14px 20px;
+            font-weight: 700;
+            font-size: 1rem;
+            color: white;
+            box-shadow: 0 8px 18px rgba(47,84,150,0.25);
+            transition: all 0.3s;
+            flex: 1;
+            text-align: center;
+        }
+
+        .btn-guardar:hover {
+            background: linear-gradient(135deg, #2F5496, #1e3c6e);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(47,84,150,0.35);
+        }
+
+        .btn-volver {
+            background: rgba(255,255,255,0.7);
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 50px;
+            padding: 14px 20px;
+            font-weight: 600;
+            color: var(--azul-oscuro);
+            transition: all 0.3s;
+            text-align: center;
+            text-decoration: none;
+            flex: 0 0 40%;
+        }
+
+        .btn-volver:hover {
+            background: white;
+            border-color: var(--azul-claro);
+        }
+
+        /* Calendario (estilos mejorados ya incluidos) */
+        .calendario-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .calendario-overlay.mostrar {
+            display: flex;
+        }
+
+        .calendario-modal {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 28px;
+            padding: 24px 20px;
+            box-shadow: 0 30px 50px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 380px;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .calendario-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .cal-titulo {
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: var(--azul-oscuro);
+            text-transform: capitalize;
+        }
+
+        .cal-nav-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(91,155,213,0.15);
+            border: none;
+            color: var(--azul-oscuro);
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cal-nav-btn:hover {
+            background: var(--azul-claro);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .cal-dias-semana {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 10px;
+        }
+
+        .cal-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            text-align: center;
+        }
+
+        .cal-dia {
+            padding: 12px 0;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #1e293b;
+            background: rgba(255,255,255,0.7);
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
+
+        .cal-dia:hover {
+            background: rgba(91,155,213,0.2);
+            transform: scale(1.05);
+        }
+
+        .cal-dia.deshabilitado {
+            color: #cbd5e1;
+            pointer-events: none;
+            cursor: default;
+            background: transparent;
+        }
+
+        .cal-dia.seleccionado {
+            background: var(--azul-claro);
+            color: white;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(91,155,213,0.4);
+        }
+
+        .cal-dia.hoy {
+            border: 2px solid var(--azul-claro);
+        }
+
+        .cal-dia.vacio {
+            pointer-events: none;
+            background: transparent;
+        }
+
+        .btn-cerrar-calendario {
+            background: rgba(91,155,213,0.1);
+            border: 1px solid rgba(91,155,213,0.3);
+            border-radius: 50px;
+            padding: 10px;
+            font-weight: 600;
+            color: var(--azul-oscuro);
+            width: 100%;
+            margin-top: 18px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .btn-cerrar-calendario:hover {
+            background: rgba(91,155,213,0.2);
+            border-color: var(--azul-claro);
+        }
+        #horaRetiro {
+            background-position: right 18px center !important;
+            background-size: 16px !important;
+            background-repeat: no-repeat !important;
+            background-attachment: scroll !important;
+            transition: none !important;
+            animation: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="glass-card">
+            <h2>Programar retiro</h2>
+
+            <div class="archivo-info">
+                <i class="fas fa-file-alt"></i>
+                <div class="detalle">
+                    <span class="nombre-archivo">
+                        {{ archivo_nombre }}
+                    </span>
+                    <span class="paginas-badge">{{ pedido.PAGINAS }} pág(s)</span>
+                </div>
+            </div>
+
+            <form method="POST" action="{{ url_for('programar_retiro', pedido_id=pedido.ID) }}">
+                <div class="mb-3">
+                    <label class="form-label">Fecha de retiro</label>
+                    <div class="position-relative">
+                        <input type="text" id="fechaRetiroVisible" class="input-glass" 
+                               placeholder="Toca para elegir fecha" readonly required>
+                        <i class="fas fa-calendar-alt position-absolute top-50 end-0 translate-middle-y me-3" 
+                           style="color: var(--azul-claro); pointer-events: none;"></i>
+                    </div>
+                    <input type="hidden" name="fecha_retiro" id="fechaRetiro">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Hora de retiro</label>
+                    <select name="hora_retiro" id="horaRetiro" class="input-glass" required disabled>
+                        <option value="">Primero elige la fecha</option>
+                    </select>
+                </div>
+
+                <!-- Botones alineados: Volver 40% + Guardar 60% -->
+                <div class="d-flex gap-2 mt-4">
+                    <a href="/imprimir?pedido_id={{ pedido.ID }}" class="btn-volver">
+                        <i class="fas fa-arrow-left me-2"></i> Volver
+                    </a>
+                    <button type="submit" class="btn-guardar">
+                        <i class="fas fa-check me-2"></i> Guardar y continuar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Calendario (sin cambios) -->
+    <div id="calendario-overlay" class="calendario-overlay">
+        <div class="calendario-modal">
+            <div class="calendario-header">
+                <button type="button" id="cal-prev" class="cal-nav-btn">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <span id="cal-titulo" class="cal-titulo"></span>
+                <button type="button" id="cal-next" class="cal-nav-btn">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+            <div class="cal-dias-semana">
+                <span>Dom</span><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span>
+            </div>
+            <div id="cal-grid" class="cal-grid"></div>
+            <button class="btn-cerrar-calendario" id="btn-cerrar-calendario">Cerrar</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputVisible = document.getElementById('fechaRetiroVisible');
+            const inputHidden = document.getElementById('fechaRetiro');
+            const overlay = document.getElementById('calendario-overlay');
+            const titulo = document.getElementById('cal-titulo');
+            const grid = document.getElementById('cal-grid');
+            const btnPrev = document.getElementById('cal-prev');
+            const btnNext = document.getElementById('cal-next');
+            const btnCerrar = document.getElementById('btn-cerrar-calendario');
+            const horaRetiro = document.getElementById('horaRetiro');
+
+            if (!inputVisible || !overlay) return;
+
+            let fechaActual = new Date();
+            const hoy = new Date(); hoy.setHours(0,0,0,0);
+            const minDate = new Date(hoy); minDate.setDate(minDate.getDate() + 1);
+            const maxDate = new Date(hoy); maxDate.setDate(maxDate.getDate() + 7);
+
+            function formatearFechaISO(date) {
+                const dia = String(date.getDate()).padStart(2, '0');
+                const mes = String(date.getMonth() + 1).padStart(2, '0');
+                return `${date.getFullYear()}-${mes}-${dia}`;
+            }
+
+            function formatearFechaLegible(date) {
+                const dia = String(date.getDate()).padStart(2, '0');
+                const mes = String(date.getMonth() + 1).padStart(2, '0');
+                return `${dia}/${mes}/${date.getFullYear()}`;
+            }
+
+            function renderizarCalendario(date) {
+                const year = date.getFullYear();
+                const month = date.getMonth();
+                const nombresMeses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+                titulo.textContent = `${nombresMeses[month]} ${year}`;
+                const primerDia = new Date(year, month, 1).getDay();
+                const ultimoDia = new Date(year, month + 1, 0).getDate();
+                grid.innerHTML = '';
+
+                for (let i = 0; i < primerDia; i++) {
+                    const div = document.createElement('div');
+                    div.className = 'cal-dia vacio';
+                    grid.appendChild(div);
+                }
+
+                for (let dia = 1; dia <= ultimoDia; dia++) {
+                    const fechaCelda = new Date(year, month, dia);
+                    const div = document.createElement('div');
+                    div.className = 'cal-dia';
+                    div.textContent = dia;
+
+                    if (fechaCelda < minDate || fechaCelda > maxDate || fechaCelda.getDay() === 0) {
+                        div.classList.add('deshabilitado');
+                    } else {
+                        div.addEventListener('click', function() {
+                            grid.querySelectorAll('.cal-dia.seleccionado').forEach(d => d.classList.remove('seleccionado'));
+                            div.classList.add('seleccionado');
+                            inputVisible.value = formatearFechaLegible(fechaCelda);
+                            inputHidden.value = formatearFechaISO(fechaCelda);
+                            cerrarCalendario();
+                            inputHidden.dispatchEvent(new Event('change', { bubbles: true }));
+                        });
+                    }
+
+                    if (fechaCelda.getTime() === hoy.getTime()) div.classList.add('hoy');
+                    if (inputHidden.value === formatearFechaISO(fechaCelda)) div.classList.add('seleccionado');
+                    grid.appendChild(div);
+                }
+
+                btnPrev.disabled = (new Date(year, month, 1) <= minDate);
+                btnNext.disabled = (new Date(year, month, ultimoDia) >= maxDate);
+            }
+
+            function abrirCalendario() {
+                overlay.classList.add('mostrar');
+                fechaActual = new Date(minDate);
+                renderizarCalendario(fechaActual);
+            }
+
+            function cerrarCalendario() {
+                overlay.classList.remove('mostrar');
+            }
+
+            inputVisible.addEventListener('click', abrirCalendario);
+
+            btnCerrar.addEventListener('click', cerrarCalendario);
+
+            overlay.addEventListener('click', function(e) {
+                if (e.target === overlay) cerrarCalendario();
+            });
+
+            btnPrev.addEventListener('click', function(e) {
+                e.stopPropagation();
+                fechaActual.setMonth(fechaActual.getMonth() - 1);
+                renderizarCalendario(fechaActual);
+            });
+
+            btnNext.addEventListener('click', function(e) {
+                e.stopPropagation();
+                fechaActual.setMonth(fechaActual.getMonth() + 1);
+                renderizarCalendario(fechaActual);
+            });
+
+            inputHidden.addEventListener('change', function() {
+                const date = new Date(this.value + 'T00:00:00');
+                const day = date.getDay();
+                horaRetiro.innerHTML = '<option value="">Selecciona hora</option>';
+                horaRetiro.disabled = false;
+
+                const horariosSemana = [
+                    '07:00','07:30','08:00','08:30','09:00','09:30','10:00','10:30',
+                    '11:00','11:30','12:00','13:00','13:30','14:00','14:30','15:00',
+                    '15:30','16:00','16:30','17:00','17:30'
+                ];
+                const horariosSabado = ['09:00','09:30','10:00','10:30','11:00','11:30','12:00'];
+
+                let horarios = horariosSemana;
+                if (day === 6) horarios = horariosSabado;
+                else if (day === 0) {
+                    alert('No se pueden programar retiros los domingos.');
+                    this.value = '';
+                    horaRetiro.disabled = true;
+                    return;
+                }
+
+                horarios.forEach(h => {
+                    const option = document.createElement('option');
+                    option.value = h;
+                    const [hora, min] = h.split(':').map(Number);
+                    const ampm = hora >= 12 ? 'PM' : 'AM';
+                    const hora12 = hora % 12 || 12;
+                    option.textContent = `${hora12}:${min.toString().padStart(2, '0')} ${ampm}`;
+                    horaRetiro.appendChild(option);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+{% extends "admin/base_admin.html" %}
+{% block content %}
+<h2 class="mb-4">Ingresos</h2>
+<div class="glass-card p-4 mb-4 text-center">
+    <h4 class="fw-bold">Total acumulado</h4>
+    <p class="fs-2 text-success">Bs. {{ "%.2f"|format(ingresos_totales) }}</p>
+</div>
+<h5>Últimos pedidos pagados</h5>
+<div class="table-responsive">
+    <table class="table glass-card">
+        <thead>
+            <tr><th>ID</th><th>Usuario</th><th>Fecha</th><th>Total</th><th>Estado</th></tr>
+        </thead>
+        <tbody>
+            {% for p in pedidos %}
+            <tr>
+                <td>#{{ p.ID }}</td>
+                <td>{{ p.ID_USUARIO }}</td>
+                <td>{{ p.FECHA.strftime('%d/%m/%Y') }}</td>
+                <td>Bs. {{ "%.2f"|format(p.TOTAL) }}</td>
+                <td>{{ p.ESTADO }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

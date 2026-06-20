@@ -1,0 +1,41 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Cliente {{ usuario.NOMBRE }}{% endblock %}
+{% block content %}
+<h2 class="mb-4">{{ usuario.NOMBRE }} {{ usuario.APELLIDO }}</h2>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="glass-card p-3 mb-3">
+            <h5>Información personal</h5>
+            <p><strong>Cédula:</strong> {{ usuario.ID_USUARIO }}</p>
+            <p><strong>Email:</strong> {{ usuario.EMAIL }}</p>
+            <p><strong>Teléfono:</strong> {{ usuario.TELEFONO }}</p>
+            <p><strong>Registrado:</strong> {{ usuario.ID }}</p>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="glass-card p-3">
+            <h5>Historial de pedidos</h5>
+            {% if pedidos %}
+            <table class="table table-sm">
+                <thead>
+                    <tr><th>ID</th><th>Fecha</th><th>Total</th><th>Estado</th></tr>
+                </thead>
+                <tbody>
+                    {% for pedido in pedidos %}
+                    <tr>
+                        <td>#{{ pedido.ID }}</td>
+                        <td>{{ pedido.FECHA.strftime('%d/%m/%Y') }}</td>
+                        <td>Bs. {{ "%.2f"|format(pedido.TOTAL) }}</td>
+                        <td><span class="badge bg-{{ 'warning' if pedido.ESTADO == 'Pendiente de pago' else 'info' }}">{{ pedido.ESTADO }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="text-muted">No ha realizado pedidos aún.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

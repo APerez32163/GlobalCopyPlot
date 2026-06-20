@@ -1,0 +1,421 @@
+/* ========== MODO OSCURO – PANELES ADMIN & OPERADOR (DEFINITIVO) ========== */
+
+/* Fondo general y texto */
+html.dark-mode body,
+body.dark-mode {
+    background-color: #1a1d23;
+    color: #e0e0e0;
+}
+
+/* Sidebar */
+html.dark-mode .sidebar,
+body.dark-mode .sidebar {
+    background: rgba(30, 33, 40, 0.85);
+    backdrop-filter: blur(20px);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+html.dark-mode .sidebar .nav-link,
+body.dark-mode .sidebar .nav-link {
+    color: #bbb !important;
+}
+html.dark-mode .sidebar .nav-link:hover,
+html.dark-mode .sidebar .nav-link.active,
+body.dark-mode .sidebar .nav-link:hover,
+body.dark-mode .sidebar .nav-link.active {
+    background: rgba(91, 155, 213, 0.2);
+    color: #fff !important;
+}
+
+/* Tarjetas de vidrio */
+html.dark-mode .glass-card,
+body.dark-mode .glass-card {
+    background: rgba(30, 33, 40, 0.7);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ddd;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+html.dark-mode .glass-card:hover,
+body.dark-mode .glass-card:hover {
+    background: rgba(40, 44, 52, 0.8);
+}
+
+/* Tablas */
+html.dark-mode .table,
+body.dark-mode .table {
+    color: #ddd;
+    --bs-table-bg: transparent;
+    --bs-table-striped-bg: rgba(255, 255, 255, 0.03);
+    --bs-table-hover-bg: rgba(255, 255, 255, 0.075);
+}
+html.dark-mode .table thead th,
+body.dark-mode .table thead th {
+    border-bottom-color: #333;
+    color: #aaa;
+}
+html.dark-mode .table td,
+html.dark-mode .table th,
+body.dark-mode .table td,
+body.dark-mode .table th {
+    border-color: #2a2d35;
+}
+
+/* Legibilidad de texto en tarjetas y tablas */
+html.dark-mode .glass-card *,
+html.dark-mode .table *,
+html.dark-mode .card *,
+body.dark-mode .glass-card *,
+body.dark-mode .table *,
+body.dark-mode .card * {
+    color: #e0e0e0;
+}
+html.dark-mode strong,
+html.dark-mode b,
+body.dark-mode strong,
+body.dark-mode b {
+    color: #ffffff;
+}
+
+/* Enlaces */
+html.dark-mode a,
+body.dark-mode a {
+    color: #5b9bd5;
+}
+html.dark-mode a:hover,
+body.dark-mode a:hover {
+    color: #7bb3e0;
+}
+
+/* Formularios */
+html.dark-mode .form-control,
+html.dark-mode .form-select,
+html.dark-mode input[type="text"],
+html.dark-mode input[type="number"],
+html.dark-mode input[type="email"],
+html.dark-mode input[type="password"],
+html.dark-mode input[type="date"],
+html.dark-mode input[type="file"],
+html.dark-mode textarea,
+body.dark-mode .form-control,
+body.dark-mode .form-select,
+body.dark-mode input[type="text"],
+body.dark-mode input[type="number"],
+body.dark-mode input[type="email"],
+body.dark-mode input[type="password"],
+body.dark-mode input[type="date"],
+body.dark-mode input[type="file"],
+body.dark-mode textarea {
+    background-color: #2a2d35;
+    color: #e0e0e0;
+    border-color: #3a3d45;
+}
+html.dark-mode .form-control:focus,
+html.dark-mode .form-select:focus,
+body.dark-mode .form-control:focus,
+body.dark-mode .form-select:focus {
+    background-color: #32353e;
+    border-color: #5b9bd5;
+    box-shadow: 0 0 0 0.2rem rgba(91, 155, 213, 0.25);
+    color: #fff;
+}
+html.dark-mode .form-control::placeholder,
+body.dark-mode .form-control::placeholder {
+    color: #888;
+}
+
+/* Inputs del calendario en reportes */
+html.dark-mode #fechaDesdeVisible,
+html.dark-mode #fechaHastaVisible,
+body.dark-mode #fechaDesdeVisible,
+body.dark-mode #fechaHastaVisible {
+    background-color: #2a2d35 !important;
+    color: #e0e0e0 !important;
+    border-color: #3a3d45 !important;
+}
+
+/* Botones */
+html.dark-mode .btn-outline-primary,
+body.dark-mode .btn-outline-primary {
+    color: #5b9bd5;
+    border-color: #5b9bd5;
+}
+html.dark-mode .btn-outline-primary:hover,
+body.dark-mode .btn-outline-primary:hover {
+    background-color: #5b9bd5;
+    color: #fff;
+}
+html.dark-mode .btn-outline-secondary,
+body.dark-mode .btn-outline-secondary {
+    color: #aaa;
+    border-color: #555;
+}
+html.dark-mode .btn-outline-secondary:hover,
+body.dark-mode .btn-outline-secondary:hover {
+    background-color: #555;
+    color: #fff;
+}
+html.dark-mode .btn-outline-danger,
+body.dark-mode .btn-outline-danger {
+    color: #ff6b6b;
+    border-color: #ff6b6b;
+}
+html.dark-mode .btn-outline-danger:hover,
+body.dark-mode .btn-outline-danger:hover {
+    background-color: #ff6b6b;
+    color: #fff;
+}
+html.dark-mode .btn-solicitar,
+body.dark-mode .btn-solicitar {
+    background-color: #5b9bd5;
+    border-color: #5b9bd5;
+    color: #fff !important;
+}
+
+/* Selector de período (Ingresos) */
+html.dark-mode .periodo-btn,
+body.dark-mode .periodo-btn {
+    color: #ccc;
+    background: transparent;
+}
+html.dark-mode .periodo-btn.active,
+body.dark-mode .periodo-btn.active {
+    background: var(--azul-claro, #5b9bd5);
+    color: #fff;
+    font-weight: 600;
+}
+html.dark-mode .periodo-btn:hover,
+body.dark-mode .periodo-btn:hover {
+    background: rgba(91, 155, 213, 0.25);
+    color: #fff;
+}
+
+/* Títulos */
+html.dark-mode h1,
+html.dark-mode h2,
+html.dark-mode h3,
+html.dark-mode h4,
+html.dark-mode h5,
+html.dark-mode h6,
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode h5,
+body.dark-mode h6 {
+    color: #f0f0f0;
+}
+html.dark-mode .text-muted,
+body.dark-mode .text-muted {
+    color: #999 !important;
+}
+html.dark-mode .badge,
+body.dark-mode .badge {
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Offcanvas */
+html.dark-mode .offcanvas,
+body.dark-mode .offcanvas {
+    background-color: #1e2128;
+    color: #ddd;
+}
+
+/* Calendario personalizado */
+.calendario-container {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 500;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 20px;
+    padding: 14px;
+    margin-top: 6px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+    font-family: "Inter", sans-serif;
+    max-width: 320px;
+}
+.calendario-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+.cal-titulo {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--azul-oscuro, #2f5496);
+    text-transform: capitalize;
+}
+.cal-nav-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(91, 155, 213, 0.1);
+    border: none;
+    color: var(--azul-oscuro, #2f5496);
+    font-size: 0.8rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.cal-nav-btn:hover {
+    background: var(--azul-claro, #5b9bd5);
+    color: #fff;
+}
+.cal-dias-semana {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--azul-oscuro, #2f5496);
+    margin-bottom: 6px;
+}
+.cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    text-align: center;
+}
+.cal-dia {
+    padding: 8px 0;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    color: #333;
+}
+.cal-dia:hover {
+    background: rgba(91, 155, 213, 0.15);
+}
+.cal-dia.deshabilitado {
+    color: #ccc;
+    pointer-events: none;
+}
+.cal-dia.seleccionado {
+    background: var(--azul-claro, #5b9bd5);
+    color: #fff;
+}
+.cal-dia.hoy {
+    border: 1px solid var(--azul-claro, #5b9bd5);
+}
+
+/* Modo oscuro para el calendario */
+html.dark-mode .calendario-container,
+body.dark-mode .calendario-container {
+    background: rgba(30, 33, 40, 0.95);
+    border-color: #444;
+    color: #ddd;
+}
+html.dark-mode .cal-titulo,
+body.dark-mode .cal-titulo {
+    color: #fff;
+}
+html.dark-mode .cal-dias-semana,
+body.dark-mode .cal-dias-semana {
+    color: #aaa;
+}
+html.dark-mode .cal-dia,
+body.dark-mode .cal-dia {
+    color: #ccc;
+}
+html.dark-mode .cal-dia:hover,
+body.dark-mode .cal-dia:hover {
+    background: rgba(91, 155, 213, 0.3);
+}
+html.dark-mode .cal-dia.deshabilitado,
+body.dark-mode .cal-dia.deshabilitado {
+    color: #666;
+}
+
+/* Botón de alternancia (siempre visible) */
+.dark-mode-toggle {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #2f5496;
+    color: #fff;
+    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1050;
+    border: none;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s;
+}
+.dark-mode-toggle:hover {
+    background: #1d3a6b;
+    transform: scale(1.08);
+}
+html.dark-mode .dark-mode-toggle,
+body.dark-mode .dark-mode-toggle {
+    background: #ffd700;
+    color: #1a1d23;
+}
+/* ========== TARJETAS DE SERVICIO DE IMPRESIÓN (CATÁLOGOS) ========== */
+html.dark-mode .tab-pane#serviciosImpresion .card.bg-light,
+body.dark-mode .tab-pane#serviciosImpresion .card.bg-light {
+    background: rgba(30, 33, 40, 0.75) !important;
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ddd;
+}
+
+html.dark-mode .tab-pane#serviciosImpresion .card .fw-bold,
+body.dark-mode .tab-pane#serviciosImpresion .card .fw-bold {
+    color: #ffffff;
+}
+
+html.dark-mode .tab-pane#serviciosImpresion .card .text-muted,
+body.dark-mode .tab-pane#serviciosImpresion .card .text-muted {
+    color: #aaa !important;
+}
+
+html.dark-mode .tab-pane#serviciosImpresion .card ul li,
+body.dark-mode .tab-pane#serviciosImpresion .card ul li {
+    color: #ccc;
+}
+
+html.dark-mode .tab-pane#serviciosImpresion .btn-outline-primary,
+body.dark-mode .tab-pane#serviciosImpresion .btn-outline-primary {
+    border-color: #5b9bd5;
+    color: #5b9bd5;
+}
+html.dark-mode .tab-pane#serviciosImpresion .btn-outline-primary:hover,
+body.dark-mode .tab-pane#serviciosImpresion .btn-outline-primary:hover {
+    background: #5b9bd5;
+    color: #fff;
+}
+
+html.dark-mode .tab-pane#serviciosImpresion .btn-outline-danger,
+body.dark-mode .tab-pane#serviciosImpresion .btn-outline-danger {
+    border-color: #ff6b6b;
+    color: #ff6b6b;
+}
+html.dark-mode .tab-pane#serviciosImpresion .btn-outline-danger:hover,
+body.dark-mode .tab-pane#serviciosImpresion .btn-outline-danger:hover {
+    background: #ff6b6b;
+    color: #fff;
+}
+html.dark-mode #servicios .card.bg-light,
+body.dark-mode #servicios .card.bg-light {
+    background: rgba(30, 33, 40, 0.75) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ddd;
+}
+html.dark-mode #servicios .card .fw-bold,
+body.dark-mode #servicios .card .fw-bold {
+    color: #ffffff;
+}
+html.dark-mode #servicios .card .text-muted,
+body.dark-mode #servicios .card .text-muted {
+    color: #aaa !important;
+}

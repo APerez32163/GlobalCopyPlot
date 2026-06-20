@@ -1,0 +1,294 @@
+/* Paleta */
+:root {
+    --azul-claro: #5B9BD5;
+    --beige: #F5F0E1;
+    --blanco: #FFFFFF;
+    --texto: #333333;
+    --dorado: #C9A96E;
+    --azul-oscuro: #2F5496;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--blanco);
+    color: var(--texto);
+}
+
+/* Offcanvas */
+.glass-offcanvas .offcanvas-title {
+    color: var(--azul-oscuro);
+    font-weight: 700;
+}
+.glass-offcanvas .nav-link {
+    color: var(--texto) !important;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 12px;
+    transition: background 0.2s;
+}
+.glass-offcanvas .nav-link:hover {
+    background: rgba(91,155,213,0.15);
+}
+
+/* Botones del menú offcanvas (se usan en el offcanvas del nuevo index) */
+.btn-menu-item {
+    display: block;
+    width: 100%;
+    padding: 0.6rem 1.5rem;
+    margin-bottom: 0.5rem;
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 30px;
+    color: var(--texto);
+    font-weight: 500;
+    text-align: center;
+    transition: all 0.25s ease;
+    text-decoration: none;
+}
+.btn-menu-item:hover {
+    background: rgba(91, 155, 213, 0.2);
+    border-color: var(--azul-claro);
+    color: var(--azul-oscuro);
+    transform: translateY(-2px);
+}
+
+/* Glass panel horarios (se usa en el hero nuevo) */
+.glass-panel {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    color: #fff;
+    text-align: left;
+    max-width: 100%;
+}
+.glass-panel h5 { color: #fff; }
+.glass-panel p { color: rgba(255,255,255,0.9); margin-bottom: 5px; }
+
+/* Secciones */
+.bg-beige { background-color: var(--beige); }
+
+/* Botón Solicitar (usado en panel admin y otras secciones) */
+.btn-solicitar {
+    background-color: var(--azul-claro);
+    color: #fff;
+    border-radius: 25px;
+    padding: 0.4rem 1.5rem;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    border: none;
+}
+.btn-solicitar:hover {
+    background-color: var(--azul-oscuro);
+    transform: scale(1.03);
+    color: #fff;
+    box-shadow: 0 5px 15px rgba(47,84,150,0.4);
+}
+
+/* Footer */
+footer {
+    background: linear-gradient(135deg, var(--azul-claro), var(--azul-oscuro));
+    color: var(--blanco);
+}
+
+a {
+    color: var(--azul-claro);
+    text-decoration: none;
+}
+a:hover { color: var(--azul-oscuro); }
+
+/* Formularios (login, registro, etc.) */
+.form-moderno .form-control {
+    border-radius: 30px;
+    padding: 12px 20px;
+    border: 1px solid #e0e0e0;
+    background-color: #f9f7f2;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+.form-moderno .form-control:focus {
+    border-color: var(--azul-claro);
+    box-shadow: 0 0 10px rgba(91,155,213,0.3);
+    background-color: #fff;
+}
+.form-moderno .btn-primary {
+    border-radius: 30px;
+    padding: 12px;
+    background-color: var(--azul-claro);
+    border: none;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
+.form-moderno .btn-primary:hover {
+    background-color: var(--azul-oscuro);
+    transform: scale(1.02);
+    box-shadow: 0 8px 20px rgba(47,84,150,0.3);
+}
+.card {
+    border-radius: 25px;
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255,255,255,0.6);
+}
+
+/* Menú inferior (usado en imprimir.html, mis_solicitudes.html) */
+.menu-inferior {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    background: rgba(91, 155, 213, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255,255,255,0.4);
+    padding: 8px 10px 12px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1000;
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
+}
+.menu-inferior a {
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    font-size: 0.7rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    opacity: 0.7;
+    transition: opacity 0.3s, transform 0.3s;
+}
+.menu-inferior a i {
+    font-size: 1.3rem;
+    margin-bottom: 2px;
+}
+.menu-inferior a.active {
+    opacity: 1;
+    transform: translateY(-2px);
+}
+
+/* Selector de período (panel admin) */
+.periodo-selector {
+    display: flex;
+    gap: 6px;
+    background: rgba(255,255,255,0.5);
+    backdrop-filter: blur(8px);
+    border-radius: 30px;
+    padding: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+.periodo-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 14px;
+    border-radius: 25px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: none;
+    color: #555;
+    transition: all 0.25s ease;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+.periodo-btn i { font-size: 0.8rem; }
+.periodo-btn:hover {
+    background: rgba(91, 155, 213, 0.15);
+    color: var(--azul-oscuro);
+    transform: translateY(-1px);
+}
+.periodo-btn.active {
+    background: var(--azul-claro);
+    color: white;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    font-weight: 600;
+}
+.periodo-btn.active i { color: white; }
+
+/* Tarjetas de vidrio (panel admin, etc.) */
+.glass-card {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 20px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.glass-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Mensajes flash (login, registro, etc.) */
+.flash-container {
+    max-width: 450px;
+    margin: 0 auto 20px auto;
+    width: 100%;
+}
+.flash-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 18px;
+    margin-bottom: 12px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+    color: #222;
+    font-weight: 500;
+    position: relative;
+    animation: flashSlideIn 0.3s ease;
+}
+.flash-icon {
+    font-size: 1.4rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+.flash-success .flash-icon { color: #2e7d32; }
+.flash-danger .flash-icon, .flash-error .flash-icon { color: #c62828; }
+.flash-warning .flash-icon { color: #f57f17; }
+.flash-info .flash-icon { color: #1565c0; }
+.flash-content {
+    flex: 1;
+    line-height: 1.4;
+    font-size: 0.95rem;
+}
+.flash-close-btn {
+    cursor: pointer;
+    font-size: 1.2rem;
+    opacity: 0.7;
+    flex-shrink: 0;
+    padding: 0 5px;
+    transition: opacity 0.2s;
+    color: #444;
+}
+.flash-close-btn:hover {
+    opacity: 1;
+    color: #000;
+}
+@keyframes flashSlideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

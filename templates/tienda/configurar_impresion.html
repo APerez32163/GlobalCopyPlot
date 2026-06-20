@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Configurar impresión · GlobalCopyPlot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive-imprimir.css') }}">
+    <style>
+        :root {
+            --azul-claro: #5B9BD5;
+            --azul-oscuro: #2F5496;
+            --beige: #F5F0E1;
+            --glass-bg: rgba(255, 255, 255, 0.45);
+            --glass-border: rgba(255, 255, 255, 0.7);
+            --glass-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+            --texto: #2c3e50;
+            --texto-secundario: #5a6c7d;
+        }
+
+        body {
+            background: url("{{ url_for('static', filename='img/fondoimprimir.png') }}") center/cover no-repeat;
+            background-attachment: fixed;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: var(--texto);
+        }
+
+        .container {
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 32px;
+            padding: 28px 24px;
+            box-shadow: var(--glass-shadow);
+        }
+
+        h2 {
+            font-weight: 700;
+            font-size: 1.9rem;
+            letter-spacing: -0.5px;
+            color: var(--azul-oscuro);
+            margin-bottom: 1.2rem;
+        }
+
+        .archivo-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 20px;
+            padding: 14px 18px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+
+        .archivo-info i {
+            font-size: 2rem;
+            color: var(--azul-claro);
+        }
+
+        .archivo-info .detalle {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .archivo-info .nombre-archivo {
+            font-weight: 600;
+            color: var(--texto);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+            max-width: 100%;
+        }
+
+        .archivo-info .paginas-badge {
+            background: var(--azul-claro);
+            color: white;
+            border-radius: 20px;
+            padding: 2px 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 4px;
+        }
+
+        .servicio-card {
+            background: rgba(255,255,255,0.55);
+            backdrop-filter: blur(12px);
+            border: 1px solid transparent; 
+            border-radius: 24px;
+            padding: 18px 16px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
+        }
+        .servicio-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 24px;
+            padding: 2px;
+            background: linear-gradient(135deg, rgba(91,155,213,0.4), rgba(47,84,150,0.4));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            transition: all 0.3s;
+        }
+
+        .servicio-card:hover::before,
+        .servicio-card.seleccionado::before {
+            background: linear-gradient(135deg, #5B9BD5, #2F5496, #5B9BD5);
+            padding: 2px;
+        }
+
+        .servicio-card:hover {
+            background: rgba(255,255,255,0.75);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+        }
+
+        .servicio-card.seleccionado {
+            background: rgba(91,155,213,0.08);
+            box-shadow: 0 0 15px rgba(91,155,213,0.3);
+        }
+
+        .servicio-card input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .servicio-titulo {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--azul-oscuro);
+        }
+
+        .servicio-descripcion {
+            font-size: 0.85rem;
+            color: var(--texto-secundario);
+            margin: 4px 0 10px;
+        }
+
+        .tamanos {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .tamano-opcion {
+            position: relative;
+        }
+
+        .tamano-opcion input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .tamano-opcion label {
+            background: rgba(255,255,255,0.7);
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 40px;
+            padding: 7px 16px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--texto);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tamano-opcion input:checked + label {
+            background: var(--azul-claro);
+            color: white;
+            border-color: var(--azul-claro);
+            box-shadow: 0 4px 10px rgba(91,155,213,0.3);
+        }
+
+        .seccion-titulo {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin: 28px 0 12px;
+            color: var(--azul-oscuro);
+        }
+
+        .extras-lista {
+            background: rgba(255,255,255,0.5);
+            border-radius: 20px;
+            padding: 10px 16px;
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+
+        .extra-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.04);
+        }
+
+        .extra-item:last-child {
+            border-bottom: none;
+        }
+
+        .extra-item label {
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        .btn-guardar {
+            background: linear-gradient(135deg, #5B9BD5, #2F5496);
+            border: none;
+            border-radius: 50px;
+            padding: 14px 20px;
+            font-weight: 700;
+            font-size: 1rem;
+            color: white;
+            width: 100%;
+            margin-top: 28px;
+            box-shadow: 0 8px 18px rgba(47,84,150,0.25);
+            transition: all 0.3s;
+        }
+
+        .btn-guardar:hover {
+            background: linear-gradient(135deg, #2F5496, #1e3c6e);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(47,84,150,0.35);
+        }
+
+        .btn-volver {
+            background: rgba(255,255,255,0.7);
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 50px;
+            padding: 12px 20px;
+            font-weight: 600;
+            color: var(--azul-oscuro);
+            transition: all 0.3s;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 28px;
+        }
+
+        .btn-volver:hover {
+            background: white;
+            border-color: var(--azul-claro);
+        }
+        .calc-fab {
+            position: fixed;
+            bottom: 100px;  /* más arriba para no pegar con el menú */
+            left: 20px;
+            width: 48px;    /* más pequeño */
+            height: 48px;
+            border-radius: 50%;
+            background: var(--azul-claro);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            cursor: pointer;
+            z-index: 2000;
+            user-select: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .calc-fab:hover {
+            transform: scale(1.08);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        .calc-panel {
+            position: fixed;
+            bottom: 160px;  /* justo encima del botón */
+            left: 20px;
+            width: 260px;   /* más estrecho */
+            max-height: 420px;
+            overflow-y: auto;
+            background: rgba(255,255,255,0.55); /* más transparente */
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.7);
+            border-radius: 24px;
+            padding: 14px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            z-index: 1999;
+            display: none;
+        }
+        .calc-panel.open {
+            display: block;
+        }
+        .calc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .calc-title {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--azul-oscuro);
+        }
+        .calc-close {
+            background: none;
+            border: none;
+            font-size: 1.4rem;
+            cursor: pointer;
+            color: #888;
+            line-height: 1;
+        }
+        .calc-display {
+            background: rgba(0,0,0,0.05);
+            border-radius: 12px;
+            padding: 8px;
+            font-size: 1.3rem;
+            text-align: right;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #1a1a2e;
+            min-height: 40px;
+            word-break: break-all;
+        }
+        .calc-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+        }
+        .calc-btn {
+            background: rgba(255,255,255,0.7);
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 10px;
+            padding: 8px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #333;
+            font-weight: 500;
+        }
+        .calc-btn:hover {
+            background: rgba(91,155,213,0.15);
+            border-color: var(--azul-claro);
+        }
+        .calc-op {
+            color: var(--azul-oscuro);
+            font-weight: 700;
+        }
+        .calc-equal {
+            background: var(--azul-claro);
+            color: white;
+            font-weight: 700;
+            border: none;
+        }
+        .calc-equal:hover {
+            background: var(--azul-oscuro);
+            color: white;
+        }
+        .calc-tabs .nav-link {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 15px;
+            margin-right: 4px;
+            color: #555;
+            background: transparent;
+            border: 1px solid transparent;
+        }
+        .calc-tabs .nav-link.active {
+            background: var(--azul-claro);
+            color: white;
+            border-color: var(--azul-claro);
+        }
+        /* Botón Actualizar personalizado */
+        .btn-actualizar {
+            background: #fff;
+            color: var(--azul-oscuro);
+            border: 2px solid var(--azul-claro);
+            border-radius: 20px;
+            padding: 5px 14px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-actualizar:hover {
+            background: var(--azul-claro);
+            color: white;
+            border-color: var(--azul-claro);
+        }
+
+        .calc-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        .calc-tab-btn {
+            flex: 1;
+            padding: 6px;
+            font-size: 0.75rem;
+            border-radius: 15px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: #555;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .calc-tab-btn.active {
+            background: var(--azul-claro);
+            color: white;
+            border-color: var(--azul-claro);
+        }
+        .tab-pane-calc {
+            display: none;
+        }
+        .tab-pane-calc.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="glass-card">
+            <h2>Configurar impresión</h2>
+
+            <!-- Información del archivo -->
+            <div class="archivo-info">
+                <i class="fas fa-file-alt"></i>
+                <div class="detalle">
+                    <span class="nombre-archivo">{{ archivo_nombre }}</span>
+                    <span class="paginas-badge">{{ pedido.PAGINAS }} pág(s)</span>
+                </div>
+            </div>
+
+            <form method="POST" action="{{ url_for('configurar_impresion', pedido_id=pedido.ID) }}">
+                <div class="seccion-titulo">Selecciona el servicio</div>
+                {% for srv in servicios %}
+                <div class="servicio-card" onclick="seleccionarServicio(this, {{ srv.ID }})">
+                    <input type="radio" name="servicio_id" value="{{ srv.ID }}" id="serv{{ srv.ID }}" {% if pedido.SERVICIO_ID == srv.ID %}checked{% endif %}>
+                    <div class="servicio-titulo">{{ srv.TITULO }}</div>
+                    {% if srv.DESCRIPCION %}<div class="servicio-descripcion">{{ srv.DESCRIPCION }}</div>{% endif %}
+                    <div class="tamanos">
+                        {% for t in srv.tamanos %}
+                        <div class="tamano-opcion">
+                            <input type="radio" name="tamano_nombre" value="{{ t.NOMBRE }}" id="tam{{ t.ID }}" data-precio="{{ t.PRECIO }}"
+                                   {% if pedido.TAMANO == t.NOMBRE %}checked{% endif %}>
+                            <label for="tam{{ t.ID }}">{{ t.NOMBRE }} · {{ "%.2f"|format(t.PRECIO) }} Bs.</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+
+                <div class="d-flex gap-2 mt-3">
+                    <a href="/imprimir?pedido_id={{ pedido.ID }}" class="btn-volver">
+                        <i class="fas fa-arrow-left me-2"></i> Volver
+                    </a>
+                    <button type="submit" class="btn-guardar" style="flex: 1;">
+                        <i class="fas fa-save me-2"></i> Guardar configuración
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Mini calculadora flotante -->
+    <div id="calc-fab" class="calc-fab">
+        <i class="fas fa-calculator"></i>
+    </div>
+
+    <div id="calc-panel" class="calc-panel glass-card">
+        <div class="calc-header">
+            <span class="calc-title">Calculadora</span>
+            <button type="button" class="calc-close" id="calc-close">&times;</button>
+        </div>
+        
+        <!-- Botones de pestaña manuales -->
+        <div class="calc-tabs">
+            <button class="calc-tab-btn active" data-tab="basica">Básica</button>
+            <button class="calc-tab-btn" data-tab="presupuesto">Presupuesto</button>
+        </div>
+
+        <!-- Contenido de pestañas -->
+        <div class="tab-content" id="calc-tab-content">
+            <!-- Calculadora básica -->
+            <div class="tab-pane-calc active" id="calc-basica">
+                <div class="calc-display" id="calc-display">0</div>
+                <div class="calc-buttons">
+                    <button class="calc-btn" onclick="calcInput('7')">7</button>
+                    <button class="calc-btn" onclick="calcInput('8')">8</button>
+                    <button class="calc-btn" onclick="calcInput('9')">9</button>
+                    <button class="calc-btn calc-op" onclick="calcInput('/')">÷</button>
+                    <button class="calc-btn" onclick="calcInput('4')">4</button>
+                    <button class="calc-btn" onclick="calcInput('5')">5</button>
+                    <button class="calc-btn" onclick="calcInput('6')">6</button>
+                    <button class="calc-btn calc-op" onclick="calcInput('*')">×</button>
+                    <button class="calc-btn" onclick="calcInput('1')">1</button>
+                    <button class="calc-btn" onclick="calcInput('2')">2</button>
+                    <button class="calc-btn" onclick="calcInput('3')">3</button>
+                    <button class="calc-btn calc-op" onclick="calcInput('-')">−</button>
+                    <button class="calc-btn" onclick="calcInput('0')">0</button>
+                    <button class="calc-btn" onclick="calcInput('.')">.</button>
+                    <button class="calc-btn calc-equal" onclick="calcCalculate()">=</button>
+                    <button class="calc-btn calc-op" onclick="calcInput('+')">+</button>
+                </div>
+                <button class="btn btn-sm btn-outline-secondary w-100 mt-2" onclick="calcClear()">C</button>
+            </div>
+
+            <!-- Presupuesto -->
+            <div class="tab-pane-calc" id="calc-presupuesto">
+                <div id="calc-presupuesto-content" class="p-2 text-center">
+                    <p class="text-muted" id="calc-presupuesto-msg">Selecciona un servicio y tamaño para ver el presupuesto.</p>
+                    <h4 class="text-primary fw-bold" id="calc-presupuesto-total" style="display:none;"></h4>
+                    <button class="btn btn-actualizar btn-sm mt-2" onclick="actualizarPresupuesto()">
+                        <i class="fas fa-sync-alt me-1"></i> Actualizar presupuesto
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Selección de tarjeta
+        function seleccionarServicio(card, servicioId) {
+            document.querySelectorAll('.servicio-card').forEach(c => c.classList.remove('seleccionado'));
+            card.classList.add('seleccionado');
+            document.getElementById('serv' + servicioId).checked = true;
+        }
+
+        // Marcar la tarjeta seleccionada al cargar (si ya había selección previa)
+        document.addEventListener('DOMContentLoaded', function() {
+            const radioSeleccionado = document.querySelector('input[name="servicio_id"]:checked');
+            if (radioSeleccionado) {
+                const card = radioSeleccionado.closest('.servicio-card');
+                if (card) card.classList.add('seleccionado');
+            }
+        });
+
+        // ========== Calculadora flotante ==========
+        (function() {
+            const fab = document.getElementById('calc-fab');
+            const panel = document.getElementById('calc-panel');
+            const closeBtn = document.getElementById('calc-close');
+            let isOpen = false;
+
+            fab.addEventListener('click', function() {
+                isOpen = !isOpen;
+                panel.classList.toggle('open', isOpen);
+                if (isOpen && document.getElementById('calc-presupuesto').classList.contains('active')) {
+                    actualizarPresupuesto();
+                }
+            });
+
+            closeBtn.addEventListener('click', function() {
+                isOpen = false;
+                panel.classList.remove('open');
+            });
+
+            // Cambio de pestañas manual
+            const tabBtns = document.querySelectorAll('.calc-tab-btn');
+            const tabPanes = document.querySelectorAll('.tab-pane-calc');
+
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const targetTab = this.getAttribute('data-tab');
+                    // Desactivar todos
+                    tabBtns.forEach(b => b.classList.remove('active'));
+                    tabPanes.forEach(p => p.classList.remove('active'));
+                    // Activar el seleccionado
+                    this.classList.add('active');
+                    document.getElementById('calc-' + targetTab).classList.add('active');
+                    // Si es presupuesto, actualizar
+                    if (targetTab === 'presupuesto') {
+                        actualizarPresupuesto();
+                    }
+                });
+            });
+        })();
+
+        // --- Calculadora básica (sin cambios) ---
+        let calcExpression = '';
+        function calcInput(val) {
+            calcExpression += val;
+            document.getElementById('calc-display').textContent = calcExpression.replace(/\*/g, '×').replace(/\//g, '÷');
+        }
+        function calcClear() {
+            calcExpression = '';
+            document.getElementById('calc-display').textContent = '0';
+        }
+        function calcCalculate() {
+            try {
+                let expr = calcExpression.replace(/×/g, '*').replace(/÷/g, '/');
+                let result = eval(expr);
+                document.getElementById('calc-display').textContent = result;
+                calcExpression = result.toString();
+            } catch(e) {
+                document.getElementById('calc-display').textContent = 'Error';
+                calcExpression = '';
+            }
+        }
+
+        // --- Presupuesto (versión corregida) ---
+        function actualizarPresupuesto() {
+            const totalSpan = document.getElementById('calc-presupuesto-total');
+            const msg = document.getElementById('calc-presupuesto-msg');
+            if (!totalSpan || !msg) return;
+
+            const paginasElem = document.getElementById('paginasPedido');
+            const paginas = paginasElem ? parseInt(paginasElem.getAttribute('data-paginas')) || 1 : 1;
+
+            const servicioRadio = document.querySelector('input[name="servicio_id"]:checked');
+            const tamanoRadio = document.querySelector('input[name="tamano_nombre"]:checked');
+            
+            if (!servicioRadio || !tamanoRadio) {
+                msg.style.display = 'block';
+                totalSpan.style.display = 'none';
+                return;
+            }
+
+            const precioUnitario = parseFloat(tamanoRadio.getAttribute('data-precio') || 0);
+            let total = precioUnitario * paginas;
+
+            const extrasCheckboxes = document.querySelectorAll('input[name="extras[]"]:checked');
+            extrasCheckboxes.forEach(cb => {
+                const label = document.querySelector(`label[for="${cb.id}"]`);
+                if (label) {
+                    const texto = label.textContent;
+                    const match = texto.match(/\+([\d.]+)\s*Bs\./);
+                    if (match) {
+                        total += parseFloat(match[1]);
+                    }
+                }
+            });
+
+            totalSpan.textContent = 'Bs. ' + total.toFixed(2);
+            msg.style.display = 'none';
+            totalSpan.style.display = 'block';
+        }
+    </script>
+    <span id="paginasPedido" data-paginas="{{ pedido.PAGINAS }}" style="display:none;"></span>
+</body>
+</html>
