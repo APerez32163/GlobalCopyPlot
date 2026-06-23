@@ -53,9 +53,6 @@ Base de datos (estructura principal)
 
     Ejecuta python app.py y accede a http://localhost:5000.
 
-El panel de administración se accede con un usuario que tenga el campo ES_ADMIN = 1.
-El panel de operador, con ES_OPERADOR = 1.
-
 Admin = Usuario: 11111111 (8 veces 1)
         Contraseña : Aa111111.
 Operador = Usuario: 00000000 (8 veces 0)
