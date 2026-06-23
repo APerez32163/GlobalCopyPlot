@@ -54,11 +54,11 @@ Base de datos (estructura principal)
     Ejecuta python app.py y accede a http://localhost:5000.
 
 Admin = Usuario: 11111111 (8 veces 1)
-        Contraseña : Aa111111.
+        Contraseña : Aa111111.  //
 Operador = Usuario: 00000000 (8 veces 0)
-           Contraseña: Aa111111. (igual que admin)
+           Contraseña: Aa111111. (igual que admin)  //
 Cliente = Usuario: 22222222 (8 veces 2)
-          Contraseña: Aa111111. (igual que admin)
+          Contraseña: Aa111111. (igual que admin)  //
 
 El panel de administración se accede con un usuario que tenga el campo ES_ADMIN = 1.
 El panel de operador, con ES_OPERADOR = 1.
