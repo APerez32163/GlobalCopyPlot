@@ -7,7 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive-imprimir.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
     <style>
         :root {
             --azul-claro: #5B9BD5;
@@ -187,7 +187,7 @@
             transform: translateX(-50%);
             width: 85%;
             max-width: 400px;
-            background: rgba(47, 84, 150, 0.75);
+            background: rgba(90, 150, 220, 0.80);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-radius: 40px;
@@ -266,9 +266,10 @@
             <div class="upload-area" id="uploadArea">
                 <i class="fas fa-file-pdf"></i>
                 <p class="upload-title" id="uploadText">Seleccionar archivo</p>
-                <p class="upload-subtitle">PDF, Word, Excel, PowerPoint, Imagenes, Zip (Imagenes)</p>
-                <input type="file" id="archivoInput" name="archivo" 
-                       accept=".pdf,.docx,.xlsx,.xlsm,.pptx,.odt,.ods,.odp,.png,.jpg,.jpeg,.bmp,.tiff,.zip" hidden>
+                <small class="text-muted">Formatos: PDF, PowerPoint, Imágenes, ZIP. Máx. 10 docs / 20 imágenes</small>
+                <input type="file" id="archivoInput" name="archivos" multiple
+                   accept=".pdf,.pptx,.png,.jpg,.jpeg,.bmp,.tiff,.tif,.zip"
+                   hidden>
             </div>
 
             <div class="file-info" id="fileInfo">
@@ -349,14 +350,25 @@
         });
 
         function handleFileSelect() {
-            const file = archivoInput.files[0];
-            if (!file) return;
-            fileNameDisplay.innerHTML = `<i class="fas fa-file me-2"></i> ${file.name} (${formatBytes(file.size)})`;
+            const files = Array.from(archivoInput.files);
+            if (files.length === 0) return;
+
+            // Mostrar nombres de archivos seleccionados
+            fileNameDisplay.innerHTML = files.map(f =>
+                `<i class="fas fa-file me-2"></i> ${f.name} (${formatBytes(f.size)})`
+            ).join('<br>');
             fileInfo.classList.add('show');
-            uploadText.textContent = 'Archivo seleccionado';
+            uploadText.textContent = files.length > 1 ? `${files.length} archivo(s) seleccionado(s)` : 'Archivo seleccionado';
             uploadArea.style.borderColor = 'var(--azul-claro)';
             uploadArea.style.borderStyle = 'solid';
-            detectarPaginas(file);
+
+            if (files.length === 1) {
+                // Flujo original para un solo archivo
+                detectarPaginas(files[0]);
+            } else {
+                // Flujo múltiple
+                detectarPaginasMultiples(files);
+            }
         }
 
         function removeFile() {
@@ -365,26 +377,43 @@
                     .then(r => r.json())
                     .then(data => {
                         if (!data.success) {
-                            alert('No se pudo cancelar el pedido.');
+                            console.warn('El pedido no se pudo cancelar:', data.error);
                         }
                     })
-                    .catch(err => console.error(err));
-            }
-            archivoInput.value = '';
-            fileInfo.classList.remove('show');
-            resultadoDeteccion.style.display = 'none';
-            uploadText.textContent = 'Seleccionar archivo';
-            uploadArea.style.borderColor = 'rgba(91, 155, 213, 0.4)';
-            uploadArea.style.borderStyle = 'dashed';
-            uploadArea.style.pointerEvents = 'auto';
-            removeFileBtn.style.display = '';
-            btnSiguiente1.disabled = true;
-            pedidoIdActual = null;
-            if (window.location.search.includes('pedido_id')) {
-                history.replaceState(null, '', window.location.pathname);
+                    .catch(err => {
+                        console.warn('Error al cancelar el pedido:', err);
+                    })
+                    .finally(() => {
+                        // Limpiar la interfaz pase lo que pase
+                        pedidoIdActual = null;
+                        archivoInput.value = '';
+                        fileNameDisplay.innerHTML = '';
+                        fileInfo.classList.remove('show');
+                        resultadoDeteccion.style.display = 'none';
+                        uploadText.textContent = 'Seleccionar archivo';
+                        uploadArea.style.borderColor = 'rgba(91, 155, 213, 0.4)';
+                        uploadArea.style.borderStyle = 'dashed';
+                        uploadArea.style.pointerEvents = 'auto';
+                        removeFileBtn.style.display = '';
+                        btnSiguiente1.disabled = true;
+                        if (window.location.search.includes('pedido_id')) {
+                            history.replaceState(null, '', window.location.pathname);
+                        }
+                    });
+            } else {
+                // Si no hay pedido activo, simplemente limpiamos la UI
+                archivoInput.value = '';
+                fileNameDisplay.innerHTML = '';
+                fileInfo.classList.remove('show');
+                resultadoDeteccion.style.display = 'none';
+                uploadText.textContent = 'Seleccionar archivo';
+                uploadArea.style.borderColor = 'rgba(91, 155, 213, 0.4)';
+                uploadArea.style.borderStyle = 'dashed';
+                uploadArea.style.pointerEvents = 'auto';
+                removeFileBtn.style.display = '';
+                btnSiguiente1.disabled = true;
             }
         }
-
         async function detectarPaginas(file) {
             const progressDiv = document.getElementById('uploadProgress');
             const progressBar = document.getElementById('uploadProgressBar');
@@ -408,11 +437,55 @@
 
                 if (response.ok && data.success) {
                     pedidoIdActual = data.pedido_id;
+                    history.replaceState(null, '', `?pedido_id=${data.pedido_id}`);
                     txtPaginas.innerHTML = `📄 ${data.paginas} página(s) detectadas`;
                     resultadoDeteccion.style.display = 'block';
                     btnSiguiente1.disabled = false;
                     btnSiguiente1.onclick = () => {
-                        window.location.href = `/configurar/${pedidoIdActual}`;
+                        window.location.href = `/configurar/${pedidoIdActual}?reset=1`;
+                    };
+                } else {
+                    alert(data.error || 'Error al detectar páginas');
+                    removeFile();
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Error de conexión');
+                removeFile();
+            } finally {
+                setTimeout(() => { progressDiv.style.display = 'none'; progressBar.style.width = '0%'; }, 500);
+            }
+        }
+
+        async function detectarPaginasMultiples(files) {
+            const progressDiv = document.getElementById('uploadProgress');
+            const progressBar = document.getElementById('uploadProgressBar');
+            const progressText = document.getElementById('uploadProgressText');
+            resultadoDeteccion.style.display = 'none';
+            progressDiv.style.display = 'block';
+            btnSiguiente1.disabled = true;
+            progressBar.style.width = '20%';
+            progressText.textContent = 'Analizando archivos...';
+
+            const formData = new FormData();
+            files.forEach(file => formData.append('archivos[]', file));
+
+            try {
+                progressBar.style.width = '60%';
+                progressText.textContent = 'Detectando páginas...';
+                const response = await fetch('/detectar-paginas-multiples', { method: 'POST', body: formData });
+                const data = await response.json();
+                progressBar.style.width = '100%';
+                progressText.textContent = 'Completado';
+
+                if (response.ok && data.success) {
+                    pedidoIdActual = data.pedido_id;
+                    history.replaceState(null, '', `?pedido_id=${data.pedido_id}`);
+                    txtPaginas.innerHTML = `📄 ${data.paginas_totales} página(s) totales en ${files.length} archivo(s).`;
+                    resultadoDeteccion.style.display = 'block';
+                    btnSiguiente1.disabled = false;
+                    btnSiguiente1.onclick = () => {
+                        window.location.href = `/configurar-multiple/${pedidoIdActual}?reset=1`;
                     };
                 } else {
                     alert(data.error || 'Error al detectar páginas');
@@ -445,12 +518,22 @@
                 .then(r => r.json())
                 .then(data => {
                     if (data.error) {
-                        alert('Pedido no encontrado');
+                        console.warn('Pedido no disponible');
+                        pedidoIdActual = null;
+                        limpiarUI();
                         return;
                     }
-                    fileNameDisplay.innerHTML = `<i class="fas fa-file me-2"></i> ${data.archivo_nombre}`;
+                    // Mostrar nombres según cantidad de archivos
+                    if (data.archivos && data.archivos.length > 1) {
+                        fileNameDisplay.innerHTML = data.archivos.map(a =>
+                            `<i class="fas fa-file me-2"></i> ${a.nombre}`
+                        ).join('<br>');
+                        uploadText.textContent = `${data.archivos.length} archivo(s) cargados`;
+                    } else {
+                        fileNameDisplay.innerHTML = `<i class="fas fa-file me-2"></i> ${data.archivo_nombre}`;
+                        uploadText.textContent = 'Archivo ya cargado';
+                    }
                     fileInfo.classList.add('show');
-                    uploadText.textContent = 'Archivo ya cargado';
                     uploadArea.style.borderColor = 'var(--azul-claro)';
                     uploadArea.style.borderStyle = 'solid';
                     resultadoDeteccion.style.display = 'block';
@@ -458,14 +541,57 @@
                     removeFileBtn.style.display = '';
                     btnSiguiente1.disabled = false;
                     btnSiguiente1.onclick = () => {
-                        window.location.href = `/configurar/${pedidoIdActual}`;
+                        const baseUrl = data.detalle_archivos && data.detalle_archivos.length > 1 
+                            ? `/configurar-multiple/${pedidoIdActual}` 
+                            : `/configurar/${pedidoIdActual}`;
+                        // Si el pedido ya existía (volvemos de un retroceso), forzar reseteo de configuración
+                        window.location.href = baseUrl + '?reset=1';
                     };
                 })
                 .catch(err => {
-                    console.error(err);
-                    alert('Error al cargar datos del pedido');
+                    console.warn('Error al cargar el pedido:', err);
+                    pedidoIdActual = null;
+                    limpiarUI();
                 });
         }
+
+        // Función auxiliar para limpiar la interfaz (añádela al final del script)
+        function limpiarUI() {
+            archivoInput.value = '';
+            fileNameDisplay.innerHTML = '';
+            fileInfo.classList.remove('show');
+            resultadoDeteccion.style.display = 'none';
+            uploadText.textContent = 'Seleccionar archivo';
+            uploadArea.style.borderColor = 'rgba(91, 155, 213, 0.4)';
+            uploadArea.style.borderStyle = 'dashed';
+            uploadArea.style.pointerEvents = 'auto';
+            removeFileBtn.style.display = '';
+            btnSiguiente1.disabled = true;
+        }
+
+        function updateIndicator() {
+            const active = dock.querySelector('.dock-item.active');
+            if (active) {
+                const rect = active.getBoundingClientRect();
+                const dockRect = dock.getBoundingClientRect();
+                const left = rect.left - dockRect.left;
+                const width = rect.width;
+                indicator.style.left = left + 'px';
+                indicator.style.width = width + 'px';
+            }
+        }
+
+        items.forEach(item => {
+            item.addEventListener('click', function(e) {
+                items.forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                updateIndicator();
+            });
+        });
+
+        window.addEventListener('load', updateIndicator);
+        window.addEventListener('resize', updateIndicator);
+        setTimeout(updateIndicator, 100);
     </script>
     <script>
         // Deslizar el indicador bajo el ítem activo

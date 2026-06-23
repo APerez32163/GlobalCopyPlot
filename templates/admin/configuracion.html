@@ -3,6 +3,13 @@
 {% block content %}
 <h2 class="mb-4">Configuración del sistema</h2>
 
+{% if request.args.get('vaciado') == '1' %}
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="fas fa-check-circle me-2"></i> Historial vaciado correctamente.
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+</div>
+{% endif %}
+
 <form method="POST">
     <ul class="nav nav-pills mb-4" id="configTabs" role="tablist">
         <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#negocio" type="button">Datos del negocio</button></li>
@@ -93,94 +100,63 @@
         <div class="tab-pane fade" id="historial">
             <div class="glass-card p-4">
                 <h5>Administración del historial</h5>
-                <p class="text-muted">Puedes eliminar todos los pedidos, detalles, archivos y mensajes de chat del sistema. Esta acción no se puede deshacer.</p>
+                <p class="text-muted">Puedes eliminar todos los pedidos, detalles y archivos subidos del sistema. Esta acción no se puede deshacer.</p>
                 
-                <button type="button" class="btn btn-danger rounded-pill" id="btnVaciarHistorial">
+                <button type="button" class="btn btn-danger rounded-pill" onclick="vaciarHistorial()">
                     <i class="fas fa-trash-alt me-2"></i> Vaciar historial completo
                 </button>
             </div>
         </div>
 
-        <!-- Modal de confirmación para vaciar historial -->
-        <div class="modal fade" id="modalVaciarHistorial" tabindex="-1" aria-labelledby="modalVaciarHistorialLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content glass-card">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="modalVaciarHistorialLabel">Confirmar eliminación total</h5>
-                    </div>
-                    <div class="modal-body">
-                        <p>¿Estás completamente seguro de vaciar todo el historial?</p>
-                        <p class="text-danger"><strong>Se borrarán permanentemente todos los pedidos, detalles, archivos subidos y mensajes de chat.</strong></p>
-                        <p>Los usuarios y la configuración no se verán afectados.</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary rounded-pill" id="btnCancelarVaciado">Cancelar</button>
-                        <button type="button" class="btn btn-danger rounded-pill" id="btnConfirmarVaciado">
-                            <i class="fas fa-trash-alt me-1"></i> Sí, vaciar todo
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <script>
-            // Variable para almacenar la instancia del modal
-            var modalVaciar = null;
+            function vaciarHistorial() {
+                var modalHTML = `
+                    <div class="modal fade" id="modalVaciarConfirmacion" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-sm">
+                            <div class="modal-content glass-card" style="text-align: center; padding: 20px; border-radius: 20px;">
+                                <i class="fas fa-exclamation-triangle fa-3x mb-3" style="color: #dc3545;"></i>
+                                <h6 class="fw-bold mb-2">¿Vaciar todo el historial?</h6>
+                                <p class="text-muted small">Se borrarán permanentemente todos los pedidos, detalles y archivos subidos.</p>
+                                <div class="d-flex gap-2 justify-content-center mt-3">
+                                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="button" class="btn btn-danger rounded-pill px-4" id="btnConfirmarVaciadoDefinitivo">
+                                        <i class="fas fa-trash-alt me-1"></i> Sí
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
 
-            // Abrir el modal
-            document.getElementById('btnVaciarHistorial').addEventListener('click', function() {
-                modalVaciar = new bootstrap.Modal(document.getElementById('modalVaciarHistorial'), {
-                    backdrop: 'static',
-                    keyboard: false
+                var oldModal = document.getElementById('modalVaciarConfirmacion');
+                if (oldModal) oldModal.remove();
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+                var modalEl = document.getElementById('modalVaciarConfirmacion');
+                var modal = new bootstrap.Modal(modalEl);
+                modal.show();
+
+                document.getElementById('btnConfirmarVaciadoDefinitivo').addEventListener('click', function() {
+                    fetch("{{ url_for('admin_vaciar_historial') }}", {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    }).then(function(response) {
+                        if (response.ok) {
+                            // Redirigir a la misma página con el parámetro de éxito
+                            window.location.href = "{{ url_for('admin_configuracion') }}?vaciado=1";
+                        } else {
+                            alert('Error al vaciar el historial.');
+                        }
+                    }).catch(function(error) {
+                        console.error(error);
+                        alert('Error de conexión al vaciar el historial.');
+                    });
                 });
-                modalVaciar.show();
-            });
 
-            // Cancelar: cierra el modal y elimina cualquier backdrop sobrante
-            document.getElementById('btnCancelarVaciado').addEventListener('click', function() {
-                if (modalVaciar) {
-                    modalVaciar.hide();
-                    // Forzar la eliminación del backdrop después de la animación
-                    setTimeout(function() {
-                        var backdrops = document.querySelectorAll('.modal-backdrop');
-                        backdrops.forEach(function(backdrop) {
-                            backdrop.remove();
-                        });
-                        // También quitar la clase que bloquea el scroll
-                        document.body.classList.remove('modal-open');
-                        document.body.style.overflow = '';
-                        document.body.style.paddingRight = '';
-                    }, 300);
-                }
-            });
-
-            // Confirmar vaciado
-            document.getElementById('btnConfirmarVaciado').addEventListener('click', function() {
-                fetch("{{ url_for('admin_vaciar_historial') }}", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                }).then(response => {
-                    if (response.redirected) {
-                        window.location.href = response.url;
-                    } else {
-                        location.reload();
-                    }
-                }).catch(error => {
-                    alert('Error al intentar vaciar el historial.');
+                modalEl.addEventListener('hidden.bs.modal', function() {
+                    modalEl.remove();
                 });
-            });
-        </script>
-
-        <script>
-            document.getElementById('btnVaciarHistorial').addEventListener('click', function() {
-                var myModal = new bootstrap.Modal(document.getElementById('modalVaciarHistorial'), {
-                    backdrop: 'static',
-                    keyboard: false
-                });
-                myModal.show();
-            });
+            }
         </script>
     </div>
 

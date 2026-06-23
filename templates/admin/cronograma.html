@@ -1,0 +1,82 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Cronograma de Retiros{% endblock %}
+{% block content %}
+<div id="cronograma">
+    <h2 class="mb-4"><i class="fas fa-calendar-alt me-2"></i>Cronograma de Retiros</h2>
+
+    {% if cronograma %}
+        {% for grupo in cronograma %}
+            <div class="mb-4">
+                <h5 class="fw-bold mb-3" style="color: var(--azul-oscuro);">
+                    <i class="fas fa-calendar-day me-2"></i>
+                    {{ grupo.etiqueta }} — {{ grupo.fecha_formateada }}
+                </h5>
+                {% for item in grupo.pedidos %}
+                    {% set pedido = item.pedido %}
+                    {% set usuario = item.usuario %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center p-3 mb-2 rounded-4 glass-card" 
+                         style="border: none;">
+                        <div>
+                            <div class="d-flex align-items-center gap-3">
+                                <h5 class="mb-0 fw-bold">#{{ pedido.ID }}</h5>
+                                <span class="badge bg-info">{{ pedido.ESTADO }}</span>
+                                {% if pedido.CODIGO_TICKET %}
+                                    <span class="badge bg-light text-dark">{{ pedido.CODIGO_TICKET }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="mt-2">
+                                <span class="me-3"><i class="fas fa-user me-1"></i> {{ usuario.NOMBRE }} {{ usuario.APELLIDO }} ({{ usuario.ID_USUARIO }})</span>
+                                <span class="me-3"><i class="fas fa-calendar-day me-1"></i> {{ pedido.FECHA_RETIRO.strftime('%d/%m/%Y') if pedido.FECHA_RETIRO else '—' }}</span>
+                                <span><i class="fas fa-clock me-1"></i> {{ pedido.HORA_RETIRO.strftime('%I:%M %p') if pedido.HORA_RETIRO else '—' }}</span>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="{{ url_for('admin_solicitud_detalle', pedido_id=pedido.ID) }}" 
+                               class="btn btn-outline-primary rounded-pill px-3" title="Ver detalle">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <button type="button" class="btn btn-success rounded-pill px-4 btn-entregar" 
+                                    data-pedido-id="{{ pedido.ID }}" 
+                                    onclick="event.stopPropagation(); marcarEntregado(this);">
+                                <i class="fas fa-check-circle me-1"></i> Listo
+                            </button>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+            <p class="text-muted">No hay pedidos pendientes de retiro.</p>
+        </div>
+    {% endif %}
+
+    <script>
+    function marcarEntregado(btn) {
+        const pedidoId = btn.getAttribute('data-pedido-id');
+        if (!confirm('¿Marcar este pedido como entregado?')) return;
+        
+        fetch(`/admin/solicitud/${pedidoId}/actualizar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'estado=Entregado'
+        })
+        .then(response => {
+            if (response.ok) {
+                const item = btn.closest('.list-group-item');
+                item.style.transition = 'opacity 0.3s';
+                item.style.opacity = '0';
+                setTimeout(() => item.remove(), 300);
+            } else {
+                alert('Error al actualizar el estado.');
+            }
+        })
+        .catch(error => {
+            console.error(error);
+            alert('Error de conexión.');
+        });
+    }
+    </script>
+</div>
+{% endblock %}

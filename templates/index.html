@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
 
     <style>
         /* ===================== TOKENS ===================== */
@@ -45,7 +46,7 @@
             position: fixed;
             top: 0; left: 0; right: 0;
             z-index: 1000;
-            padding: 14px 0;
+            padding: 25px 0;
             background: rgba(255,255,255,0.55);
             backdrop-filter: blur(30px);
             -webkit-backdrop-filter: blur(22px);
@@ -91,27 +92,44 @@
             margin: 0;
             padding: 0;
         }
+        /* Enlaces normales del menú */
         .nav-links a {
-            font-size: 0.88rem;
-            font-weight: 500;
+            font-size: 0.95rem;
+            font-weight: 600;
             color: var(--ink-mid);
             text-decoration: none;
             padding: 7px 16px;
-            border-radius: 50px;
+            border-radius: 60px;
             transition: all var(--transition);
         }
         .nav-links a:hover {
             background: var(--azul-pale);
             color: var(--azul-deep);
         }
-        .nav-links .nav-cta {
-            background: var(--azul);
-            color: #fff;
-            padding: 8px 20px;
+        /* Botón CTA (Centro de Impresión) */
+        .btn-imprimir-nav {
+            background: linear-gradient(135deg, #5B9BD5, #2F5496) !important;
+            color: #fff !important;
+            padding: 12px 28px;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: 50px;
+            box-shadow: 0 6px 20px rgba(47,84,150,0.4);
+            transition: all 0.3s ease;
+            letter-spacing: 0.3px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
-        .nav-links .nav-cta:hover {
-            background: var(--azul-deep);
-            color: #fff;
+        .btn-imprimir-nav:hover {
+            background: linear-gradient(135deg, #2F5496, #1e3c6e) !important;
+            color: #fff !important;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(47,84,150,0.55);
+        }
+        .btn-imprimir-nav i {
+            font-size: 1.1rem;
         }
         .nav-hamburger {
             display: none;
@@ -148,7 +166,6 @@
             background: rgba(91, 155, 213, 0.12);
             color: var(--azul-deep);
         }
-        /* Estilo específico para Cerrar sesión */
         .nav-links .dropdown-item.text-danger {
             color: #dc3545;
         }
@@ -178,7 +195,7 @@
             color: var(--azul-deep);
         }
 
-        /* ---------- OFFCANVAS DEFINITIVO ---------- */
+        /* ===================== OFFCANVAS ===================== */
         .menu-offcanvas-link {
             display: flex;
             align-items: center;
@@ -197,7 +214,6 @@
             transition: all 0.25s ease;
             letter-spacing: 0.3px;
         }
-
         .menu-offcanvas-link:hover {
             background: rgba(91, 155, 213, 0.35);
             border-color: #5B9BD5;
@@ -205,8 +221,6 @@
             color: white;
             text-decoration: none;
         }
-
-        /* Enlace Destacado: Centro de Impresión */
         .menu-offcanvas-link-destacado {
             background: linear-gradient(135deg, #5B9BD5, #2F5496);
             border: 1px solid rgba(255, 255, 255, 0.5);
@@ -215,7 +229,6 @@
             padding: 14px 16px;
             margin-bottom: 12px;
         }
-
         .menu-offcanvas-link-destacado:hover {
             background: linear-gradient(135deg, #2F5496, #1e3c6e);
             border-color: white;
@@ -223,15 +236,13 @@
             transform: translateX(4px);
             color: white;
         }
-
-        /* Botón Cerrar Sesión (Rojo Elegante) */
         .btn-offcanvas-logout {
             display: flex;
             align-items: center;
             justify-content: center;
             width: 100%;
             padding: 12px;
-            background: rgba(220, 53, 69, 0.7);  /* rojo más intenso */
+            background: rgba(220, 53, 69, 0.7);
             backdrop-filter: blur(8px);
             border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 50px;
@@ -241,15 +252,12 @@
             transition: all 0.3s;
             margin-top: 8px;
         }
-
         .btn-offcanvas-logout:hover {
             background: #dc3545;
             border-color: #dc3545;
             color: white;
             text-decoration: none;
         }
-
-        /* Botón Iniciar Sesión */
         .btn-offcanvas-login {
             display: flex;
             align-items: center;
@@ -265,14 +273,13 @@
             transition: all 0.3s;
             margin-top: 8px;
         }
-
         .btn-offcanvas-login:hover {
             background: linear-gradient(135deg, #2F5496, #1e3c6e);
             color: white;
             text-decoration: none;
         }
 
-        /* ===================== RESTO DE SECCIONES  ===================== */
+        /* ===================== HERO ===================== */
         .hero {
             position: relative;
             min-height: 100vh;
@@ -287,12 +294,7 @@
         .hero-overlay {
             position: absolute;
             inset: 0;
-            background: linear-gradient(
-                135deg,
-                rgba(47,84,150,0.65) 0%,
-                rgba(91,155,213,0.45) 60%,
-                rgba(47,84,150,0.30) 100%
-            );
+            background: linear-gradient(135deg, rgba(47,84,150,0.65) 0%, rgba(91,155,213,0.45) 60%, rgba(47,84,150,0.30) 100%);
         }
         .hero-content {
             position: relative;
@@ -420,8 +422,17 @@
             z-index: 1;
             pointer-events: none;
         }
+        .hero .glass-panel {
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+        }
 
-        /* ===================== ESTADISTICAS ===================== */
+        .hero .glass-panel:hover {
+            transform: translateY(-6px);
+            border-color: rgba(91, 155, 213, 0.6);
+            box-shadow: 0 0 15px rgba(91, 155, 213, 0.4), 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        /* ===================== ESTADÍSTICAS ===================== */
         .stats-strip {
             background: var(--white);
             padding: 48px 0;
@@ -466,7 +477,7 @@
             pointer-events: none;
         }
 
-        /* ===================== CARRUSEL  ===================== */
+        /* ===================== CARRUSEL ===================== */
         #servicios {
             background: linear-gradient(180deg, var(--beige) 0%, var(--white) 100%);
             padding: 90px 0;
@@ -525,10 +536,9 @@
             width: 100%;
         }
         .servicio-card:hover {
-            transform: translateY(-6px) scale(1.02);
-            box-shadow: 0 14px 40px rgba(47,84,150,0.14);
-            z-index: 5;                       /* se superpone a las demás */
-            position: relative;
+            transform: translateY(-8px) scale(1.04);
+            box-shadow: 0 20px 40px rgba(47,84,150,0.25);
+            z-index: 10;
         }
         .servicio-card-img {
             width: 100%;
@@ -536,11 +546,6 @@
             object-fit: cover;
             object-position: center;
             display: block;
-        }
-        .servicio-card:hover {
-            transform: translateY(-8px) scale(1.04);
-            box-shadow: 0 20px 40px rgba(47,84,150,0.25);
-            z-index: 10;               
         }
         .servicio-card-overlay {
             position: absolute;
@@ -616,9 +621,6 @@
             transition: all var(--transition);
             padding: 0;
         }
-        .carousel-slide {
-            overflow: visible;   
-        }
         .carousel-dot.active {
             background: var(--azul);
             width: 24px;
@@ -636,7 +638,7 @@
             pointer-events: none;
         }
 
-        /* ===================== POR QUE NOSOTROS ===================== */
+        /* ===================== POR QUÉ NOSOTROS ===================== */
         #por-que {
             background: linear-gradient(160deg, var(--azul-deep) 0%, var(--azul) 100%);
             padding: 90px 0;
@@ -943,6 +945,10 @@
             .scroll-dot {
                 background: rgba(255,255,255,0.8);
             }
+            .carousel-slide { flex: 0 0 100%; }
+            .carousel-wrapper { padding: 0 40px; }
+            .stat-divider { display: none; }
+            footer .footer-inner { flex-direction: column; text-align: center; }
         }
 
         @media (max-width: 991px) {
@@ -950,13 +956,6 @@
             .nav-hamburger { display: block; }
             .carousel-slide { flex: 0 0 calc(50% - 12px); }
             .carousel-wrapper { padding: 0 48px; }
-        }
-        @media (max-width: 600px) {
-            .carousel-slide { flex: 0 0 100%; }
-            .carousel-wrapper { padding: 0 40px; }
-            .hero-content { padding: 100px 20px 70px; }
-            .stat-divider { display: none; }
-            footer .footer-inner { flex-direction: column; text-align: center; }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -981,7 +980,9 @@
             <li><a href="/politicas">Politicas</a></li>
 
             {% if current_user.is_authenticated %}
-                <li><a href="/imprimir" class="nav-cta"><i class="fas fa-print me-1"></i> Imprimir</a></li>
+                <a class="btn btn-imprimir-nav" href="/imprimir">
+                    <i class="fas fa-print"></i> Imprimir
+                </a>
 
                 {% if current_user.ES_ADMIN %}
                     <li><a href="/admin"><i class="fas fa-cog me-1"></i>Admin</a></li>
@@ -1104,31 +1105,43 @@
 <header class="hero">
     <div class="hero-overlay"></div>
     <div class="hero-content">
+        <!-- Mensajes controlados del index -->
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
-            <div class="flash-container" style="position: relative; z-index: 10; max-width: 500px; margin: 0 auto 30px auto;">
+            <div class="flash-container">
               {% for category, message in messages %}
-                <div class="flash-alert flash-{{ category }}">
-                  <div class="flash-icon">
-                    {% if category == 'success' %}
-                      <i class="fas fa-check-circle"></i>
-                    {% elif category == 'danger' or category == 'error' %}
-                      <i class="fas fa-times-circle"></i>
-                    {% elif category == 'warning' %}
-                      <i class="fas fa-exclamation-triangle"></i>
-                    {% else %}
-                      <i class="fas fa-info-circle"></i>
-                    {% endif %}
+                {% if category in ('success', 'info') %}
+                  <div class="flash-alert flash-{{ category }}">
+                    <div class="flash-icon">
+                      {% if category == 'success' %}
+                        <i class="fas fa-check-circle"></i>
+                      {% else %}
+                        <i class="fas fa-info-circle"></i>
+                      {% endif %}
+                    </div>
+                    <div class="flash-content">{{ message }}</div>
+                    <span class="flash-close-btn" onclick="this.closest('.flash-alert').remove()">
+                      <i class="fas fa-times"></i>
+                    </span>
                   </div>
-                  <div class="flash-content">{{ message }}</div>
-                  <span class="flash-close-btn" onclick="this.closest('.flash-alert').style.display='none'">
-                    <i class="fas fa-times"></i>
-                  </span>
-                </div>
+                {% endif %}
               {% endfor %}
             </div>
           {% endif %}
         {% endwith %}
+
+        <!-- Mensaje de cancelación de pedido -->
+        {% if request.args.get('cancelado') == '1' %}
+          <div class="flash-container">
+            <div class="flash-alert flash-danger">
+              <div class="flash-icon"><i class="fas fa-times-circle"></i></div>
+              <div class="flash-content">Pedido cancelado correctamente.</div>
+              <span class="flash-close-btn" onclick="this.closest('.flash-alert').remove()">
+                <i class="fas fa-times"></i>
+              </span>
+            </div>
+          </div>
+        {% endif %}
         <div class="row align-items-center gy-5">
             <div class="col-lg-6">
                 <img src="{{ url_for('static', filename='img/logo.png') }}" alt="GlobalCopyPlot" class="hero-logo d-block">
@@ -1146,7 +1159,7 @@
                 {% endif %}
             </div>
             <div class="col-lg-5 ms-auto">
-                <div class="glass-panel">
+                <div class="glass-panel hero-info-card">
                     <p style="margin-bottom: 12px; font-size:0.88rem; opacity:0.85;">
                         <i class="fas fa-map-marker-alt me-1"></i> {{ config.get('direccion', '') }}
                     </p>
@@ -1358,16 +1371,7 @@
 <!-- ===================== LIGHTBOX ===================== -->
 <div id="lightbox" class="lightbox" role="dialog" aria-modal="true">
     <div class="lightbox-inner">
-        <button class="lightbox-close" id="lightbox-close" aria-label="Cerrar"><i class="fas fa-times"></i></button>
         <img class="lightbox-img" id="lightbox-img" src="" alt="Imagen del servicio">
-        <div class="lightbox-footer">
-            <p>¿Te interesa este servicio? Accede al centro de impresión.</p>
-            {% if current_user.is_authenticated %}
-                <a href="/imprimir" class="btn-lightbox"><i class="fas fa-print me-2"></i>Ir a imprimir</a>
-            {% else %}
-                <a href="/login" class="btn-lightbox"><i class="fas fa-sign-in-alt me-2"></i>Iniciar sesión</a>
-            {% endif %}
-        </div>
     </div>
 </div>
 

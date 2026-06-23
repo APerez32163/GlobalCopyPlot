@@ -1,13 +1,13 @@
 import re
 import os
-import openpyxl
 import zipfile
 import tempfile
 import shutil
 import random, string
-from PyPDF2 import PdfReader
+from pypdf import PdfReader
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from sqlalchemy import text, func, extract
+from sqlalchemy.orm.attributes import flag_modified
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -17,10 +17,8 @@ from email_service import enviar_correo_restablecimiento, enviar_correo_confirma
 from extensions import db 
 from models import Usuario, Pedido, DetallePedido, ArchivoPedido, Catalogo, Configuracion, ServicioImpresion, ServicioImpresionTamano
 from functools import wraps 
-from docx import Document
 from pptx import Presentation
-from odf.opendocument import load
-from odf.text import P as ODFParagraph
+from flask_wtf.csrf import CSRFProtect
 
 def detectar_paginas(filepath, filename):
 
@@ -32,32 +30,12 @@ def detectar_paginas(filepath, filename):
             paginas = len(reader.pages)
             return paginas, None
         
-        elif ext == 'docx':
-            doc = Document(filepath)
-            paginas = max(1, len(doc.paragraphs) // 30)
-            return paginas, None
-        
         elif ext in ('png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'tif'):
             return 1, None
-        
-        elif ext in ('xlsx', 'xlsm'):
-            wb = openpyxl.load_workbook(filepath, read_only=True)
-            total_filas = 0
-            for sheet in wb.worksheets:
-                total_filas += sheet.max_row or 0
-            wb.close()
-            paginas = max(1, total_filas // 50)
-            return paginas, None
         
         elif ext == 'pptx':
             prs = Presentation(filepath)
             paginas = len(prs.slides)
-            return paginas, None
-        
-        elif ext in ('odt', 'ods', 'odp'):
-            doc = load(filepath)
-            parrafos = len(doc.getElementsByType(ODFParagraph))
-            paginas = max(1, parrafos // 25)
             return paginas, None
 
         elif ext == 'zip':
@@ -94,7 +72,7 @@ def detectar_paginas(filepath, filename):
                 shutil.rmtree(tmpdir, ignore_errors=True)
         
         else:
-            return None, f"Formato no soportado: .{ext}"
+            return None, f"Formato no soportado: .{ext}. Solo se permiten PDF, Canvas, Imágenes y ZIP de imágenes."
     
     except Exception as e:
         print(f"Error al detectar páginas de {filename}: {e}")
@@ -116,7 +94,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/globalcopyplot'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'clave_secreta_super_segura_GCPlot2025'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'clave-temporal-solo-dev')
 
 db.init_app(app)
 
@@ -628,6 +606,11 @@ def panel_admin():
         Pedido.ESTADO.in_(['Esperando validación', 'Pago confirmado'])
     ).count()
     listos = Pedido.query.filter_by(ESTADO='Listo').count()
+
+    nuevos_proceso = Pedido.query.filter(
+        Pedido.ESTADO.in_(['Esperando validación', 'Pago confirmado']),
+        Pedido.VISTO_ADMIN == False
+    ).count()
     
     return render_template('admin/dashboard.html',
                          pendientes=pendientes,
@@ -635,58 +618,8 @@ def panel_admin():
                          listos=listos,
                          ingresos=ingresos,
                          periodo_actual=periodo,
-                         nuevos_pendientes=nuevos_pendientes)
-
-@app.route('/admin/resumen')
-@login_required
-@admin_required
-def admin_resumen():
-    # Resumen general: todos los pedidos con detalles
-    pedidos = Pedido.query.order_by(Pedido.FECHA.desc()).all()
-    return render_template('admin/resumen.html', pedidos=pedidos)
-
-@app.route('/admin/estadisticas')
-@login_required
-@admin_required
-def admin_estadisticas():
-    # Datos estadísticos básicos
-    total_usuarios = Usuario.query.count()
-    pedidos_por_estado = {
-        'Pendiente de pago': Pedido.query.filter_by(ESTADO='Pendiente de pago').count(),
-        'Pago verificado': Pedido.query.filter_by(ESTADO='Pago verificado').count(),
-        'En proceso': Pedido.query.filter_by(ESTADO='En proceso').count(),
-        'Listo': Pedido.query.filter_by(ESTADO='Listo').count(),
-        'Entregado': Pedido.query.filter_by(ESTADO='Entregado').count()
-    }
-    return render_template('admin/estadisticas.html',
-                         total_usuarios=total_usuarios,
-                         total_productos=total_productos,
-                         pedidos_por_estado=pedidos_por_estado)
-
-@app.route('/admin/ingresos')
-@login_required
-@admin_required
-def admin_ingresos():
-    # Ingresos totales y por mes (simplificado)
-    ingresos_totales = db.session.query(db.func.sum(Pedido.TOTAL)).filter(Pedido.ESTADO != 'Pendiente de pago').scalar() or 0
-    # Últimos pedidos pagados
-    pedidos_pagados = Pedido.query.filter(Pedido.ESTADO != 'Pendiente de pago').order_by(Pedido.FECHA.desc()).limit(20).all()
-    return render_template('admin/ingresos.html',
-                         ingresos_totales=ingresos_totales,
-                         pedidos=pedidos_pagados)
-
-@app.route('/admin/cambiar-estado', methods=['POST'])
-@login_required
-@admin_required
-def cambiar_estado():
-    pedido_id = request.form.get('pedido_id')
-    nuevo_estado = request.form.get('estado')
-    pedido = Pedido.query.get(pedido_id)
-    if pedido:
-        pedido.ESTADO = nuevo_estado
-        db.session.commit()
-        flash('Estado actualizado.', 'success')
-    return redirect(request.referrer or url_for('admin_resumen'))
+                         nuevos_pendientes=nuevos_pendientes,
+                         nuevos_proceso=nuevos_proceso)
 
 # ------------------------------------------------------------
 # PANEL ADMIN – SOLICITUDES
@@ -723,23 +656,56 @@ def admin_solicitud_detalle(pedido_id):
     usuario = db.session.get(Usuario, pedido.ID_USUARIO)
     detalles = DetallePedido.query.filter_by(PEDIDO_ID=pedido.ID).all()
     archivos = ArchivoPedido.query.filter_by(PEDIDO_ID=pedido.ID).all()
-    
-    # Marcar como visto por el admin (ANTES de renderizar)
+
+    # Obtener la lista de archivos con sus configuraciones
+    if pedido.DETALLE_ARCHIVOS:
+        # Caso múltiple
+        archivos_info = pedido.DETALLE_ARCHIVOS
+    else:
+        # Caso único: creamos una lista de un solo elemento con los datos del pedido
+        archivos_info = [{
+            'nombre': archivos[0].NOMBRE_ARCHIVO if archivos else 'Sin archivo',
+            'paginas': pedido.PAGINAS,
+            'servicio_id': pedido.SERVICIO_ID,
+            'tamano': pedido.TAMANO,
+            'paginas_color': pedido.PAGINAS_COLOR,    
+            'comentarios': pedido.COMENTARIOS
+        }]
+
+    # Enriquecer archivos_info con los nombres de servicio y precio
+    for item in archivos_info:
+        servicio_id = item.get('servicio_id')
+        if servicio_id:
+            servicio = ServicioImpresion.query.get(servicio_id)
+            item['servicio_nombre'] = servicio.TITULO if servicio else 'Desconocido'
+            # Obtener precio del tamaño
+            tamano_nombre = item.get('tamano')
+            if tamano_nombre and servicio:
+                tamano_obj = ServicioImpresionTamano.query.filter_by(
+                    SERVICIO_ID=servicio_id, NOMBRE=tamano_nombre
+                ).first()
+                item['precio'] = float(tamano_obj.PRECIO_BN) if tamano_obj else None
+        else:
+            item['servicio_nombre'] = None
+            item['precio'] = None
+
+    # Marcar como visto por el admin
     if not pedido.VISTO_ADMIN:
         pedido.VISTO_ADMIN = True
         db.session.commit()
-    
+
     historial = [
         {"fecha": pedido.FECHA, "estado": "Pedido creado"},
         {"fecha": datetime.now(), "estado": pedido.ESTADO}
     ]
-    
+
     return render_template('admin/solicitud_detalle.html', 
                            pedido=pedido,
                            usuario=usuario,
                            detalles=detalles,
                            archivos=archivos,
-                           historial=historial)
+                           historial=historial,
+                           archivos_info=archivos_info) 
 
 @app.route('/admin/solicitud/<int:pedido_id>/confirmar-pago', methods=['POST'])
 @login_required
@@ -908,30 +874,52 @@ def admin_agregar_servicio_impresion():
     titulo = request.form.get('titulo', '').strip()
     descripcion = request.form.get('descripcion', '').strip()
     activo = 'activo' in request.form
+    es_mixto = 'es_mixto' in request.form
+    servicio_bn_id = request.form.get('servicio_bn_id', type=int) or None
+    servicio_color_id = request.form.get('servicio_color_id', type=int) or None
 
     if not titulo:
         flash('El título es obligatorio.', 'danger')
         return redirect(url_for('admin_catalogos', tab='serviciosImpresion'))
 
-    nuevo = ServicioImpresion(TITULO=titulo, DESCRIPCION=descripcion, ACTIVO=activo)
+    nuevo = ServicioImpresion(TITULO=titulo, 
+                              DESCRIPCION=descripcion, 
+                              ACTIVO=activo,
+                              ES_MIXTO=es_mixto,
+                              SERVICIO_BN_ID=servicio_bn_id,
+                              SERVICIO_COLOR_ID=servicio_color_id)
+    
     db.session.add(nuevo)
-    db.session.flush()  # para obtener nuevo.ID
+    db.session.flush() 
 
     # Procesar tamaños
     nombres = request.form.getlist('tam_nombre[]')
-    precios = request.form.getlist('tam_precio[]')
-    for nom, pre in zip(nombres, precios):
-        if nom.strip() and pre.strip():
+    precios_bn = request.form.getlist('tam_precio_bn[]')
+    precios_color = request.form.getlist('tam_precio_color[]')
+    
+    # Iterar con índice para poder acceder al precio color correcto
+    for i, nom in enumerate(nombres):
+        pre_bn = precios_bn[i] if i < len(precios_bn) else ''
+        if nom.strip() and pre_bn.strip():
             try:
-                precio = float(pre)
+                precio_bn = float(pre_bn)
             except ValueError:
-                flash('Precio inválido para el tamaño.', 'danger')
+                flash('Precio B/N inválido.', 'danger')
                 db.session.rollback()
                 return redirect(url_for('admin_catalogos', tab='serviciosImpresion'))
+            
+            # Precio color: tomar el correspondiente, o si no existe, usar el B/N
+            pre_color = precios_color[i] if i < len(precios_color) else pre_bn
+            try:
+                precio_color = float(pre_color)
+            except ValueError:
+                precio_color = precio_bn
+            
             t = ServicioImpresionTamano(
                 SERVICIO_ID=nuevo.ID,
                 NOMBRE=nom.strip(),
-                PRECIO=precio
+                PRECIO_BN=precio_bn,
+                PRECIO_COLOR=precio_color
             )
             db.session.add(t)
 
@@ -947,22 +935,34 @@ def admin_editar_servicio_impresion(servicio_id):
     servicio.TITULO = request.form.get('titulo', '').strip()
     servicio.DESCRIPCION = request.form.get('descripcion', '').strip()
     servicio.ACTIVO = 'activo' in request.form
+    servicio.ES_MIXTO = 'es_mixto' in request.form
+    servicio.SERVICIO_BN_ID = request.form.get('servicio_bn_id', type=int) or None
+    servicio.SERVICIO_COLOR_ID = request.form.get('servicio_color_id', type=int) or None
 
     # Reemplazar tamaños existentes por los nuevos enviados
     ServicioImpresionTamano.query.filter_by(SERVICIO_ID=servicio_id).delete()
-
     nombres = request.form.getlist('tam_nombre[]')
-    precios = request.form.getlist('tam_precio[]')
-    for nom, pre in zip(nombres, precios):
-        if nom.strip() and pre.strip():
+    precios_bn = request.form.getlist('tam_precio_bn[]')
+    precios_color = request.form.getlist('tam_precio_color[]')
+    
+    for i, nom in enumerate(nombres):
+        pre_bn = precios_bn[i] if i < len(precios_bn) else ''
+        if nom.strip() and pre_bn.strip():
+            pre_color = precios_color[i] if i < len(precios_color) else pre_bn
+            try:
+                precio_color = float(pre_color)
+            except ValueError:
+                precio_color = float(pre_bn)
             t = ServicioImpresionTamano(
                 SERVICIO_ID=servicio_id,
                 NOMBRE=nom.strip(),
-                PRECIO=float(pre)
+                PRECIO_BN=float(pre_bn),
+                PRECIO_COLOR=precio_color
             )
             db.session.add(t)
-
+            
     db.session.commit()
+
     flash('Servicio actualizado.', 'success')
     return redirect(url_for('admin_catalogos', tab='serviciosImpresion'))
 
@@ -971,6 +971,10 @@ def admin_editar_servicio_impresion(servicio_id):
 @admin_required
 def admin_eliminar_servicio_impresion(servicio_id):
     servicio = ServicioImpresion.query.get_or_404(servicio_id)
+    
+    # Desvincular pedidos que usan este servicio (poner SERVICIO_ID a NULL)
+    Pedido.query.filter_by(SERVICIO_ID=servicio_id).update({'SERVICIO_ID': None})
+    
     db.session.delete(servicio)
     db.session.commit()
     flash('Servicio de impresión eliminado.', 'success')
@@ -1265,6 +1269,153 @@ def admin_reportes():
                            hoy=datetime.now(),
                            ranking=ranking)
 
+@app.route('/admin/api/pedido/<int:pedido_id>')
+@login_required
+@admin_required
+def admin_api_pedido(pedido_id):
+    pedido = Pedido.query.get_or_404(pedido_id)
+    usuario = Usuario.query.get(pedido.ID_USUARIO)
+    archivos = ArchivoPedido.query.filter_by(PEDIDO_ID=pedido_id).all()
+    detalles = DetallePedido.query.filter_by(PEDIDO_ID=pedido_id).all()
+
+    # Construir archivos_detalle (siempre, para uno o varios archivos)
+    archivos_detalle = []
+    if pedido.DETALLE_ARCHIVOS:
+        for item in pedido.DETALLE_ARCHIVOS:
+            archivo_real = next((a for a in archivos if a.NOMBRE_ARCHIVO == item['nombre'] and 'comprobantes' not in a.RUTA), None)
+            ruta_descarga = None
+            if archivo_real:
+                ruta_descarga = url_for('static', filename=archivo_real.RUTA.replace('static/', '', 1).replace('\\', '/'))
+            servicio_nombre = None
+            precio_bn = None
+            precio_color = None
+            if item.get('servicio_id'):
+                srv = ServicioImpresion.query.get(item['servicio_id'])
+                if srv:
+                    servicio_nombre = srv.TITULO
+                    if item.get('tamano'):
+                        tam = ServicioImpresionTamano.query.filter_by(
+                            SERVICIO_ID=item['servicio_id'], NOMBRE=item['tamano']
+                        ).first()
+                        if tam:
+                            precio_bn = float(tam.PRECIO_BN)    # ← corregido
+                            precio_color = float(tam.PRECIO_COLOR) if srv.ES_MIXTO else None
+            archivos_detalle.append({
+                'nombre': item['nombre'],
+                'paginas': item['paginas'],
+                'servicio_nombre': servicio_nombre,
+                'tamano': item.get('tamano'),
+                'precio': precio_bn,                    # usado en modal
+                'precio_color': precio_color,           # nuevo
+                'ruta_descarga': ruta_descarga,
+                'paginas_color': item.get('paginas_color'),      # nuevo
+                'comentarios': item.get('comentarios')          # nuevo
+            })
+    else:
+        for a in archivos:
+            if 'comprobantes' not in a.RUTA:
+                servicio_nombre = None
+                precio_bn = None
+                precio_color = None
+                if pedido.SERVICIO_ID:
+                    srv = ServicioImpresion.query.get(pedido.SERVICIO_ID)
+                    if srv:
+                        servicio_nombre = srv.TITULO
+                        if pedido.TAMANO:
+                            tam = ServicioImpresionTamano.query.filter_by(
+                                SERVICIO_ID=pedido.SERVICIO_ID, NOMBRE=pedido.TAMANO
+                            ).first()
+                            if tam:
+                                precio_bn = float(tam.PRECIO_BN)
+                                precio_color = float(tam.PRECIO_COLOR) if srv.ES_MIXTO else None
+                archivos_detalle.append({
+                    'nombre': a.NOMBRE_ARCHIVO,
+                    'paginas': pedido.PAGINAS,
+                    'servicio_nombre': servicio_nombre,
+                    'tamano': pedido.TAMANO,
+                    'precio': precio_bn,
+                    'precio_color': precio_color,
+                    'ruta_descarga': url_for('static', filename=a.RUTA.replace('static/', '', 1).replace('\\', '/')),
+                    'paginas_color': pedido.PAGINAS_COLOR if servicio_nombre and srv.ES_MIXTO else None,
+                    'comentarios': pedido.COMENTARIOS if servicio_nombre and srv.ES_MIXTO else None
+                })
+
+    return {
+        'pedido': {
+            'id': pedido.ID,
+            'fecha': pedido.FECHA.strftime('%d/%m/%Y %H:%M'),
+            'total': float(pedido.TOTAL),
+            'estado': pedido.ESTADO,
+            'codigo_ticket': pedido.CODIGO_TICKET,
+            'fecha_retiro': pedido.FECHA_RETIRO.strftime('%d/%m/%Y') if pedido.FECHA_RETIRO else None,
+            'hora_retiro': pedido.HORA_RETIRO.strftime('%I:%M %p') if pedido.HORA_RETIRO else None,
+            'comentarios': pedido.COMENTARIOS,
+            'tamano': pedido.TAMANO,
+            'referencia_pago': pedido.REFERENCIA_PAGO
+        },
+        'usuario': {
+            'nombre': usuario.NOMBRE,
+            'apellido': usuario.APELLIDO,
+            'cedula': usuario.ID_USUARIO,
+            'email': usuario.EMAIL,
+            'telefono': usuario.TELEFONO
+        },
+        'archivos_detalle': archivos_detalle,
+        'detalles': [{
+            'cantidad': d.CANTIDAD,
+            'precio_unitario': float(d.PRECIO_UNITARIO) if d.PRECIO_UNITARIO else None,
+            'subtotal': float(d.SUBTOTAL)
+        } for d in detalles]
+    }
+
+# ------------------------------------------------------------
+# PANEL ADMIN – CRONOGRAMA
+# ------------------------------------------------------------
+
+@app.route('/admin/cronograma')
+@login_required
+@admin_required
+def admin_cronograma():
+    pedidos = Pedido.query.filter(
+        Pedido.ESTADO.in_(['Pago confirmado', 'En proceso', 'Listo'])
+    ).order_by(Pedido.FECHA_RETIRO.asc(), Pedido.HORA_RETIRO.asc()).all()
+    
+    # Agrupar por fecha
+    from collections import defaultdict
+    grupos = defaultdict(list)
+    for pedido in pedidos:
+        if pedido.FECHA_RETIRO:
+            usuario = Usuario.query.get(pedido.ID_USUARIO)
+            grupos[pedido.FECHA_RETIRO.isoformat()].append({
+                'pedido': pedido,
+                'usuario': usuario
+            })
+    
+    # Ordenar las fechas
+    fechas_ordenadas = sorted(grupos.keys())
+    
+    # Preparar datos para la plantilla
+    cronograma = []
+    hoy = date.today()
+    for fecha_str in fechas_ordenadas:
+        fecha = date.fromisoformat(fecha_str)
+        if fecha == hoy:
+            etiqueta = "Hoy"
+        elif fecha == hoy + timedelta(days=1):
+            etiqueta = "Mañana"
+        else:
+            dias_semana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+            etiqueta = dias_semana[fecha.weekday()]
+        
+        cronograma.append({
+            'fecha': fecha,
+            'etiqueta': etiqueta,
+            'fecha_formateada': fecha.strftime('%d/%m/%Y'),
+            'pedidos': grupos[fecha_str]
+        })
+    
+    return render_template('admin/cronograma.html', cronograma=cronograma, hoy=hoy)
+
 # ------------------------------------------------------------
 # PANEL ADMIN – CONFIGURACION
 # ------------------------------------------------------------
@@ -1292,7 +1443,7 @@ def admin_configuracion():
 
 @login_manager.user_loader
 def load_user(user_id):
-    return Usuario.query.get(int(user_id))
+    return db.session.get(Usuario, int(user_id))
 
 def validar_nombre_apellido(texto, campo="Nombre"):
     if not texto:
@@ -1371,6 +1522,7 @@ def admin_vaciar_historial():
 # ------------------------------------------------------------
 # PANEL DE OPERADOR
 # ------------------------------------------------------------
+
 @app.route('/operador')
 @login_required
 @operador_required
@@ -1395,26 +1547,67 @@ def panel_operador():
     for pedido in pedidos:
         usuario = Usuario.query.get(pedido.ID_USUARIO)
         archivos = ArchivoPedido.query.filter_by(PEDIDO_ID=pedido.ID).all()
-        # Solo archivos de impresión, excluyendo comprobantes
+        # Solo archivos de impresión
         archivos_impresion = [a for a in archivos if 'comprobantes' not in a.RUTA.lower()]
         detalles = DetallePedido.query.filter_by(PEDIDO_ID=pedido.ID).all()
+
+        # Obtener servicio de impresión
+        servicio = None
+        if pedido.SERVICIO_ID:
+            servicio = ServicioImpresion.query.get(pedido.SERVICIO_ID)
 
         pedidos_data.append({
             'pedido': pedido,
             'usuario': usuario,
             'archivos': archivos_impresion,
-            'detalles': detalles
+            'detalles': detalles,
+            'servicio': servicio,          # ← nuevo
+            'referencia_pago': pedido.REFERENCIA_PAGO   # ← nuevo
         })
 
-    # Recuperar mensaje de sesión (si existe) y eliminarlo para que no se muestre de nuevo
+    # --- Cronograma (misma lógica que en admin) ---
+    from collections import defaultdict
+    pedidos_cronograma = Pedido.query.filter(
+        Pedido.ESTADO.in_(['Pago confirmado', 'En proceso', 'Listo'])
+    ).order_by(Pedido.FECHA_RETIRO.asc(), Pedido.HORA_RETIRO.asc()).all()
+
+    grupos = defaultdict(list)
+    for pedido in pedidos_cronograma:
+        if pedido.FECHA_RETIRO:
+            usuario = Usuario.query.get(pedido.ID_USUARIO)
+            grupos[pedido.FECHA_RETIRO.isoformat()].append({
+                'pedido': pedido,
+                'usuario': usuario
+            })
+
+    fechas_ordenadas = sorted(grupos.keys())
+    cronograma = []
+    hoy = date.today()
+    for fecha_str in fechas_ordenadas:
+        fecha = date.fromisoformat(fecha_str)
+        if fecha == hoy:
+            etiqueta = "Hoy"
+        elif fecha == hoy + timedelta(days=1):
+            etiqueta = "Mañana"
+        else:
+            dias_semana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+            etiqueta = dias_semana[fecha.weekday()]
+        cronograma.append({
+            'fecha': fecha,
+            'etiqueta': etiqueta,
+            'fecha_formateada': fecha.strftime('%d/%m/%Y'),
+            'pedidos': grupos[fecha_str]
+        })
+
+    # Recuperar mensaje de sesión (si existe)
     mensaje = session.pop('mensaje_operador', None)
 
-    # Siempre devolvemos la plantilla, con o sin mensaje
     return render_template('operador/dashboard.html',
                            pedidos=pedidos_data,
                            historial=historial,
                            nuevos_operador=nuevos_operador,
-                           mensaje=mensaje)
+                           mensaje=mensaje,
+                           cronograma=cronograma)
 
 @app.route('/operador/solicitud/<int:pedido_id>')
 @login_required
@@ -1428,16 +1621,43 @@ def operador_detalle(pedido_id):
     # Solo archivos de impresión
     archivos_impresion = [a for a in archivos if 'comprobantes' not in a.RUTA.lower()]
 
-    # Marcar como visto por el operador (ANTES de renderizar)
+    # Servicio de impresión
+    servicio = None
+    if pedido.SERVICIO_ID:
+        servicio = ServicioImpresion.query.get(pedido.SERVICIO_ID)
+
+    # Referencia de pago
+    referencia_pago = pedido.REFERENCIA_PAGO
+
+    # Marcar como visto
     if not pedido.VISTO_OPERADOR:
         pedido.VISTO_OPERADOR = True
         db.session.commit()
+
+    if pedido.DETALLE_ARCHIVOS:
+        archivos_info = pedido.DETALLE_ARCHIVOS
+    else:
+        archivos_info = [{
+            'nombre': archivos[0].NOMBRE_ARCHIVO if archivos else 'Sin archivo',
+            'paginas': pedido.PAGINAS,
+            'servicio_id': pedido.SERVICIO_ID,
+            'tamano': pedido.TAMANO,
+            'paginas_color': pedido.PAGINAS_COLOR,
+            'comentarios': pedido.COMENTARIOS
+        }]
+
+    # Obtener nombre real de cada servicio de impresión
+    todos_servicios = {srv.ID: srv.TITULO for srv in ServicioImpresion.query.all()}
 
     return render_template('operador/detalle.html',
                            pedido=pedido,
                            usuario=usuario,
                            archivos=archivos_impresion,
-                           detalles=detalles)
+                           detalles=detalles,
+                           servicio=servicio,
+                           referencia_pago=referencia_pago,
+                           todos_servicios=todos_servicios,
+                           archivos_info=archivos_info)
 
 @app.route('/operador/solicitud/<int:pedido_id>/marcar-listo', methods=['POST'])
 @login_required
@@ -1517,11 +1737,129 @@ def detectar_paginas_ajax():
     db.session.add(archivo_bd)
     db.session.commit()
 
+    limite = datetime.now() - timedelta(minutes=5)
+    pedidos_viejos = Pedido.query.filter(
+        Pedido.ID_USUARIO == current_user.ID,
+        Pedido.ESTADO == 'borrador',
+        Pedido.FECHA < limite
+    ).all()
+
+    for p in pedidos_viejos:
+        # Primero eliminar archivos asociados (físicos y registros)
+        for archivo in ArchivoPedido.query.filter_by(PEDIDO_ID=p.ID).all():
+            if os.path.exists(archivo.RUTA):
+                os.remove(archivo.RUTA)
+            db.session.delete(archivo)
+        # Eliminar detalles del pedido
+        DetallePedido.query.filter_by(PEDIDO_ID=p.ID).delete()
+        # Finalmente eliminar el pedido
+        db.session.delete(p)
+
+    db.session.commit()
+
     return {
         'success': True,
         'pedido_id': nuevo.ID,
         'paginas': paginas,
         'mensaje': mensaje or ''
+    }
+
+@app.route('/detectar-paginas-multiples', methods=['POST'])
+@login_required
+def detectar_paginas_multiples():
+    archivos = request.files.getlist('archivos[]')
+    if not archivos or len(archivos) == 0:
+        return {'error': 'No se recibieron archivos'}, 400
+
+    # Validar límites: máximo 10 documentos, 20 imágenes
+    docs = 0
+    imgs = 0
+    for f in archivos:
+        ext = f.filename.rsplit('.', 1)[-1].lower() if '.' in f.filename else ''
+        if ext in ('pdf', 'xlsx', 'xlsm', 'pptx', 'ods', 'odp'):
+            docs += 1
+        elif ext in ('png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'tif'):
+            imgs += 1
+        else:
+            return {'error': f'Formato no soportado: {f.filename}'}, 400
+
+    if docs > 10:
+        return {'error': 'Máximo 10 documentos permitidos'}, 400
+    if imgs > 20:
+        return {'error': 'Máximo 20 imágenes permitidas'}, 400
+
+    # Crear pedido en estado borrador
+    nuevo = Pedido(
+        ID_USUARIO=current_user.ID,
+        FECHA=datetime.now(),
+        ESTADO='borrador',
+        TOTAL=0.0,
+        PAGINAS=0
+    )
+    db.session.add(nuevo)
+    db.session.flush()
+
+    total_paginas = 0
+    detalle_archivos = []
+
+    for f in archivos:
+        filename = secure_filename(f.filename)
+        ruta_destino = os.path.join(UPLOAD_FOLDER_IMPRESION, filename)
+        f.save(ruta_destino)
+
+        paginas, mensaje = detectar_paginas(ruta_destino, filename)
+        if paginas is None:
+            # Si un archivo falla, eliminar el pedido completo y devolver error
+            db.session.delete(nuevo)
+            db.session.commit()
+            os.remove(ruta_destino)
+            return {'error': f'Error en {filename}: {mensaje}'}, 400
+
+        total_paginas += paginas
+        detalle_archivos.append({
+            'nombre': filename,
+            'paginas': paginas,
+            'servicio_id': None,
+            'tamano': None
+        })
+
+        # Guardar registro del archivo
+        archivo_bd = ArchivoPedido(
+            PEDIDO_ID=nuevo.ID,
+            NOMBRE_ARCHIVO=filename,
+            RUTA=ruta_destino
+        )
+        db.session.add(archivo_bd)
+
+    nuevo.PAGINAS = total_paginas
+    nuevo.DETALLE_ARCHIVOS = detalle_archivos  # solo se rellena si hay múltiples archivos
+    db.session.commit()
+
+    limite = datetime.now() - timedelta(minutes=5)
+    pedidos_viejos = Pedido.query.filter(
+        Pedido.ID_USUARIO == current_user.ID,
+        Pedido.ESTADO == 'borrador',
+        Pedido.FECHA < limite
+    ).all()
+
+    for p in pedidos_viejos:
+        # Primero eliminar archivos asociados (físicos y registros)
+        for archivo in ArchivoPedido.query.filter_by(PEDIDO_ID=p.ID).all():
+            if os.path.exists(archivo.RUTA):
+                os.remove(archivo.RUTA)
+            db.session.delete(archivo)
+        # Eliminar detalles del pedido
+        DetallePedido.query.filter_by(PEDIDO_ID=p.ID).delete()
+        # Finalmente eliminar el pedido
+        db.session.delete(p)
+        
+    db.session.commit()
+
+    return {
+        'success': True,
+        'pedido_id': nuevo.ID,
+        'paginas_totales': total_paginas,
+        'detalle_archivos': detalle_archivos
     }
 
 @app.route('/cancelar-pedido/<int:pedido_id>', methods=['POST'])
@@ -1553,18 +1891,24 @@ def cancelar_pedido(pedido_id):
 def configurar_impresion(pedido_id):
     pedido = Pedido.query.get_or_404(pedido_id)
     if pedido.ID_USUARIO != current_user.ID:
-        flash('Acceso no autorizado.', 'danger')
         return redirect(url_for('imprimir'))
 
     if pedido.ESTADO not in ['borrador', 'Pendiente de pago']:
-        flash('Este pedido ya no se puede modificar.', 'warning')
         return redirect(url_for('mis_solicitudes'))
+
+    if pedido.DETALLE_ARCHIVOS:
+        return redirect(url_for('configurar_impresion_multiple', pedido_id=pedido_id))
 
     servicios = ServicioImpresion.query.filter_by(ACTIVO=True).order_by(ServicioImpresion.TITULO).all()
 
-    # Obtener el nombre del archivo (para GET y también por si se necesita en POST)
     archivo = ArchivoPedido.query.filter_by(PEDIDO_ID=pedido_id).first()
     archivo_nombre = archivo.NOMBRE_ARCHIVO if archivo else 'Sin archivo'
+
+    # Si se solicita reiniciar la configuración, limpiar selección previa
+    if request.args.get('reset') == '1':
+        pedido.SERVICIO_ID = None
+        pedido.TAMANO = None
+        db.session.commit()
 
     if request.method == 'POST':
         servicio_id = request.form.get('servicio_id', type=int)
@@ -1572,22 +1916,75 @@ def configurar_impresion(pedido_id):
         comentarios = request.form.get('comentarios', '').strip()
 
         if not servicio_id or not tamano_nombre:
-            flash('Debes seleccionar un servicio y un tamaño.', 'danger')
+            
             return redirect(url_for('configurar_impresion', pedido_id=pedido.ID))
 
         pedido.SERVICIO_ID = servicio_id
         pedido.TAMANO = tamano_nombre
-        pedido.COMENTARIOS = comentarios
+
+        servicio = ServicioImpresion.query.get(servicio_id)
+        if servicio and servicio.ES_MIXTO:
+            pedido.PAGINAS_COLOR = request.form.get('paginas_color', '').strip() or None
+        else:
+            pedido.PAGINAS_COLOR = None
+
+        pedido.COMENTARIOS = comentarios  # 'comentarios' ya viene del formulario
 
         db.session.commit()
-        flash('Servicio configurado. Ahora elige la fecha de retiro.', 'success')
         return redirect(url_for('programar_retiro', pedido_id=pedido.ID))
 
-    # GET
     return render_template('tienda/configurar_impresion.html',
                            pedido=pedido,
                            servicios=servicios,
-                           archivo_nombre=archivo_nombre)
+                           archivo_nombre=archivo_nombre) 
+
+@app.route('/configurar-multiple/<int:pedido_id>', methods=['GET', 'POST'])
+@login_required
+def configurar_impresion_multiple(pedido_id):
+    pedido = Pedido.query.get_or_404(pedido_id)
+    if pedido.ID_USUARIO != current_user.ID:
+        return redirect(url_for('imprimir'))
+
+    if pedido.ESTADO not in ['borrador', 'Pendiente de pago']:
+        return redirect(url_for('mis_solicitudes'))
+
+    if not pedido.DETALLE_ARCHIVOS:
+        return redirect(url_for('configurar_impresion', pedido_id=pedido.ID))
+
+    if request.args.get('reset') == '1':
+        for item in pedido.DETALLE_ARCHIVOS:
+            item['servicio_id'] = None
+            item['tamano'] = None
+        db.session.commit()
+
+    servicios = ServicioImpresion.query.filter_by(ACTIVO=True).order_by(ServicioImpresion.TITULO).all()
+
+    if request.method == 'POST':
+        detalle = pedido.DETALLE_ARCHIVOS
+        for i, item in enumerate(detalle):
+            serv_id = request.form.get(f'servicio_{i}')
+            tam = request.form.get(f'tamano_{i}')
+            pag_color = request.form.get(f'paginas_color_{i}')
+            com = request.form.get(f'comentarios_{i}')
+            if serv_id:
+                item['servicio_id'] = int(serv_id)
+            if tam:
+                item['tamano'] = tam
+            if pag_color:
+                item['paginas_color'] = pag_color
+            if com:
+                item['comentarios'] = com
+
+        pedido.DETALLE_ARCHIVOS = detalle
+        pedido.COMENTARIOS = request.form.get('comentarios', '').strip()
+        flag_modified(pedido, 'DETALLE_ARCHIVOS')
+        db.session.commit()
+        return redirect(url_for('programar_retiro', pedido_id=pedido.ID))
+
+    # GET
+    return render_template('tienda/configurar_impresion_multiple.html',
+                           pedido=pedido,
+                           servicios=servicios) 
 
 @app.route('/api/pedido/<int:pedido_id>')
 @login_required
@@ -1596,11 +1993,19 @@ def api_pedido(pedido_id):
     if pedido.ID_USUARIO != current_user.ID:
         return {'error': 'No autorizado'}, 403
 
-    # Obtener nombre del archivo (primer archivo del pedido)
-    archivo = ArchivoPedido.query.filter_by(PEDIDO_ID=pedido_id).first()
-    archivo_nombre = archivo.NOMBRE_ARCHIVO if archivo else 'Sin archivo'
+    archivos_reg = ArchivoPedido.query.filter_by(PEDIDO_ID=pedido_id).all()
 
-    # Nombre del servicio
+    # Construir lista de archivos con sus páginas
+    if pedido.DETALLE_ARCHIVOS:
+        archivos_info = pedido.DETALLE_ARCHIVOS
+    else:
+        archivos_info = [{
+            'nombre': archivos_reg[0].NOMBRE_ARCHIVO if archivos_reg else 'Sin archivo',
+            'paginas': pedido.PAGINAS
+        }]
+
+    archivo_nombre = archivos_info[0]['nombre'] if archivos_info else 'Sin archivo'
+
     servicio_nombre = None
     if pedido.SERVICIO_ID:
         srv = ServicioImpresion.query.get(pedido.SERVICIO_ID)
@@ -1610,10 +2015,13 @@ def api_pedido(pedido_id):
     return {
         'paginas': pedido.PAGINAS,
         'servicio': servicio_nombre,
+        'tamano': pedido.TAMANO,
         'fecha_retiro': pedido.FECHA_RETIRO.strftime('%Y-%m-%d') if pedido.FECHA_RETIRO else '',
         'hora_retiro': pedido.HORA_RETIRO.strftime('%H:%M') if pedido.HORA_RETIRO else '',
         'total': float(pedido.TOTAL),
-        'archivo_nombre': archivo_nombre
+        'archivo_nombre': archivo_nombre,
+        'archivos': archivos_info,           # ← lista de {nombre, paginas}
+        'detalle_archivos': pedido.DETALLE_ARCHIVOS  # ← array completo o None
     }
 
 @app.route('/programar-retiro/<int:pedido_id>', methods=['GET', 'POST'])
@@ -1621,11 +2029,9 @@ def api_pedido(pedido_id):
 def programar_retiro(pedido_id):
     pedido = Pedido.query.get_or_404(pedido_id)
     if pedido.ID_USUARIO != current_user.ID:
-        flash('Acceso no autorizado.', 'danger')
         return redirect(url_for('imprimir'))
 
     if pedido.ESTADO not in ['borrador', 'Pendiente de pago']:
-        flash('Este pedido ya no se puede modificar.', 'warning')
         return redirect(url_for('mis_solicitudes'))
 
     if request.method == 'POST':
@@ -1669,14 +2075,49 @@ def programar_retiro(pedido_id):
 
         paginas = pedido.PAGINAS or 1
         total = 0
-
         tamano_obj = None
-        if pedido.SERVICIO_ID and pedido.TAMANO:
-            tamano_obj = ServicioImpresionTamano.query.filter_by(
-                SERVICIO_ID=pedido.SERVICIO_ID, NOMBRE=pedido.TAMANO
-            ).first()
-            if tamano_obj:
-                total = round(float(tamano_obj.PRECIO) * paginas, 2)
+
+        if pedido.DETALLE_ARCHIVOS:
+            for item in pedido.DETALLE_ARCHIVOS:
+                paginas_archivo = item['paginas']
+                serv_id = item.get('servicio_id')
+                tamano_nombre = item.get('tamano')
+                if serv_id and tamano_nombre:
+                    servicio = ServicioImpresion.query.get(serv_id)
+                    tamano_obj = ServicioImpresionTamano.query.filter_by(
+                        SERVICIO_ID=serv_id, NOMBRE=tamano_nombre
+                    ).first()
+                    if tamano_obj:
+                        if servicio and servicio.ES_MIXTO and item.get('paginas_color'):
+                            try:
+                                paginas_color = int(item['paginas_color'])
+                            except ValueError:
+                                paginas_color = 0
+                            if paginas_color > paginas_archivo:
+                                paginas_color = paginas_archivo
+                            paginas_bn = paginas_archivo - paginas_color
+                            total += round(float(tamano_obj.PRECIO_BN) * paginas_bn + float(tamano_obj.PRECIO_COLOR) * paginas_color, 2)
+                        else:
+                            total += round(float(tamano_obj.PRECIO_BN) * paginas_archivo, 2)
+        else:
+            paginas = pedido.PAGINAS or 1
+            if pedido.SERVICIO_ID and pedido.TAMANO:
+                servicio = ServicioImpresion.query.get(pedido.SERVICIO_ID)
+                tamano_obj = ServicioImpresionTamano.query.filter_by(
+                    SERVICIO_ID=pedido.SERVICIO_ID, NOMBRE=pedido.TAMANO
+                ).first()
+                if tamano_obj:
+                    if servicio and servicio.ES_MIXTO and pedido.PAGINAS_COLOR:
+                        try:
+                            paginas_color = int(pedido.PAGINAS_COLOR)
+                        except ValueError:
+                            paginas_color = 0
+                        if paginas_color > paginas:
+                            paginas_color = paginas
+                        paginas_bn = paginas - paginas_color
+                        total = round(float(tamano_obj.PRECIO_BN) * paginas_bn + float(tamano_obj.PRECIO_COLOR) * paginas_color, 2)
+                    else:
+                        total = round(float(tamano_obj.PRECIO_BN) * paginas, 2)
 
         pedido.FECHA_RETIRO = fecha_elegida
         pedido.HORA_RETIRO = hora_elegida
@@ -1684,7 +2125,7 @@ def programar_retiro(pedido_id):
         pedido.ESTADO = 'Pendiente de pago'
 
         detalle_existente = DetallePedido.query.filter_by(PEDIDO_ID=pedido.ID).first()
-        precio_unitario = float(tamano_obj.PRECIO) if tamano_obj else 0
+        precio_unitario = float(tamano_obj.PRECIO_BN) if tamano_obj else 0
         if detalle_existente:
             detalle_existente.CANTIDAD = paginas
             detalle_existente.PRECIO_UNITARIO = precio_unitario
@@ -1704,13 +2145,20 @@ def programar_retiro(pedido_id):
         db.session.commit()
         return redirect(url_for('pagar_impresion', pedido_id=pedido.ID))
 
-    # GET: obtener el nombre del archivo
-    archivo = ArchivoPedido.query.filter_by(PEDIDO_ID=pedido_id).first()
-    archivo_nombre = archivo.NOMBRE_ARCHIVO if archivo else 'Sin archivo'
+    # GET: obtener el nombre del archivo y la lista de archivos
+    archivos_reg = ArchivoPedido.query.filter_by(PEDIDO_ID=pedido_id).all()
+    archivos_info = []
+    if pedido.DETALLE_ARCHIVOS:
+        archivos_info = pedido.DETALLE_ARCHIVOS
+    else:
+        archivos_info = [{'nombre': a.NOMBRE_ARCHIVO, 'paginas': pedido.PAGINAS} for a in archivos_reg]
+
+    archivo_nombre = archivos_info[0]['nombre'] if archivos_info else 'Sin archivo'
 
     return render_template('tienda/programar_retiro.html',
                            pedido=pedido,
-                           archivo_nombre=archivo_nombre)
+                           archivo_nombre=archivo_nombre,
+                           archivos_info=archivos_info)
 
 @app.route('/pagar-impresion/<int:pedido_id>', methods=['GET', 'POST'])
 @login_required
@@ -1729,6 +2177,7 @@ def pagar_impresion(pedido_id):
                 RUTA=filepath
             )
             db.session.add(archivo)
+        pedido.REFERENCIA_PAGO = referencia
         pedido.ESTADO = 'Esperando validación'
         db.session.commit()
         return redirect(url_for('espera_validacion', pedido_id=pedido.ID))
@@ -1754,9 +2203,6 @@ def cancelar_impresion(pedido_id):
     pedido.ESTADO = 'Cancelado'
     db.session.commit()
 
-    # Mensaje flash bonito
-    flash(f'❌ Tu pedido #{pedido.ID} ha sido cancelado correctamente.', 'danger')
-
     return {'ok': True}
 
 @app.route('/espera-validacion/<int:pedido_id>')
@@ -1764,7 +2210,6 @@ def cancelar_impresion(pedido_id):
 def espera_validacion(pedido_id):
     pedido = Pedido.query.get_or_404(pedido_id)
     if pedido.ID_USUARIO != current_user.ID:
-        flash('Acceso no autorizado.', 'danger')
         return redirect(url_for('imprimir'))
     return render_template('tienda/espera_validacion.html', pedido=pedido)
 
@@ -1781,11 +2226,9 @@ def api_estado_pedido(pedido_id):
 def ticket_impresion(pedido_id):
     pedido = Pedido.query.get_or_404(pedido_id)
     if pedido.ID_USUARIO != current_user.ID:
-        flash('Acceso no autorizado.', 'danger')
         return redirect(url_for('imprimir'))
 
     if pedido.ESTADO not in ['Pago confirmado', 'Listo', 'Entregado']:
-        flash('El ticket aún no está disponible. Espera la confirmación del pago.', 'warning')
         return redirect(url_for('espera_validacion', pedido_id=pedido.ID))
 
     usuario = Usuario.query.get(pedido.ID_USUARIO)

@@ -42,8 +42,10 @@ class Pedido(db.Model):
     VISTO_ADMIN = db.Column(db.Boolean, default=False)
     VISTO_OPERADOR = db.Column(db.Boolean, default=False)
     PAGINAS = db.Column(db.Integer, nullable=True)   # páginas detectadas
-    SERVICIO_ID = db.Column(db.Integer, db.ForeignKey('servicio_impresion.ID'),
-                            nullable=True)
+    SERVICIO_ID = db.Column(db.Integer, db.ForeignKey('servicio_impresion.ID'),nullable=True)
+    DETALLE_ARCHIVOS = db.Column(db.JSON, nullable=True)
+    REFERENCIA_PAGO = db.Column(db.String(100), nullable=True)
+    PAGINAS_COLOR = db.Column(db.String(255), nullable=True)
     
 class DetallePedido(db.Model):
     __tablename__ = 'detalle'
@@ -75,9 +77,10 @@ class ServicioImpresion(db.Model):
     TITULO = db.Column(db.String(100), nullable=False)
     DESCRIPCION = db.Column(db.Text, nullable=True)
     ACTIVO = db.Column(db.Boolean, default=True)
-
-    tamanos = db.relationship('ServicioImpresionTamano', backref='servicio',
-                              cascade='all, delete-orphan', lazy='select')
+    ES_MIXTO = db.Column(db.Boolean, default=False)
+    SERVICIO_BN_ID = db.Column(db.Integer, db.ForeignKey('servicio_impresion.ID'), nullable=True)
+    SERVICIO_COLOR_ID = db.Column(db.Integer, db.ForeignKey('servicio_impresion.ID'), nullable=True)
+    tamanos = db.relationship('ServicioImpresionTamano', backref='servicio', cascade='all, delete-orphan', lazy='select')
 
 class ServicioImpresionTamano(db.Model):
     __tablename__ = 'servicio_impresion_tamano'
@@ -85,4 +88,5 @@ class ServicioImpresionTamano(db.Model):
     SERVICIO_ID = db.Column(db.Integer, db.ForeignKey('servicio_impresion.ID'),
                             nullable=False)
     NOMBRE = db.Column(db.String(50), nullable=False)
-    PRECIO = db.Column(db.Numeric(10, 2), nullable=False)
+    PRECIO_BN = db.Column(db.Numeric(10, 2), nullable=False)
+    PRECIO_COLOR = db.Column(db.Numeric(10, 2), nullable=False)

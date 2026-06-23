@@ -1,12 +1,13 @@
 # email_service.py
 import smtplib
+import os
 from email.message import EmailMessage
 from flask import url_for
 
 SMTP_SERVER = 'smtp.gmail.com'
 SMTP_PORT = 587
 SMTP_USER = 'SupportGlobalCopyPlot@gmail.com'
-SMTP_PASSWORD = 'yagwluslewmfropa'   # sin espacios
+SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD') 
 
 def enviar_correo_restablecimiento(email_destino, token):
     enlace = url_for('reset_password', token=token, _external=True)

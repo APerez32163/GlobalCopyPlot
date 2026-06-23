@@ -7,7 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive-imprimir.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
     <style>
         :root {
             --azul-claro: #5B9BD5;
@@ -134,14 +134,14 @@
             background: linear-gradient(135deg, #5B9BD5, #2F5496);
             border: none;
             border-radius: 50px;
-            padding: 14px 20px;
+            padding: 18px 20px;
             font-weight: 700;
             font-size: 1rem;
             color: white;
+            width: 100%;
+            margin-top: 28px;
             box-shadow: 0 8px 18px rgba(47,84,150,0.25);
             transition: all 0.3s;
-            flex: 1;
-            text-align: center;
         }
 
         .btn-guardar:hover {
@@ -154,13 +154,14 @@
             background: rgba(255,255,255,0.7);
             border: 1px solid rgba(0,0,0,0.08);
             border-radius: 50px;
-            padding: 14px 20px;
+            padding: 18px 20px;
             font-weight: 600;
             color: var(--azul-oscuro);
             transition: all 0.3s;
             text-align: center;
             text-decoration: none;
-            flex: 0 0 40%;
+            display: inline-block;
+            margin-top: 28px;
         }
 
         .btn-volver:hover {
@@ -323,6 +324,13 @@
             transition: none !important;
             animation: none !important;
         }
+        .texto-limitado {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -330,15 +338,29 @@
         <div class="glass-card">
             <h2>Programar retiro</h2>
 
+        {% if archivos_info and archivos_info|length > 1 %}
+            <!-- Múltiples archivos -->
             <div class="archivo-info">
                 <i class="fas fa-file-alt"></i>
                 <div class="detalle">
-                    <span class="nombre-archivo">
-                        {{ archivo_nombre }}
-                    </span>
+                    <ul class="list-unstyled mb-0">
+                        {% for a in archivos_info %}
+                        <li><strong class="texto-limitado" style="max-width: 300px; display: inline-block; vertical-align: middle;">{{ a.nombre }}</strong> ({{ a.paginas }} pág.)</li>
+                        {% endfor %}
+                    </ul>
+                    <span class="paginas-badge">{{ pedido.PAGINAS }} pág(s) totales</span>
+                </div>
+            </div>
+        {% else %}
+            <!-- Un solo archivo (comportamiento original) -->
+            <div class="archivo-info">
+                <i class="fas fa-file-alt"></i>
+                <div class="detalle">
+                    <span class="nombre-archivo texto-limitado">{{ archivo_nombre }}</span>
                     <span class="paginas-badge">{{ pedido.PAGINAS }} pág(s)</span>
                 </div>
             </div>
+        {% endif %}
 
             <form method="POST" action="{{ url_for('programar_retiro', pedido_id=pedido.ID) }}">
                 <div class="mb-3">
@@ -359,13 +381,20 @@
                     </select>
                 </div>
 
-                <!-- Botones alineados: Volver 40% + Guardar 60% -->
-                <div class="d-flex gap-2 mt-4">
-                    <a href="/imprimir?pedido_id={{ pedido.ID }}" class="btn-volver">
-                        <i class="fas fa-arrow-left me-2"></i> Volver
-                    </a>
-                    <button type="submit" class="btn-guardar">
-                        <i class="fas fa-check me-2"></i> Guardar y continuar
+                <hr></hr>
+
+                <div class="d-flex gap-2 mt-3">
+                    {% if pedido.DETALLE_ARCHIVOS %}
+                        <a href="{{ url_for('configurar_impresion_multiple', pedido_id=pedido.ID) }}?reset=1" class="btn-volver">
+                            <i class="fas fa-arrow-left me-2"></i> Volver
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('configurar_impresion', pedido_id=pedido.ID) }}?reset=1" class="btn-volver">
+                            <i class="fas fa-arrow-left me-2"></i> Volver
+                        </a>
+                    {% endif %}
+                    <button type="submit" class="btn-guardar" style="flex: 1;">
+                        <i class="fas fa-credit-card me-2"></i> Pagar
                     </button>
                 </div>
             </form>

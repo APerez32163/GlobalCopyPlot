@@ -1,165 +1,438 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-
     <script>
-        // Aplicar modo oscuro inmediatamente (sobre <html>) para que no parpadee
         if (localStorage.getItem('darkMode') === 'true') {
             document.documentElement.classList.add('dark-mode');
         }
     </script>
 
     <meta charset="UTF-8">
-    <title>Panel Operador - GlobalCopyPlot</title>
+    <title>Panel Operador · GlobalCopyPlot</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}">
 
     <style>
-        body { background: #f8f9fa; font-family: 'Inter', sans-serif; }
-        .glass-card { background: rgba(255,255,255,0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.8); border-radius: 20px; padding: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
-        .btn-accion { background: #5B9BD5; color: white; border-radius: 25px; padding: 0.4rem 1.5rem; font-weight: 500; border: none; }
-        .btn-accion:hover { background: #2F5496; color: white; }
-        .badge-nuevo { background: #dc3545; color: white; font-size: 0.7rem; padding: 3px 10px; border-radius: 12px; }
-        .contador-nuevos { background: rgba(220,53,69,0.1); border: 1px solid rgba(220,53,69,0.3); border-radius: 16px; padding: 12px 20px; margin-bottom: 20px; }
+        :root {
+            --azul-claro: #5B9BD5;
+            --azul-oscuro: #2F5496;
+            --glass-bg: rgba(255, 255, 255, 0.55);
+            --glass-border: rgba(255, 255, 255, 0.7);
+            --transition: 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        body {
+            background: linear-gradient(135deg, #f0f4f8 0%, #e9eff5 100%);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            color: #1e293b;
+        }
+
+        .container {
+            max-width: 1300px;
+            padding: 2rem 1.5rem;
+        }
+
+        /* ---- ENVOLTORIO PRINCIPAL ---- */
+        .main-glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: 32px;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
+        }
+
+        /* ---- CABECERA ---- */
+        .operador-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .operador-header h2 {
+            font-weight: 700;
+            color: var(--azul-oscuro);
+            font-size: 2rem;
+            letter-spacing: -0.5px;
+            margin: 0;
+        }
+
+        .operador-header h2 i {
+            background: linear-gradient(135deg, var(--azul-claro), var(--azul-oscuro));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .btn-outline-glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 50px;
+            padding: 0.5rem 1.5rem;
+            font-weight: 600;
+            color: var(--azul-oscuro);
+            text-decoration: none;
+            transition: all var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-outline-glass:hover {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: var(--azul-claro);
+            color: var(--azul-oscuro);
+        }
+
+        /* ---- CONTADOR DE NUEVOS ---- */
+        .contador-nuevos {
+            background: rgba(220, 53, 69, 0.08);
+            border: 1px solid rgba(220, 53, 69, 0.2);
+            border-radius: 20px;
+            padding: 14px 24px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(15px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: #b91c1c;
+        }
+
+        /* ---- PESTAÑAS ---- */
+        .nav-pills {
+            gap: 8px;
+            margin-bottom: 28px;
+        }
+
+        .nav-pills .nav-link {
+            border-radius: 50px;
+            padding: 0.65rem 1.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--azul-oscuro);
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            transition: all var(--transition);
+        }
+
+        .nav-pills .nav-link.active {
+            background: linear-gradient(135deg, var(--azul-claro), var(--azul-oscuro));
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 8px 20px rgba(47, 84, 150, 0.3);
+        }
+
+        /* ---- TARJETAS ---- */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.04);
+            transition: all var(--transition);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+        }
+
+        .badge-nuevo {
+            background: linear-gradient(135deg, #dc3545, #b91c1c);
+            color: white;
+            font-size: 0.7rem;
+            padding: 3px 12px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        /* ---- BOTONES DE ACCIÓN ---- */
+        .btn-accion {
+            background: linear-gradient(135deg, var(--azul-claro), var(--azul-oscuro));
+            color: white;
+            border-radius: 50px;
+            padding: 0.5rem 1.5rem;
+            font-weight: 600;
+            border: none;
+            box-shadow: 0 6px 15px rgba(47, 84, 150, 0.25);
+            transition: all var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-accion:hover {
+            background: linear-gradient(135deg, var(--azul-oscuro), #1e3c6e);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 22px rgba(47, 84, 150, 0.4);
+        }
+
+        .btn-entregar {
+            background: linear-gradient(135deg, #28a745, #1e7e34);
+            border: none;
+            box-shadow: 0 6px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-entregar:hover {
+            background: linear-gradient(135deg, #1e7e34, #145523);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 22px rgba(40, 167, 69, 0.45);
+        }
+
+        /* ---- TABLA HISTORIAL ---- */
+        .table-glass {
+            background: rgba(255, 255, 255, 0.55);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .table-glass thead th {
+            background: rgba(47, 84, 150, 0.08);
+            font-weight: 600;
+            color: var(--azul-oscuro);
+            border: none;
+        }
+
+        .table-glass tbody td {
+            border-color: rgba(0, 0, 0, 0.04);
+        }
     </style>
 </head>
 <body>
-    <div class="container py-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="fw-bold" style="color: #2F5496;"><i class="fas fa-print me-2"></i>Panel de Operador</h2>
-            <div>
-                <a href="/" class="btn btn-outline-secondary rounded-pill me-2">Inicio</a>
-                <a href="/logout" class="btn btn-outline-danger rounded-pill">Cerrar sesión</a>
+    <div class="container">
+        <div class="main-glass">
+            <!-- Cabecera -->
+            <div class="operador-header">
+                <h2><i class="fas fa-print me-3"></i>Panel de Operador</h2>
+                <div class="d-flex gap-2">
+                    <a href="/" class="btn-outline-glass"><i class="fas fa-home"></i> Inicio</a>
+                    <a href="/logout" class="btn-outline-glass"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
+                </div>
             </div>
-        </div>
 
-        <!-- Contador de pedidos nuevos -->
-        {% if nuevos_operador > 0 %}
-        <div class="contador-nuevos text-center">
-            <i class="fas fa-bell me-2 text-danger"></i> 
-            Tienes <strong>{{ nuevos_operador }}</strong> pedidos nuevos por revisar
-        </div>
-        {% endif %}
+            <!-- Contador de nuevos -->
+            {% if nuevos_operador > 0 %}
+            <div class="contador-nuevos">
+                <i class="fas fa-bell"></i> 
+                Tienes <strong>{{ nuevos_operador }}</strong> pedidos nuevos por revisar
+            </div>
+            {% endif %}
 
-        {% if mensaje %}
-        <div class="alert alert-success glass-card p-2 mb-3 text-center" style="border-radius: 16px;">
-            <i class="fas fa-check-circle me-2"></i> {{ mensaje }}
-        </div>
-        {% endif %}
+            {% if mensaje %}
+            <div class="alert alert-success glass-card p-2 mb-3 text-center" style="border-radius: 16px;">
+                <i class="fas fa-check-circle me-2"></i> {{ mensaje }}
+            </div>
+            {% endif %}
 
-        <!-- Pestañas -->
-        <ul class="nav nav-pills mb-4">
-            <li class="nav-item">
-                <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#pendientes" type="button">Pendientes de impresión</button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#historial" type="button">Historial reciente</button>
-            </li>
-        </ul>
+            <!-- Pestañas -->
+            <ul class="nav nav-pills">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#pendientes" type="button">Pendientes</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#historial" type="button">Historial</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#cronograma" type="button">Cronograma</button>
+                </li>
+            </ul>
 
-        <div class="tab-content">
-            <!-- Pestaña Pendientes -->
-            <div class="tab-pane fade show active" id="pendientes">
-                {% if pedidos %}
-                    <div class="row g-4">
-                        {% for item in pedidos %}
-                        <div class="col-md-6 col-lg-4">
-                            <div class="glass-card h-100">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <div>
-                                        <h5>Pedido #{{ item.pedido.ID }}</h5>
-                                        {% if not item.pedido.VISTO_OPERADOR %}
-                                            <span class="badge-nuevo">Nuevo</span>
-                                        {% endif %}
+            <div class="tab-content">
+                <!-- Pendientes -->
+                <div class="tab-pane fade show active" id="pendientes">
+                    {% if pedidos %}
+                        <div class="row g-4">
+                            {% for item in pedidos %}
+                            <div class="col-md-6 col-lg-4">
+                                <div class="glass-card h-100">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h5>Pedido #{{ item.pedido.ID }}</h5>
+                                            {% if not item.pedido.VISTO_OPERADOR %}
+                                                <span class="badge-nuevo">Nuevo</span>
+                                            {% endif %}
+                                        </div>
+                                        <span class="badge bg-info">{{ item.pedido.ESTADO }}</span>
                                     </div>
-                                    <span class="badge bg-info">{{ item.pedido.ESTADO }}</span>
+                                    <p><strong>Cliente:</strong> {{ item.usuario.NOMBRE }} {{ item.usuario.APELLIDO }}</p>
+                                    <p><strong>Cédula:</strong> {{ item.usuario.ID_USUARIO }}</p>
+                                    <p><strong>Páginas:</strong> {{ item.detalles[0].CANTIDAD if item.detalles else 'N/A' }}</p>
+                                    
+                                    {% if item.servicio %}
+                                    <div class="mb-2">
+                                        <span class="badge bg-primary">{{ item.servicio.TITULO }}</span>
+                                        <small class="ms-1">{{ item.pedido.TAMANO }}</small>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if item.referencia_pago %}
+                                    <p><strong>Ref. pago:</strong> <code>{{ item.referencia_pago }}</code></p>
+                                    {% endif %}
+                                    
+                                    <a href="{{ url_for('operador_detalle', pedido_id=item.pedido.ID) }}" class="btn-accion w-100 mt-2">Ver detalle</a>
                                 </div>
-                                <p><strong>Cliente:</strong> {{ item.usuario.NOMBRE }} {{ item.usuario.APELLIDO }}</p>
-                                <p><strong>Cédula:</strong> {{ item.usuario.ID_USUARIO }}</p>
-                                <p><strong>Páginas:</strong> {{ item.detalles[0].CANTIDAD if item.detalles else 'N/A' }}</p>
-                                <p><strong>Color:</strong> 
-                                    {% if item.pedido.COLOR == 'bn' %} B/N
-                                    {% elif item.pedido.COLOR == 'color' %} Color
-                                    {% elif item.pedido.COLOR == 'mixto' %} Mixto
-                                    {% else %} — {% endif %}
-                                </p>
-                                <p><strong>Tamaño:</strong> {{ item.pedido.TAMANO or '—' }}</p>
-                                <a href="{{ url_for('operador_detalle', pedido_id=item.pedido.ID) }}" class="btn btn-accion w-100 mt-2">Ver detalle completo</a>
                             </div>
+                            {% endfor %}
                         </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <div class="text-center py-5">
-                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                        <p class="text-muted">No hay pedidos pendientes de impresión.</p>
-                    </div>
-                {% endif %}
-            </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No hay pedidos pendientes.</p>
+                        </div>
+                    {% endif %}
+                </div>
 
-            <!-- Pestaña Historial -->
-            <div class="tab-pane fade" id="historial">
-                {% if historial %}
-                    <div class="table-responsive glass-card p-3">
-                        <table class="table table-hover align-middle">
-                            <thead>
-                                <tr>
-                                    <th>Pedido</th>
-                                    <th>Cliente</th>
-                                    <th>Fecha</th>
-                                    <th>Total</th>
-                                    <th>Estado</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for pedido in historial %}
-                                <tr>
-                                    <td>#{{ pedido.ID }}</td>
-                                    <td>{{ pedido.ID_USUARIO }}</td>
-                                    <td>{{ pedido.FECHA.strftime('%d/%m/%Y %H:%M') if pedido.FECHA else '' }}</td>
-                                    <td>Bs. {{ "%.2f"|format(pedido.TOTAL) }}</td>
-                                    <td><span class="badge bg-{{ 'success' if pedido.ESTADO == 'Listo' else 'secondary' }}">{{ pedido.ESTADO }}</span></td>
-                                </tr>
+                <!-- Historial -->
+                <div class="tab-pane fade" id="historial">
+                    {% if historial %}
+                        <div class="table-responsive glass-card p-3">
+                            <table class="table table-hover align-middle table-glass">
+                                <thead>
+                                    <tr>
+                                        <th>Pedido</th>
+                                        <th>Cliente</th>
+                                        <th>Fecha</th>
+                                        <th>Total</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for pedido in historial %}
+                                    <tr>
+                                        <td>#{{ pedido.ID }}</td>
+                                        <td>{{ pedido.ID_USUARIO }}</td>
+                                        <td>{{ pedido.FECHA.strftime('%d/%m/%Y %H:%M') if pedido.FECHA else '' }}</td>
+                                        <td>Bs. {{ "%.2f"|format(pedido.TOTAL) }}</td>
+                                        <td><span class="badge bg-{{ 'success' if pedido.ESTADO == 'Listo' else 'secondary' }}">{{ pedido.ESTADO }}</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No hay historial reciente.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Cronograma -->
+                <div class="tab-pane fade" id="cronograma">
+                    {% if cronograma %}
+                        {% for grupo in cronograma %}
+                            <div class="mb-4">
+                                <h5 class="fw-bold mb-3" style="color: var(--azul-oscuro);">
+                                    <i class="fas fa-calendar-day me-2"></i>
+                                    {{ grupo.etiqueta }} — {{ grupo.fecha_formateada }}
+                                </h5>
+                                {% for item in grupo.pedidos %}
+                                    {% set pedido = item.pedido %}
+                                    {% set usuario = item.usuario %}
+                                    <div class="list-group-item d-flex justify-content-between align-items-center p-3 mb-2 rounded-4 glass-card" style="border: none;">
+                                        <div>
+                                            <div class="d-flex align-items-center gap-3">
+                                                <h5 class="mb-0 fw-bold">#{{ pedido.ID }}</h5>
+                                                <span class="badge bg-info">{{ pedido.ESTADO }}</span>
+                                                {% if pedido.CODIGO_TICKET %}
+                                                    <span class="badge bg-light text-dark">{{ pedido.CODIGO_TICKET }}</span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="mt-2">
+                                                <span class="me-3"><i class="fas fa-user me-1"></i> {{ usuario.NOMBRE }} {{ usuario.APELLIDO }} ({{ usuario.ID_USUARIO }})</span>
+                                                <span class="me-3"><i class="fas fa-calendar-day me-1"></i> {{ pedido.FECHA_RETIRO.strftime('%d/%m/%Y') if pedido.FECHA_RETIRO else '—' }}</span>
+                                                <span><i class="fas fa-clock me-1"></i> {{ pedido.HORA_RETIRO.strftime('%I:%M %p') if pedido.HORA_RETIRO else '—' }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <a href="{{ url_for('operador_detalle', pedido_id=pedido.ID) }}" 
+                                               class="btn btn-outline-primary rounded-pill px-3" title="Ver detalle">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-entregar rounded-pill px-4" 
+                                                    data-pedido-id="{{ pedido.ID }}" 
+                                                    onclick="event.stopPropagation(); marcarListoDesdeCronograma(this);">
+                                                <i class="fas fa-check-circle me-1"></i> Listo
+                                            </button>
+                                        </div>
+                                    </div>
                                 {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% else %}
-                    <div class="text-center py-5">
-                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                        <p class="text-muted">No hay historial reciente.</p>
-                    </div>
-                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No hay pedidos pendientes de retiro.</p>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Botón Modo Oscuro -->
-<button class="dark-mode-toggle" id="darkModeToggle" title="Modo oscuro">
-    <i class="fas fa-moon"></i>
-</button>
+    <!-- Botón Modo Oscuro -->
+    <button class="dark-mode-toggle" id="darkModeToggle" title="Modo oscuro">
+        <i class="fas fa-moon"></i>
+    </button>
 
-<script>
-    const toggle = document.getElementById('darkModeToggle');
-    if (toggle) {
-        // Sincronizar icono al cargar
-        if (document.documentElement.classList.contains('dark-mode')) {
-            toggle.innerHTML = '<i class="fas fa-sun"></i>';
-        } else {
-            toggle.innerHTML = '<i class="fas fa-moon"></i>';
+    <script>
+        const toggle = document.getElementById('darkModeToggle');
+        if (toggle) {
+            if (document.documentElement.classList.contains('dark-mode')) {
+                toggle.innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                toggle.innerHTML = '<i class="fas fa-moon"></i>';
+            }
+
+            toggle.addEventListener('click', function() {
+                const html = document.documentElement;
+                const isDark = html.classList.toggle('dark-mode');
+                localStorage.setItem('darkMode', isDark);
+                toggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+            });
         }
-
-        toggle.addEventListener('click', function() {
-            const html = document.documentElement;
-            const isDark = html.classList.toggle('dark-mode');
-            localStorage.setItem('darkMode', isDark);
-            toggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
-        });
-    }
-</script>
-    
+    </script>
+    <script>
+        function marcarListoDesdeCronograma(btn) {
+            const pedidoId = btn.getAttribute('data-pedido-id');
+            if (!confirm('¿Marcar este pedido como listo?')) return;
+            
+            fetch(`/operador/solicitud/${pedidoId}/marcar-listo`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            })
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                } else {
+                    const item = btn.closest('.list-group-item');
+                    item.style.transition = 'opacity 0.3s';
+                    item.style.opacity = '0';
+                    setTimeout(() => item.remove(), 300);
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                alert('Error de conexión.');
+            });
+        }
+    </script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 20-06-2026 a las 04:43:19
+-- Tiempo de generación: 22-06-2026 a las 07:22:10
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -33,6 +33,31 @@ CREATE TABLE `archivo_pedido` (
   `NOMBRE_ARCHIVO` varchar(255) NOT NULL,
   `RUTA` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `archivo_pedido`
+--
+
+INSERT INTO `archivo_pedido` (`ID`, `PEDIDO_ID`, `NOMBRE_ARCHIVO`, `RUTA`) VALUES
+(466, 268, 'GlobalCopyplot_Presentacion_IngenieriaSoftware.pptx', 'static/uploads\\impresion\\GlobalCopyplot_Presentacion_IngenieriaSoftware.pptx'),
+(467, 268, '5d50bc9f-2752-4d61-9ec3-650a7be69527-1_all_1959.jpg', 'static/uploads\\comprobantes\\5d50bc9f-2752-4d61-9ec3-650a7be69527-1_all_1959.jpg'),
+(469, 270, 'PNFI-Trayecto2Seccion2.pdf', 'static/uploads\\impresion\\PNFI-Trayecto2Seccion2.pdf'),
+(470, 271, 'PNFI-Trayecto2Seccion2.pdf', 'static/uploads\\impresion\\PNFI-Trayecto2Seccion2.pdf'),
+(471, 272, 'PNFI-Trayecto2Seccion2.pdf', 'static/uploads\\impresion\\PNFI-Trayecto2Seccion2.pdf'),
+(472, 273, 'PNFI-Trayecto2Seccion2.pdf', 'static/uploads\\impresion\\PNFI-Trayecto2Seccion2.pdf'),
+(473, 274, 'GlobalCopyplotPresentacionProyecto.pptx', 'static/uploads\\impresion\\GlobalCopyplotPresentacionProyecto.pptx'),
+(474, 274, 'PNFI-Trayecto2Seccion2.pdf', 'static/uploads\\impresion\\PNFI-Trayecto2Seccion2.pdf'),
+(475, 275, 'GlobalCopyplotPresentacionProyecto.pptx', 'static/uploads\\impresion\\GlobalCopyplotPresentacionProyecto.pptx'),
+(476, 276, 'PNFI-Trayecto2Seccion2.pdf', 'static/uploads\\impresion\\PNFI-Trayecto2Seccion2.pdf'),
+(477, 277, 'GlobalCopyplot_Presentacion_IngenieriaSoftware.pptx', 'static/uploads\\impresion\\GlobalCopyplot_Presentacion_IngenieriaSoftware.pptx'),
+(478, 277, 'GlobalCopyplotPresentacionProyecto.pptx', 'static/uploads\\impresion\\GlobalCopyplotPresentacionProyecto.pptx'),
+(479, 277, 'Captura1.PNG', 'static/uploads\\comprobantes\\Captura1.PNG'),
+(480, 278, 'Captura1.PNG', 'static/uploads\\impresion\\Captura1.PNG'),
+(481, 278, '0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.PNG', 'static/uploads\\comprobantes\\0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.PNG'),
+(482, 279, '0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.PNG', 'static/uploads\\impresion\\0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.PNG'),
+(483, 279, 'Captura1.PNG', 'static/uploads\\comprobantes\\Captura1.PNG'),
+(484, 280, 'Captura1.PNG', 'static/uploads\\impresion\\Captura1.PNG'),
+(485, 280, '0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.PNG', 'static/uploads\\comprobantes\\0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.PNG');
 
 -- --------------------------------------------------------
 
@@ -96,15 +121,7 @@ INSERT INTO `configuracion` (`ID`, `CLAVE`, `VALOR`, `DESCRIPCION`) VALUES
 (14, 'notificar_pedido_listo', '1', 'Notificar cuando un pedido esté listo (1=Sí, 0=No)'),
 (15, 'politicas', 'Hola', 'Texto de políticas y términos'),
 (16, 'respaldos_automaticos', '1', 'Activar respaldos automáticos (1=Sí, 0=No)'),
-(17, 'frecuencia_respaldo', 'semanal', 'Frecuencia de respaldo: diario, semanal, mensual'),
-(18, 'precio_impresion_bn', '50', 'Precio por página en blanco y negro'),
-(19, 'precio_impresion_color', '120', 'Precio por página a color'),
-(20, 'multiplicador_carta', '1.0', 'Multiplicador de precio para tamaño carta'),
-(21, 'multiplicador_oficio', '1.2', 'Multiplicador para tamaño oficio'),
-(22, 'multiplicador_extra_oficio', '1.3', 'Multiplicador para extra oficio'),
-(23, 'multiplicador_doble_carta', '1.5', 'Multiplicador para doble carta'),
-(24, 'multiplicador_cuarto_pliego', '2.0', 'Multiplicador para 1/4 pliego'),
-(26, 'dashboard_periodo', 'semanal', 'Período por defecto para ingresos del dashboard');
+(17, 'frecuencia_respaldo', 'semanal', 'Frecuencia de respaldo: diario, semanal, mensual');
 
 -- --------------------------------------------------------
 
@@ -117,11 +134,28 @@ CREATE TABLE `detalle` (
   `CANTIDAD` int(5) DEFAULT NULL,
   `SUBTOTAL` decimal(10,2) DEFAULT NULL,
   `PEDIDO_ID` int(11) NOT NULL,
-  `PRODUCTO_ID` int(11) DEFAULT NULL,
   `PRECIO_UNITARIO` decimal(10,2) DEFAULT NULL,
   `IVA` decimal(3,2) DEFAULT NULL,
   `TOTAL_PAGO` decimal(10,2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `detalle`
+--
+
+INSERT INTO `detalle` (`ID`, `CANTIDAD`, `SUBTOTAL`, `PEDIDO_ID`, `PRECIO_UNITARIO`, `IVA`, `TOTAL_PAGO`) VALUES
+(131, 11, 550.00, 268, 50.00, 0.00, 550.00),
+(132, 65, 3250.00, 270, 50.00, 0.00, 3250.00),
+(133, 65, 3250.00, 271, 50.00, 0.00, 3250.00),
+(134, 65, 3250.00, 272, 50.00, 0.00, 3250.00),
+(135, 65, 3250.00, 273, 50.00, 0.00, 3250.00),
+(136, 77, 6800.00, 274, 50.00, 0.00, 6800.00),
+(137, 12, 700.00, 275, 50.00, 0.00, 700.00),
+(138, 65, 6000.00, 276, 50.00, 0.00, 6000.00),
+(139, 23, 1700.00, 277, 50.00, 0.00, 1700.00),
+(140, 1, 50.00, 278, 50.00, 0.00, 50.00),
+(141, 1, 200.00, 279, 200.00, 0.00, 200.00),
+(142, 1, 100.00, 280, 100.00, 0.00, 100.00);
 
 -- --------------------------------------------------------
 
@@ -134,11 +168,8 @@ CREATE TABLE `pedido` (
   `FECHA` datetime DEFAULT current_timestamp(),
   `ESTADO` varchar(20) DEFAULT 'Pendiente',
   `TOTAL` decimal(10,2) DEFAULT 0.00,
-  `COLOR` varchar(10) DEFAULT NULL,
   `TAMANO` varchar(20) DEFAULT NULL,
-  `TIPO_PAPEL_ID` int(11) DEFAULT NULL,
   `PAGINAS_COLOR` varchar(255) DEFAULT NULL,
-  `SERVICIOS_EXTRAS` varchar(255) DEFAULT NULL,
   `ID_USUARIO` int(11) DEFAULT NULL,
   `FECHA_RETIRO` date DEFAULT NULL,
   `HORA_RETIRO` time DEFAULT NULL,
@@ -147,8 +178,28 @@ CREATE TABLE `pedido` (
   `VISTO_ADMIN` tinyint(1) NOT NULL DEFAULT 0,
   `VISTO_OPERADOR` tinyint(1) NOT NULL DEFAULT 0,
   `PAGINAS` int(11) DEFAULT NULL,
-  `SERVICIO_ID` int(11) DEFAULT NULL
+  `SERVICIO_ID` int(11) DEFAULT NULL,
+  `REFERENCIA_PAGO` varchar(100) DEFAULT NULL,
+  `DETALLE_ARCHIVOS` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`DETALLE_ARCHIVOS`))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `pedido`
+--
+
+INSERT INTO `pedido` (`ID`, `FECHA`, `ESTADO`, `TOTAL`, `TAMANO`, `PAGINAS_COLOR`, `ID_USUARIO`, `FECHA_RETIRO`, `HORA_RETIRO`, `CODIGO_TICKET`, `COMENTARIOS`, `VISTO_ADMIN`, `VISTO_OPERADOR`, `PAGINAS`, `SERVICIO_ID`, `REFERENCIA_PAGO`, `DETALLE_ARCHIVOS`) VALUES
+(268, '2026-06-21 22:48:13', 'Listo', 550.00, 'Carta', NULL, 19, '2026-06-23', '09:00:00', 'TICK-268-7M0Z', '', 1, 1, 11, 3, '555556656666666', NULL),
+(270, '2026-06-22 00:16:11', 'Cancelado', 3250.00, 'Carta', NULL, 19, '2026-06-24', '10:00:00', NULL, '', 0, 0, 65, 14, NULL, NULL),
+(271, '2026-06-22 00:17:24', 'Cancelado', 3250.00, 'Carta', NULL, 19, '2026-06-23', '08:30:00', NULL, '', 0, 0, 65, 14, NULL, NULL),
+(272, '2026-06-22 00:20:54', 'Cancelado', 3250.00, 'Carta', NULL, 19, '2026-06-23', '10:00:00', NULL, 'tengo hijos', 0, 0, 65, 14, NULL, NULL),
+(273, '2026-06-22 00:23:13', 'Cancelado', 3250.00, 'Carta', NULL, 19, '2026-06-23', '09:30:00', NULL, 'tengo hijos', 0, 0, 65, 14, NULL, NULL),
+(274, '2026-06-22 00:27:33', 'Cancelado', 6800.00, NULL, NULL, 19, '2026-06-23', '10:30:00', NULL, '', 0, 0, 77, NULL, NULL, '[{\"nombre\": \"GlobalCopyplotPresentacionProyecto.pptx\", \"paginas\": 12, \"servicio_id\": 14, \"tamano\": \"Carta\", \"paginas_color\": \"4\"}, {\"nombre\": \"PNFI-Trayecto2Seccion2.pdf\", \"paginas\": 65, \"servicio_id\": 14, \"tamano\": \"Carta\", \"paginas_color\": \"55\"}]'),
+(275, '2026-06-22 00:32:16', 'Cancelado', 700.00, 'Carta', '2', 19, '2026-06-23', '10:00:00', NULL, '', 0, 0, 12, 14, NULL, NULL),
+(276, '2026-06-22 00:32:54', 'Cancelado', 6000.00, 'Carta', '55', 19, '2026-06-23', '10:30:00', NULL, '', 0, 0, 65, 14, NULL, NULL),
+(277, '2026-06-22 00:43:43', 'Pago confirmado', 1700.00, NULL, NULL, 19, '2026-06-23', '09:30:00', 'TICK-277-AZC9', '', 1, 0, 23, NULL, '000000000000000', '[{\"nombre\": \"GlobalCopyplot_Presentacion_IngenieriaSoftware.pptx\", \"paginas\": 11, \"servicio_id\": 14, \"tamano\": \"Carta\", \"paginas_color\": \"5\"}, {\"nombre\": \"GlobalCopyplotPresentacionProyecto.pptx\", \"paginas\": 12, \"servicio_id\": 14, \"tamano\": \"Carta\", \"paginas_color\": \"6\"}]'),
+(278, '2026-06-22 00:56:06', 'Pago confirmado', 50.00, 'Carta', NULL, 19, '2026-06-23', '17:30:00', 'TICK-278-8M9P', '', 1, 0, 1, 3, '444444444444444', NULL),
+(279, '2026-06-22 00:57:14', 'Entregado', 200.00, 'Doble carta', NULL, 19, '2026-06-23', '07:00:00', 'TICK-279-J73U', '', 1, 0, 1, 4, '455555555555555', NULL),
+(280, '2026-06-22 00:58:05', 'Pago confirmado', 100.00, 'Extra oficio', NULL, 19, '2026-06-29', '09:30:00', 'TICK-280-GC1N', '', 1, 0, 1, 3, '125222222222222', NULL);
 
 -- --------------------------------------------------------
 
@@ -160,16 +211,20 @@ CREATE TABLE `servicio_impresion` (
   `ID` int(11) NOT NULL,
   `TITULO` varchar(100) NOT NULL,
   `DESCRIPCION` text DEFAULT NULL,
-  `ACTIVO` tinyint(1) DEFAULT 1
+  `ACTIVO` tinyint(1) DEFAULT 1,
+  `ES_MIXTO` tinyint(1) DEFAULT 0,
+  `SERVICIO_BN_ID` int(11) DEFAULT NULL,
+  `SERVICIO_COLOR_ID` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `servicio_impresion`
 --
 
-INSERT INTO `servicio_impresion` (`ID`, `TITULO`, `DESCRIPCION`, `ACTIVO`) VALUES
-(3, 'Impresión B/N Bond', 'Impresión blanco y negro.', 1),
-(4, 'Impresión Laser Color Bond', 'Impresión a color.', 1);
+INSERT INTO `servicio_impresion` (`ID`, `TITULO`, `DESCRIPCION`, `ACTIVO`, `ES_MIXTO`, `SERVICIO_BN_ID`, `SERVICIO_COLOR_ID`) VALUES
+(3, 'Impresión B/N Bond', 'Impresión blanco y negro.', 1, 0, NULL, NULL),
+(4, 'Impresión Laser Color Bond', 'Impresión a color.', 1, 0, NULL, NULL),
+(14, 'Impresión Mixta Bond', 'Impresión a color y blanco y negro de forma mixta.', 1, 1, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -181,22 +236,27 @@ CREATE TABLE `servicio_impresion_tamano` (
   `ID` int(11) NOT NULL,
   `SERVICIO_ID` int(11) NOT NULL,
   `NOMBRE` varchar(50) NOT NULL,
-  `PRECIO` decimal(10,2) NOT NULL
+  `PRECIO_BN` decimal(10,2) NOT NULL,
+  `PRECIO_COLOR` decimal(10,2) NOT NULL DEFAULT 0.00
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `servicio_impresion_tamano`
 --
 
-INSERT INTO `servicio_impresion_tamano` (`ID`, `SERVICIO_ID`, `NOMBRE`, `PRECIO`) VALUES
-(9, 3, 'Carta', 50.00),
-(10, 3, 'Oficio', 80.00),
-(11, 3, 'Extra oficio', 100.00),
-(12, 3, 'Doble carta', 160.00),
-(21, 4, 'Carta', 120.00),
-(22, 4, 'Oficio', 160.00),
-(23, 4, 'Extra oficio', 200.00),
-(24, 4, 'Doble carta', 250.00);
+INSERT INTO `servicio_impresion_tamano` (`ID`, `SERVICIO_ID`, `NOMBRE`, `PRECIO_BN`, `PRECIO_COLOR`) VALUES
+(9, 3, 'Carta', 50.00, 0.00),
+(10, 3, 'Oficio', 80.00, 0.00),
+(11, 3, 'Extra oficio', 100.00, 0.00),
+(12, 3, 'Doble carta', 160.00, 0.00),
+(77, 4, 'Carta', 100.00, 100.00),
+(78, 4, 'Oficio', 130.00, 130.00),
+(79, 4, 'Extra oficio', 150.00, 150.00),
+(80, 4, 'Doble carta', 200.00, 200.00),
+(81, 14, 'Carta', 50.00, 100.00),
+(82, 14, 'Oficio', 80.00, 130.00),
+(83, 14, 'Extra oficio', 100.00, 150.00),
+(84, 14, 'Doble carta', 160.00, 200.00);
 
 -- --------------------------------------------------------
 
@@ -260,8 +320,7 @@ ALTER TABLE `configuracion`
 --
 ALTER TABLE `detalle`
   ADD PRIMARY KEY (`ID`),
-  ADD KEY `ID_PEDIDO` (`PEDIDO_ID`),
-  ADD KEY `ID_SERVICIO` (`PRODUCTO_ID`);
+  ADD KEY `ID_PEDIDO` (`PEDIDO_ID`);
 
 --
 -- Indices de la tabla `pedido`
@@ -276,7 +335,9 @@ ALTER TABLE `pedido`
 -- Indices de la tabla `servicio_impresion`
 --
 ALTER TABLE `servicio_impresion`
-  ADD PRIMARY KEY (`ID`);
+  ADD PRIMARY KEY (`ID`),
+  ADD KEY `SERVICIO_BN_ID` (`SERVICIO_BN_ID`),
+  ADD KEY `SERVICIO_COLOR_ID` (`SERVICIO_COLOR_ID`);
 
 --
 -- Indices de la tabla `servicio_impresion_tamano`
@@ -302,7 +363,7 @@ ALTER TABLE `usuario`
 -- AUTO_INCREMENT de la tabla `archivo_pedido`
 --
 ALTER TABLE `archivo_pedido`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=169;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=486;
 
 --
 -- AUTO_INCREMENT de la tabla `catalogo`
@@ -320,25 +381,25 @@ ALTER TABLE `configuracion`
 -- AUTO_INCREMENT de la tabla `detalle`
 --
 ALTER TABLE `detalle`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=74;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=143;
 
 --
 -- AUTO_INCREMENT de la tabla `pedido`
 --
 ALTER TABLE `pedido`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=123;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=281;
 
 --
 -- AUTO_INCREMENT de la tabla `servicio_impresion`
 --
 ALTER TABLE `servicio_impresion`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT de la tabla `servicio_impresion_tamano`
 --
 ALTER TABLE `servicio_impresion_tamano`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=85;
 
 --
 -- AUTO_INCREMENT de la tabla `usuario`
@@ -362,6 +423,13 @@ ALTER TABLE `archivo_pedido`
 ALTER TABLE `pedido`
   ADD CONSTRAINT `pedido_ibfk_1` FOREIGN KEY (`ID_USUARIO`) REFERENCES `usuario` (`ID`),
   ADD CONSTRAINT `pedido_ibfk_2` FOREIGN KEY (`SERVICIO_ID`) REFERENCES `servicio_impresion` (`ID`);
+
+--
+-- Filtros para la tabla `servicio_impresion`
+--
+ALTER TABLE `servicio_impresion`
+  ADD CONSTRAINT `servicio_impresion_ibfk_1` FOREIGN KEY (`SERVICIO_BN_ID`) REFERENCES `servicio_impresion` (`ID`),
+  ADD CONSTRAINT `servicio_impresion_ibfk_2` FOREIGN KEY (`SERVICIO_COLOR_ID`) REFERENCES `servicio_impresion` (`ID`);
 
 --
 -- Filtros para la tabla `servicio_impresion_tamano`

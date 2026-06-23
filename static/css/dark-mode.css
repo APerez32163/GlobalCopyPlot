@@ -3,41 +3,7 @@
 /* Fondo general y texto */
 html.dark-mode body,
 body.dark-mode {
-    background-color: #1a1d23;
     color: #e0e0e0;
-}
-
-/* Sidebar */
-html.dark-mode .sidebar,
-body.dark-mode .sidebar {
-    background: rgba(30, 33, 40, 0.85);
-    backdrop-filter: blur(20px);
-    border-right: 1px solid rgba(255, 255, 255, 0.08);
-}
-html.dark-mode .sidebar .nav-link,
-body.dark-mode .sidebar .nav-link {
-    color: #bbb !important;
-}
-html.dark-mode .sidebar .nav-link:hover,
-html.dark-mode .sidebar .nav-link.active,
-body.dark-mode .sidebar .nav-link:hover,
-body.dark-mode .sidebar .nav-link.active {
-    background: rgba(91, 155, 213, 0.2);
-    color: #fff !important;
-}
-
-/* Tarjetas de vidrio */
-html.dark-mode .glass-card,
-body.dark-mode .glass-card {
-    background: rgba(30, 33, 40, 0.7);
-    backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #ddd;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-}
-html.dark-mode .glass-card:hover,
-body.dark-mode .glass-card:hover {
-    background: rgba(40, 44, 52, 0.8);
 }
 
 /* Tablas */
@@ -418,4 +384,321 @@ body.dark-mode #servicios .card .fw-bold {
 html.dark-mode #servicios .card .text-muted,
 body.dark-mode #servicios .card .text-muted {
     color: #aaa !important;
+}
+/* ========== MODO OSCURO – TARJETA DE PREFERENCIAS DE IMPRESIÓN ========== */
+html.dark-mode #info .card.bg-light,
+body.dark-mode #info .card.bg-light {
+    background: rgba(30, 33, 40, 0.75) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ddd;
+}
+html.dark-mode #info .card .fw-bold,
+body.dark-mode #info .card .fw-bold {
+    color: #ffffff;
+}
+html.dark-mode #info .card .text-muted,
+body.dark-mode #info .card .text-muted {
+    color: #aaa !important;
+}
+
+/* ========== MODO OSCURO – PESTAÑA ARCHIVOS A IMPRIMIR ========== */
+html.dark-mode #archivos .list-group-item,
+body.dark-mode #archivos .list-group-item {
+    background-color: rgba(30, 33, 40, 0.6);
+    color: #ddd;
+    border-color: #333;
+}
+html.dark-mode #archivos .badge.bg-primary,
+body.dark-mode #archivos .badge.bg-primary {
+    background-color: #5b9bd5 !important;
+    color: #fff;
+}
+html.dark-mode #archivos .btn-solicitar,
+body.dark-mode #archivos .btn-solicitar {
+    background-color: #5b9bd5;
+    border-color: #5b9bd5;
+    color: #fff;
+}
+html.dark-mode #archivos .btn-solicitar:hover,
+body.dark-mode #archivos .btn-solicitar:hover {
+    background-color: #2f5496;
+}
+
+/* ========== MODO OSCURO – MODAL DE DETALLE EN REPORTES ========== */
+html.dark-mode #modalDetallePedido .modal-content,
+body.dark-mode #modalDetallePedido .modal-content {
+    background: rgba(30, 33, 40, 0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #ddd;
+}
+html.dark-mode #modalDetallePedido .modal-header,
+body.dark-mode #modalDetallePedido .modal-header {
+    border-bottom: 1px solid #333;
+}
+html.dark-mode #modalDetallePedido .btn-close,
+body.dark-mode #modalDetallePedido .btn-close {
+    filter: invert(1);
+}
+html.dark-mode #modalDetallePedido .card.bg-light,
+body.dark-mode #modalDetallePedido .card.bg-light {
+    background: rgba(255,255,255,0.1) !important;
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #ddd;
+}
+html.dark-mode #modalDetallePedido .list-group-item,
+body.dark-mode #modalDetallePedido .list-group-item {
+    background-color: rgba(30, 33, 40, 0.7);
+    color: #ddd;
+    border-color: #444;
+}
+html.dark-mode #modalDetallePedido .badge.bg-primary,
+body.dark-mode #modalDetallePedido .badge.bg-primary {
+    background-color: #5b9bd5 !important;
+}
+html.dark-mode #modalDetallePedido .badge.bg-success,
+body.dark-mode #modalDetallePedido .badge.bg-success {
+    background-color: #198754 !important;
+}
+html.dark-mode #modalDetallePedido .btn-solicitar,
+body.dark-mode #modalDetallePedido .btn-solicitar {
+    background-color: #5b9bd5;
+    border-color: #5b9bd5;
+    color: #fff;
+}
+
+/* Overlay de confirmación */
+html.dark-mode .confirm-dialog,
+body.dark-mode .confirm-dialog {
+    background: rgba(30, 33, 40, 0.9);
+    color: #ddd;
+    border: 1px solid #444;
+}
+/* ========== MODO OSCURO: CRONOGRAMA ========== */
+html.dark-mode #cronograma h5,
+body.dark-mode #cronograma h5 {
+    color: #f0f0f0 !important;
+}
+
+html.dark-mode #cronograma .list-group-item,
+body.dark-mode #cronograma .list-group-item {
+    background: rgba(30, 33, 40, 0.8) !important;
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #ddd;
+}
+
+html.dark-mode #cronograma .list-group-item:hover,
+body.dark-mode #cronograma .list-group-item:hover {
+    background: rgba(40, 44, 52, 0.9) !important;
+}
+
+html.dark-mode #cronograma .list-group-item h5,
+body.dark-mode #cronograma .list-group-item h5 {
+    color: #ffffff !important;
+}
+
+html.dark-mode #cronograma .badge.bg-light,
+body.dark-mode #cronograma .badge.bg-light {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    color: #ddd !important;
+}
+
+html.dark-mode #cronograma .btn-success,
+body.dark-mode #cronograma .btn-success {
+    background-color: #198754;
+    border-color: #198754;
+    color: white;
+}
+
+html.dark-mode #cronograma .btn-success:hover,
+body.dark-mode #cronograma .btn-success:hover {
+    background-color: #157347;
+}
+/* ========== MODO OSCURO – PANEL ADMIN (NUEVO DISEÑO LÍQUID GLASS) ========== */
+
+/* Fondo general del body */
+html.dark-mode body,
+body.dark-mode {
+    background: linear-gradient(135deg, #16191e 0%, #1a1d23 100%);
+}
+
+/* Sidebar */
+html.dark-mode .sidebar,
+body.dark-mode .sidebar {
+    background: rgba(20, 23, 28, 0.7);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.03);
+}
+
+/* Logo */
+html.dark-mode .sidebar-logo,
+body.dark-mode .sidebar-logo {
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4), 0 0 0 8px rgba(91, 155, 213, 0.25);
+}
+
+/* Enlaces del menú */
+html.dark-mode .sidebar .nav-link,
+body.dark-mode .sidebar .nav-link {
+    color: #b0c4de;
+}
+
+html.dark-mode .sidebar .nav-link i,
+body.dark-mode .sidebar .nav-link i {
+    color: #7bb3e0;
+}
+
+html.dark-mode .sidebar .nav-link:hover,
+html.dark-mode .sidebar .nav-link.active,
+body.dark-mode .sidebar .nav-link:hover,
+body.dark-mode .sidebar .nav-link.active {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+html.dark-mode .sidebar .nav-link::before,
+body.dark-mode .sidebar .nav-link::before {
+    background: #5b9bd5;
+}
+
+/* Submenú */
+html.dark-mode .sidebar .submenu .nav-link,
+body.dark-mode .sidebar .submenu .nav-link {
+    color: #9aa9b9;
+}
+
+html.dark-mode .sidebar .submenu .nav-link:hover,
+body.dark-mode .sidebar .submenu .nav-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+/* Separador */
+html.dark-mode .sidebar hr,
+body.dark-mode .sidebar hr {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Barra de scroll del menú */
+html.dark-mode .sidebar-menu::-webkit-scrollbar-thumb,
+body.dark-mode .sidebar-menu::-webkit-scrollbar-thumb {
+    background: rgba(91, 155, 213, 0.5);
+}
+
+/* Contenido principal (tarjeta de vidrio) */
+html.dark-mode .main-glass,
+body.dark-mode .main-glass {
+    background: rgba(20, 23, 28, 0.7);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Botón hamburguesa */
+html.dark-mode .hamburger-btn,
+body.dark-mode .hamburger-btn {
+    background: rgba(20, 23, 28, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #b0c4de;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+html.dark-mode .hamburger-btn:hover,
+body.dark-mode .hamburger-btn:hover {
+    background: #5b9bd5;
+    color: #ffffff;
+    box-shadow: 0 12px 30px rgba(47, 84, 150, 0.5);
+}
+
+/* Ajuste para los alerts dentro del main-glass */
+html.dark-mode .main-glass .alert,
+body.dark-mode .main-glass .alert {
+    background: rgba(30, 33, 40, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e0e0e0;
+}
+/* ========== MODO OSCURO – PANEL OPERADOR (NUEVO DISEÑO GLASS) ========== */
+html.dark-mode body,
+body.dark-mode {
+    background: linear-gradient(135deg, #16191e 0%, #1a1d23 100%);
+}
+
+html.dark-mode .main-glass,
+body.dark-mode .main-glass {
+    background: rgba(20, 23, 28, 0.7);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+html.dark-mode .operador-header h2,
+body.dark-mode .operador-header h2 {
+    color: #ffffff;
+}
+
+html.dark-mode .btn-outline-glass,
+body.dark-mode .btn-outline-glass {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #b0c4de;
+}
+
+html.dark-mode .btn-outline-glass:hover,
+body.dark-mode .btn-outline-glass:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+
+html.dark-mode .nav-pills .nav-link,
+body.dark-mode .nav-pills .nav-link {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #b0c4de;
+}
+
+html.dark-mode .nav-pills .nav-link.active,
+body.dark-mode .nav-pills .nav-link.active {
+    background: linear-gradient(135deg, #5B9BD5, #2F5496);
+    color: white;
+}
+
+html.dark-mode .glass-card,
+body.dark-mode .glass-card {
+    background: rgba(20, 23, 28, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+html.dark-mode .glass-card:hover,
+body.dark-mode .glass-card:hover {
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+}
+
+html.dark-mode .table-glass,
+body.dark-mode .table-glass {
+    background: rgba(20, 23, 28, 0.7);
+    color: #e0e0e0;
+}
+
+html.dark-mode .table-glass thead th,
+body.dark-mode .table-glass thead th {
+    background: rgba(47, 84, 150, 0.15);
+    color: #7bb3e0;
+}
+
+html.dark-mode .table-glass tbody td,
+body.dark-mode .table-glass tbody td {
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+html.dark-mode .contador-nuevos,
+body.dark-mode .contador-nuevos {
+    background: rgba(220, 53, 69, 0.1);
+    border-color: rgba(220, 53, 69, 0.25);
 }

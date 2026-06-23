@@ -4,24 +4,7 @@
 <h2 class="mb-4">Catálogos</h2>
 
 {# Script para activar la pestaña correcta si se recibe el parámetro tab #}
-{% if tab_activa %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var tabPill = document.querySelector('#catalogoTabs button[data-bs-target="#{{ tab_activa }}"]');
-        if (tabPill) {
-            // Desactivar todos
-            document.querySelectorAll('#catalogoTabs .nav-link').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('show', 'active'));
-            // Activar el deseado
-            tabPill.classList.add('active');
-            var targetPane = document.querySelector('#{{ tab_activa }}');
-            if (targetPane) {
-                targetPane.classList.add('show', 'active');
-            }
-        }
-    });
-</script>
-{% endif %}
+
 
 <ul class="nav nav-pills mb-4" id="catalogoTabs" role="tablist">
     <li class="nav-item" role="presentation">
@@ -33,7 +16,6 @@
 </ul>
 
 <div class="tab-content">
-    
     <!-- SERVICIOS IMAGENES -->
     <div class="tab-pane fade show active" id="servicios">
         <div class="glass-card p-4">
@@ -65,6 +47,7 @@
             </div>
         </div>
     </div>
+</div>
 
     <!-- Modal Agregar imagen -->
     <div class="modal fade" id="modalAgregar" tabindex="-1">
@@ -141,13 +124,20 @@
                                 {% else %}
                                     <span class="badge bg-secondary">Inactivo</span>
                                 {% endif %}
+                                {% if srv.ES_MIXTO %}
+                                    <span class="badge bg-warning text-dark ms-1">Mixto</span>
+                                {% endif %}
                             </div>
                         </div>
                         <ul class="list-unstyled mb-0 mt-2">
                             {% for t in srv.tamanos %}
                                 <li class="d-flex justify-content-between">
                                     <span>{{ t.NOMBRE }}</span>
-                                    <strong>{{ "%.2f"|format(t.PRECIO) }} Bs.</strong>
+                                    {% if srv.ES_MIXTO %}
+                                        <span class="small">BN: {{ "%.2f"|format(t.PRECIO_BN) }} / Color: {{ "%.2f"|format(t.PRECIO_COLOR) }} Bs.</span>
+                                    {% else %}
+                                        <strong>{{ "%.2f"|format(t.PRECIO_BN) }} Bs.</strong>
+                                    {% endif %}
                                 </li>
                             {% endfor %}
                         </ul>
@@ -167,132 +157,218 @@
                 {% endfor %}
             </div>
         </div>
-    </div>
 
-    <!-- Modal Agregar Servicio -->
-    <div class="modal fade" id="modalAgregarServicio" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content glass-card p-4">
-                <h5>Agregar servicio de impresión</h5>
-                <form method="POST" action="{{ url_for('admin_agregar_servicio_impresion') }}">
-                    <div class="mb-3">
-                        <label>Título *</label>
-                        <input type="text" name="titulo" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label>Descripción</label>
-                        <textarea name="descripcion" class="form-control" rows="2"></textarea>
-                    </div>
-                    <div class="form-check mb-3">
-                        <input type="checkbox" name="activo" class="form-check-input" checked>
-                        <label class="form-check-label">Activo</label>
-                    </div>
-
-                    <h6>Tamaños y precios</h6>
-                    <div id="contenedorTamanosAgregar">
-                        <!-- Las filas se agregan dinámicamente -->
-                    </div>
-                    <button type="button" class="btn btn-outline-secondary btn-sm mb-3"
-                            onclick="agregarFilaTamano('contenedorTamanosAgregar')">
-                        <i class="fas fa-plus"></i> Agregar tamaño
-                    </button>
-
-                    <div class="text-end">
-                        <button type="submit" class="btn btn-solicitar">Guardar servicio</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modales de edición (uno por servicio) -->
-    {% for srv in servicios %}
-    <div class="modal fade" id="modalEditarServicio{{ srv.ID }}" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content glass-card p-4">
-                <h5>Editar servicio</h5>
-                <form method="POST" action="{{ url_for('admin_editar_servicio_impresion', servicio_id=srv.ID) }}">
-                    <div class="mb-3">
-                        <label>Título *</label>
-                        <input type="text" name="titulo" class="form-control" value="{{ srv.TITULO }}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label>Descripción</label>
-                        <textarea name="descripcion" class="form-control" rows="2">{{ srv.DESCRIPCION or '' }}</textarea>
-                    </div>
-                    <div class="form-check mb-3">
-                        <input type="checkbox" name="activo" class="form-check-input" {% if srv.ACTIVO %}checked{% endif %}>
-                        <label class="form-check-label">Activo</label>
-                    </div>
-
-                    <h6>Tamaños y precios</h6>
-                    <div id="contenedorEditar{{ srv.ID }}">
-                        {% for t in srv.tamanos %}
-                        <div class="input-group mb-2">
-                            <input type="text" name="tam_nombre[]" class="form-control" placeholder="Nombre" value="{{ t.NOMBRE }}">
-                            <input type="number" step="0.01" name="tam_precio[]" class="form-control" placeholder="Precio" value="{{ t.PRECIO }}">
-                            <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()">
-                                <i class="fas fa-times"></i>
-                            </button>
+        <!-- Modal Agregar Servicio (único) -->
+        <div class="modal fade" id="modalAgregarServicio" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content glass-card p-4">
+                    <h5>Agregar servicio de impresión</h5>
+                    <form method="POST" action="{{ url_for('admin_agregar_servicio_impresion') }}">
+                        <div class="mb-3">
+                            <label>Título *</label>
+                            <input type="text" name="titulo" class="form-control" required>
                         </div>
-                        {% endfor %}
-                    </div>
-                    <button type="button" class="btn btn-outline-secondary btn-sm mb-3"
-                            onclick="agregarFilaTamano('contenedorEditar{{ srv.ID }}')">
-                        <i class="fas fa-plus"></i> Agregar tamaño
-                    </button>
+                        <div class="mb-3">
+                            <label>Descripción</label>
+                            <textarea name="descripcion" class="form-control" rows="2"></textarea>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input type="checkbox" name="activo" class="form-check-input" checked>
+                            <label class="form-check-label">Activo</label>
+                        </div>
 
-                    <div class="text-end">
-                        <button type="submit" class="btn btn-solicitar">Guardar cambios</button>
-                    </div>
-                </form>
+                        <div class="form-check mb-3">
+                            <input type="checkbox" name="es_mixto" class="form-check-input" id="chkMixtoAgregar">
+                            <label class="form-check-label" for="chkMixtoAgregar">Servicio mixto (BN/Color)</label>
+                        </div>
+
+                        <h6>Tamaños y precios</h6>
+                        <div id="contenedorTamanosAgregar"></div>
+                        <button type="button" class="btn btn-outline-secondary btn-sm mb-3"
+                                id="btnAgregarTamano">
+                            <i class="fas fa-plus"></i> Agregar tamaño
+                        </button>
+
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-solicitar">Guardar servicio</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
-    </div>
-    {% endfor %}
 
-    <!-- Modal confirmar eliminación -->
-    <div class="modal fade" id="modalEliminarServicio" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content glass-card p-3">
-                <h5>Confirmar eliminación</h5>
-                <p>¿Eliminar este servicio y todos sus tamaños?</p>
-                <form id="formEliminarServicio" method="POST" action="">
-                    <div class="d-flex gap-2 justify-content-end">
-                        <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-danger rounded-pill">Eliminar</button>
-                    </div>
-                </form>
+        <!-- Modales de edición -->
+        {% for srv in servicios %}
+        <div class="modal fade" id="modalEditarServicio{{ srv.ID }}" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content glass-card p-4">
+                    <h5>Editar servicio</h5>
+                    <form method="POST" action="{{ url_for('admin_editar_servicio_impresion', servicio_id=srv.ID) }}">
+                        <div class="mb-3">
+                            <label>Título *</label>
+                            <input type="text" name="titulo" class="form-control" value="{{ srv.TITULO }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Descripción</label>
+                            <textarea name="descripcion" class="form-control" rows="2">{{ srv.DESCRIPCION or '' }}</textarea>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input type="checkbox" name="activo" class="form-check-input" {% if srv.ACTIVO %}checked{% endif %}>
+                            <label class="form-check-label">Activo</label>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input type="checkbox" name="es_mixto" class="form-check-input"
+                                   id="chkMixtoEditar{{ srv.ID }}" {% if srv.ES_MIXTO %}checked{% endif %}>
+                            <label class="form-check-label" for="chkMixtoEditar{{ srv.ID }}">Servicio mixto (BN/Color)</label>
+                        </div>
+
+                        <h6>Tamaños y precios</h6>
+                        <div id="contenedorEditar{{ srv.ID }}">
+                            {% for t in srv.tamanos %}
+                            <div class="input-group mb-2">
+                                <input type="text" name="tam_nombre[]" class="form-control" placeholder="Nombre" value="{{ t.NOMBRE }}">
+                                {% if srv.ES_MIXTO %}
+                                    <input type="number" step="0.01" name="tam_precio_bn[]" class="form-control" placeholder="Precio B/N" value="{{ t.PRECIO_BN }}">
+                                    <input type="number" step="0.01" name="tam_precio_color[]" class="form-control" placeholder="Precio Color" value="{{ t.PRECIO_COLOR }}">
+                                {% else %}
+                                    <input type="number" step="0.01" name="tam_precio_bn[]" class="form-control" placeholder="Precio" value="{{ t.PRECIO_BN }}">
+                                {% endif %}
+                                <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <button type="button" class="btn btn-outline-secondary btn-sm mb-3"
+                                onclick="agregarFilaTamanoEditar('contenedorEditar{{ srv.ID }}', {{ 'true' if srv.ES_MIXTO else 'false' }})">
+                            <i class="fas fa-plus"></i> Agregar tamaño
+                        </button>
+
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-solicitar">Guardar cambios</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Modal eliminar -->
+        <div class="modal fade" id="modalEliminarServicio" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content glass-card p-3">
+                    <h5>Confirmar eliminación</h5>
+                    <p>¿Eliminar este servicio y todos sus tamaños?</p>
+                    <form id="formEliminarServicio" method="POST" action="">
+                        <div class="d-flex gap-2 justify-content-end">
+                            <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-danger rounded-pill">Eliminar</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        function agregarFilaTamano(contenedorId) {
-            const div = document.createElement('div');
-            div.className = 'input-group mb-2';
-            div.innerHTML = `
-                <input type="text" name="tam_nombre[]" class="form-control" placeholder="Nombre" required>
-                <input type="number" step="0.01" name="tam_precio[]" class="form-control" placeholder="Precio" required>
-                <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()">
-                    <i class="fas fa-times"></i>
-                </button>
-            `;
-            document.getElementById(contenedorId).appendChild(div);
-        }
+        (function() {
+            // Referencias al modal de agregar
+            const chkMixto = document.getElementById('chkMixtoAgregar');
+            const contenedor = document.getElementById('contenedorTamanosAgregar');
+            const btnAgregar = document.getElementById('btnAgregarTamano');
 
-        function confirmarEliminarServicio(servicioId) {
-            const form = document.getElementById('formEliminarServicio');
-            form.action = '/admin/servicio-impresion/' + servicioId + '/eliminar';
-            new bootstrap.Modal(document.getElementById('modalEliminarServicio')).show();
-        }
+            let modoMixto = false;
 
-        // Inicializar con una fila vacía para el modal de agregar
-        document.addEventListener('DOMContentLoaded', function() {
-            const contAgregar = document.getElementById('contenedorTamanosAgregar');
-            if (contAgregar && contAgregar.children.length === 0) {
-                agregarFilaTamano('contenedorTamanosAgregar');
+            function crearFila() {
+                const div = document.createElement('div');
+                div.className = 'input-group mb-2';
+                if (modoMixto) {
+                    div.innerHTML = `
+                        <input type="text" name="tam_nombre[]" class="form-control" placeholder="Nombre" required>
+                        <input type="number" step="0.01" name="tam_precio_bn[]" class="form-control" placeholder="Precio B/N" required>
+                        <input type="number" step="0.01" name="tam_precio_color[]" class="form-control" placeholder="Precio Color" required>
+                        <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                } else {
+                    div.innerHTML = `
+                        <input type="text" name="tam_nombre[]" class="form-control" placeholder="Nombre" required>
+                        <input type="number" step="0.01" name="tam_precio_bn[]" class="form-control" placeholder="Precio" required>
+                        <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                }
+                contenedor.appendChild(div);
             }
-        });
+
+            function reconstruir() {
+                contenedor.innerHTML = '';
+                crearFila();
+            }
+
+            chkMixto.addEventListener('change', function() {
+                modoMixto = this.checked;
+                reconstruir();
+            });
+
+            btnAgregar.addEventListener('click', function(e) {
+                e.preventDefault();
+                crearFila();
+            });
+
+            // Fila inicial
+            if (contenedor.children.length === 0) {
+                crearFila();
+            }
+
+            // Funciones globales para editar y eliminar
+            window.agregarFilaTamanoEditar = function(contenedorId, esMixto) {
+                const div = document.createElement('div');
+                div.className = 'input-group mb-2';
+                if (esMixto) {
+                    div.innerHTML = `
+                        <input type="text" name="tam_nombre[]" class="form-control" placeholder="Nombre" required>
+                        <input type="number" step="0.01" name="tam_precio_bn[]" class="form-control" placeholder="Precio B/N" required>
+                        <input type="number" step="0.01" name="tam_precio_color[]" class="form-control" placeholder="Precio Color" required>
+                        <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                } else {
+                    div.innerHTML = `
+                        <input type="text" name="tam_nombre[]" class="form-control" placeholder="Nombre" required>
+                        <input type="number" step="0.01" name="tam_precio_bn[]" class="form-control" placeholder="Precio" required>
+                        <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                }
+                document.getElementById(contenedorId).appendChild(div);
+            };
+
+            window.confirmarEliminarServicio = function(servicioId) {
+                const form = document.getElementById('formEliminarServicio');
+                form.action = '/admin/servicio-impresion/' + servicioId + '/eliminar';
+                new bootstrap.Modal(document.getElementById('modalEliminarServicio')).show();
+            };
+        })();
+
+        document.addEventListener('DOMContentLoaded', function() {
+        var tabPill = document.querySelector('#catalogoTabs button[data-bs-target="#{{ tab_activa }}"]');
+        if (tabPill) {
+            // Desactivar todos
+            document.querySelectorAll('#catalogoTabs .nav-link').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('show', 'active'));
+            // Activar el deseado
+            tabPill.classList.add('active');
+            var targetPane = document.querySelector('#{{ tab_activa }}');
+            if (targetPane) {
+                targetPane.classList.add('show', 'active');
+            }
+        }
+    });
     </script>
 {% endblock %}
