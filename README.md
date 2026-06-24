@@ -29,9 +29,9 @@ Base de datos (estructura principal)
 
     Administrador: Gestiona servicios (crea tarjetas de impresión con precios), confirma pagos, actualiza estados (Listo/Entregado) y visualiza reportes (ventas, ingresos, servicios más solicitados).
 
-    Operador: Consulta los pedidos pendientes, imprime los documentos y los marca como “Listo” para que el cliente reciba su ticket.
+    Operador: Consulta los pedidos pendientes, imprime los documentos y los marca como “Listo” para que el cliente reciba un correo de confirmación de impresión.
 
-    Notificaciones: Al confirmar el pago o al estar listo el pedido, se envían correos automáticos al cliente.
+    Notificaciones: Al confirmar estar listo el pedido, se envían correos automáticos al cliente.
 
 ¿Cómo se instala?
 
