@@ -78,8 +78,6 @@ class ServicioImpresion(db.Model):
     DESCRIPCION = db.Column(db.Text, nullable=True)
     ACTIVO = db.Column(db.Boolean, default=True)
     ES_MIXTO = db.Column(db.Boolean, default=False)
-    SERVICIO_BN_ID = db.Column(db.Integer, db.ForeignKey('servicio_impresion.ID'), nullable=True)
-    SERVICIO_COLOR_ID = db.Column(db.Integer, db.ForeignKey('servicio_impresion.ID'), nullable=True)
     tamanos = db.relationship('ServicioImpresionTamano', backref='servicio', cascade='all, delete-orphan', lazy='select')
 
 class ServicioImpresionTamano(db.Model):

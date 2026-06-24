@@ -409,23 +409,26 @@
             });
         }
     </script>
+
     <script>
         function marcarListoDesdeCronograma(btn) {
             const pedidoId = btn.getAttribute('data-pedido-id');
-            if (!confirm('¿Marcar este pedido como listo?')) return;
+            if (!confirm('¿Marcar este pedido como Entregado?')) return;
             
-            fetch(`/operador/solicitud/${pedidoId}/marcar-listo`, {
+            fetch(`/operador/solicitud/${pedidoId}/marcar-entregado`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
             })
-            .then(response => {
-                if (response.redirected) {
-                    window.location.href = response.url;
-                } else {
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Eliminar la tarjeta con animación
                     const item = btn.closest('.list-group-item');
                     item.style.transition = 'opacity 0.3s';
                     item.style.opacity = '0';
                     setTimeout(() => item.remove(), 300);
+                } else {
+                    alert('Error al actualizar el estado.');
                 }
             })
             .catch(error => {

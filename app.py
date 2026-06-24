@@ -875,8 +875,6 @@ def admin_agregar_servicio_impresion():
     descripcion = request.form.get('descripcion', '').strip()
     activo = 'activo' in request.form
     es_mixto = 'es_mixto' in request.form
-    servicio_bn_id = request.form.get('servicio_bn_id', type=int) or None
-    servicio_color_id = request.form.get('servicio_color_id', type=int) or None
 
     if not titulo:
         flash('El título es obligatorio.', 'danger')
@@ -885,9 +883,7 @@ def admin_agregar_servicio_impresion():
     nuevo = ServicioImpresion(TITULO=titulo, 
                               DESCRIPCION=descripcion, 
                               ACTIVO=activo,
-                              ES_MIXTO=es_mixto,
-                              SERVICIO_BN_ID=servicio_bn_id,
-                              SERVICIO_COLOR_ID=servicio_color_id)
+                              ES_MIXTO=es_mixto)
     
     db.session.add(nuevo)
     db.session.flush() 
@@ -936,8 +932,6 @@ def admin_editar_servicio_impresion(servicio_id):
     servicio.DESCRIPCION = request.form.get('descripcion', '').strip()
     servicio.ACTIVO = 'activo' in request.form
     servicio.ES_MIXTO = 'es_mixto' in request.form
-    servicio.SERVICIO_BN_ID = request.form.get('servicio_bn_id', type=int) or None
-    servicio.SERVICIO_COLOR_ID = request.form.get('servicio_color_id', type=int) or None
 
     # Reemplazar tamaños existentes por los nuevos enviados
     ServicioImpresionTamano.query.filter_by(SERVICIO_ID=servicio_id).delete()
@@ -1683,6 +1677,17 @@ def operador_marcar_listo(pedido_id):
 
     return redirect(url_for('panel_operador'))
 
+@app.route('/operador/solicitud/<int:pedido_id>/marcar-entregado', methods=['POST'])
+@login_required
+@operador_required
+def operador_marcar_entregado(pedido_id):
+    pedido = Pedido.query.get_or_404(pedido_id)
+    if pedido.ESTADO in ['Listo', 'Pago confirmado', 'En proceso']:
+        pedido.ESTADO = 'Entregado'
+        db.session.commit()
+        return {'success': True}
+    return {'error': 'No se puede marcar como entregado en este estado'}, 400
+
 # ------------------------------------------------------------
 # IMPRIMIR
 # ------------------------------------------------------------
@@ -1923,6 +1928,7 @@ def configurar_impresion(pedido_id):
         pedido.TAMANO = tamano_nombre
 
         servicio = ServicioImpresion.query.get(servicio_id)
+
         if servicio and servicio.ES_MIXTO:
             pedido.PAGINAS_COLOR = request.form.get('paginas_color', '').strip() or None
         else:
