@@ -1,4 +1,4 @@
-/* ========== RESPONSIVE MÓVIL (max-width: 576px) – FLUJO DE IMPRESIÓN ========== */
+/* ========== RESPONSIVE MÓVIL GLOBAL (max-width: 576px) ========== */
 @media (max-width: 576px) {
     *, *::before, *::after {
         box-sizing: border-box;
@@ -9,51 +9,43 @@
         background-attachment: scroll;
     }
 
-    .wizard-container,
-    .container {
+    /* Contenedores generales (tienda, index, login) */
+    .container,
+    .wizard-container {
         padding: 8px 12px 100px;
         max-width: 100%;
         width: 100%;
         margin: 0 auto;
     }
 
+    /* Tarjetas y pasos */
     .step,
-    .glass-card {
+    .glass-card,
+    .auth-card {
         padding: 16px 12px;
         border-radius: 20px;
         margin-bottom: 12px;
     }
 
-    h2 {
-        font-size: 1.5rem !important;
-        margin-top: 0.4rem;
-        margin-bottom: 0.8rem;
-    }
+    h2 { font-size: 1.5rem !important; margin: 0.4rem 0 0.8rem; }
+    h4 { font-size: 1.2rem !important; }
 
-    h4 {
-        font-size: 1.2rem !important;
-    }
-
+    /* Área de subida de archivos */
     .upload-area {
         padding: 16px 10px;
         border-radius: 18px;
     }
-    .upload-area i {
-        font-size: 1.8rem;
-    }
-    .upload-title {
-        font-size: 0.85rem;
-    }
-    .upload-subtitle {
-        font-size: 0.65rem;
-        padding: 0 8px;
-    }
+    .upload-area i { font-size: 1.8rem; }
+    .upload-title { font-size: 0.85rem; }
+    .upload-subtitle { font-size: 0.65rem; padding: 0 8px; }
 
+    /* Botones principales */
     .btn-primary-gradient,
     .btn-subir,
     .btn-guardar,
     .btn-continuar,
-    .btn-inicio {
+    .btn-inicio,
+    .btn-hero {
         padding: 13px 18px;
         font-size: 0.9rem;
         width: 100%;
@@ -63,22 +55,23 @@
     }
 
     .btn-volver {
-        padding: 11px 14px;
+        padding: 8px 14px;            /* ligeramente más compacto */
         font-size: 0.8rem;
         width: 100% !important;
-        margin-bottom: 6px;
+        margin-bottom: 2px;           /* menos separación inferior */
     }
 
     .d-flex.gap-2.mt-3,
     .d-flex.gap-2.mt-4 {
         flex-direction: column;
-        gap: 6px !important;
+        gap: 4px !important;          /* botones más pegados */
     }
     .btn-volver, .btn-guardar {
         width: 100% !important;
         flex: auto !important;
     }
 
+    /* Formularios */
     .form-control,
     .form-select,
     .input-glass {
@@ -86,12 +79,9 @@
         font-size: 0.85rem;
         border-radius: 14px;
     }
+    .form-label { font-size: 0.8rem; margin-bottom: 3px; }
 
-    .form-label {
-        font-size: 0.8rem;
-        margin-bottom: 3px;
-    }
-
+    /* Menú inferior flotante */
     .dock-menu {
         width: 94%;
         max-width: 370px;
@@ -100,151 +90,221 @@
         bottom: 6px;
         backdrop-filter: blur(16px);
     }
-    .dock-item {
-        font-size: 0.55rem;
-        padding: 3px 5px;
-    }
-    .dock-item i {
-        font-size: 1.2rem;
-        margin-bottom: 1px;
-    }
-    .dock-item.active {
-        transform: translateY(-3px);
-    }
+    .dock-item { font-size: 0.55rem; padding: 3px 5px; }
+    .dock-item i { font-size: 1.2rem; margin-bottom: 1px; }
+    .dock-item.active { transform: translateY(-3px); }
 
+    /* Calculadora flotante */
     .calc-fab {
-        width: 36px;
-        height: 36px;
+        width: 36px; height: 36px;
         bottom: 70px;
-        left: auto;
-        right: 12px;
+        left: auto; right: 12px;
         font-size: 1.1rem;
     }
     .calc-panel {
         width: 200px;
         bottom: 120px;
-        right: 10px;
-        left: auto;
+        right: 10px; left: auto;
         max-height: 280px;
         border-radius: 18px;
         padding: 8px;
     }
 
+    /* Tarjetas de servicio */
     .servicio-card {
         padding: 10px 8px;
         border-radius: 16px;
     }
-    .servicio-titulo {
-        font-size: 0.9rem;
-    }
-    .tamano-opcion label {
-        padding: 4px 8px;
-        font-size: 0.72rem;
-    }
+    .servicio-titulo { font-size: 0.9rem; }
+    .tamano-opcion label { padding: 4px 8px; font-size: 0.72rem; }
 
+    /* Info de archivo */
     .archivo-info {
         flex-wrap: wrap;
         padding: 8px 10px;
     }
-    .archivo-info i {
-        font-size: 1.4rem;
-    }
-    .archivo-info .nombre-archivo {
-        max-width: 180px;
-    }
+    .archivo-info i { font-size: 1.4rem; }
+    .archivo-info .nombre-archivo { max-width: 180px; }
 
-    .ticket-card {
-        padding: 16px 12px;
-    }
-    .codigo-ticket {
-        font-size: 1rem;
-        padding: 5px 10px;
-        letter-spacing: 0.3px;
-    }
+    /* Ticket */
+    .ticket-card { padding: 16px 12px; }
+    .codigo-ticket { font-size: 1rem; padding: 5px 10px; letter-spacing: 0.3px; }
 
-    .table {
-        font-size: 0.72rem;
-    }
-    .table thead th {
-        font-size: 0.65rem;
-    }
+    /* Tablas (en mis solicitudes y otras) */
+    .table { font-size: 0.72rem; }
+    .table thead th { font-size: 0.65rem; }
 
-    .progress-steps {
-        display: none;
-    }
+    /* Ocultar barras de progreso antiguas */
+    .progress-steps { display: none; }
 
+    /* Filas de datos (pagar) */
     .data-row {
-        flex-wrap: wrap;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
         padding: 7px 8px;
         font-size: 0.8rem;
     }
     .data-row .value {
-        width: 100%;
-        text-align: left;
-        margin-top: 2px;
+        flex: 1;
+        text-align: right;
+        margin-top: 0 !important;
+        word-break: break-word;
+        margin-right: 8px;
     }
 
-    .total-pagar .monto {
-        font-size: 1.4rem;
-    }
+    .total-pagar .monto { font-size: 1.4rem; }
+    .badge-estado { font-size: 0.65rem; padding: 2px 7px; }
 
-    .badge-estado {
-        font-size: 0.65rem;
-        padding: 2px 7px;
-    }
-
+    /* Imágenes y multimedia */
     img, svg, video, canvas, iframe {
         max-width: 100%;
         height: auto;
     }
 
-    .modal-content {
-        margin: 8px;
-        border-radius: 18px;
+    /* Modales */
+    .modal-content { margin: 8px; border-radius: 18px; }
+
+    /* Corrección de flecha en select de hora */
+    #horaRetiro {
+        background-position: right 18px center !important;
+        background-size: 16px !important;
+        background-repeat: no-repeat !important;
+        background-attachment: scroll !important;
+        transition: none !important;
+        animation: none !important;
     }
-}
 
-.data-row {
-    flex-wrap: nowrap !important;      
-    align-items: center !important;
-    padding: 7px 8px;
-    font-size: 0.8rem;
-}
-.data-row .value {
-    flex: 1;
-    text-align: right;
-    margin-top: 0 !important;
-    word-break: break-word;
-    margin-right: 8px;                 
-}
+    /* Eliminar efectos de toque en botones */
+    .btn-continuar,
+    .btn-guardar,
+    .btn-subir,
+    .btn-primary-gradient,
+    .btn-inicio {
+        -webkit-tap-highlight-color: transparent;
+        outline: none !important;
+        -webkit-appearance: none;
+        overflow: hidden;
+    }
+    .btn-continuar i,
+    .btn-guardar i,
+    .btn-subir i,
+    .btn-primary-gradient i,
+    .btn-inicio i {
+        transition: none !important;
+        animation: none !important;
+        transform: none !important;
+        position: static;
+    }
 
-.btn-continuar,
-.btn-guardar,
-.btn-subir,
-.btn-primary-gradient,
-.btn-inicio {
-    -webkit-tap-highlight-color: transparent;  
-    outline: none !important;
-    -webkit-appearance: none;
-    overflow: hidden;                          
-}
+    /* ========== INDEX ========== */
 
-.btn-continuar i,
-.btn-guardar i,
-.btn-subir i,
-.btn-primary-gradient i,
-.btn-inicio i {
-    transition: none !important;
-    animation: none !important;
-    transform: none !important;
-    position: static;
-}
+    /* Hero */
+    .hero-content {
+        padding: 100px 20px 70px;
+        text-align: center;
+    }
+    .hero-title {
+        font-size: 1.8rem !important;
+        word-break: break-word;
+        line-height: 1.15;
+    }
+    .hero-subtitle { font-size: 0.95rem; }
+    .hero-logo { width: 90px; height: 90px; margin: 0 auto; }
+    .glass-panel {
+        padding: 20px 22px;
+        text-align: center;
+        margin-bottom: 30px;
+    }
 
-#horaRetiro {
-    background-position: right 18px center !important;
-    background-size: 16px !important;
-    background-repeat: no-repeat !important;
-    background-attachment: scroll !important;
-    transition: none !important;
-    animation: none !important;
+    /* Navbar del index */
+    .site-nav { padding: 15px 0; }
+    .nav-brand-name { font-size: 1rem; }
+    .nav-links { display: none; }
+    .nav-hamburger { display: block; }
+
+    /* Footer */
+    footer .footer-inner {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    /* ========== LOGIN / REGISTRO / RECUPERAR ========== */
+    .auth-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: auto;
+        padding: 20px 10px;
+    }
+    .auth-card {
+        width: 100%;
+        max-width: 400px;
+        margin: 10px;
+        padding: 20px 15px;
+    }
+
+    /* ========== TIENDA (BOTONES MÁS JUNTOS) ========== */
+    .btn-volver {
+        margin-bottom: 0px !important; 
+    }
+    .d-flex.gap-2.mt-3,
+    .d-flex.gap-2.mt-4 {
+        gap: 0px !important;          
+    }
+
+    /* ========== LIMITAR NOMBRES DE ARCHIVO ========== */
+    /* configurar_impresion */
+    .nombre-archivo,
+    .archivo-card .nombre-archivo,
+    .archivo-info .nombre-archivo {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 150px !important;
+        display: inline-block !important;
+        vertical-align: middle !important;
+    }
+
+    /* configurar_impresion_multiple */
+    .archivo-item .nombre {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100px !important;
+        display: inline-block;
+        vertical-align: middle;
+    }
+    .btn-configurar {
+        font-size: 0 !important;          /* Oculta el texto */
+        padding: 5px 5px !important;      /* Un poco más compacto */
+    }
+    .btn-configurar i {
+        font-size: 1.2rem;     /* Tamaño visible del icono */
+        margin-right: 0;       /* Evita espacio extra */
+    }
+
+    /* mis_solicitudes */
+    .solicitud-card .archivo-link,
+    .solicitud-card .pedido-id {
+        /* no son nombres de archivo largos normalmente, pero por si acaso */
+    }
+    .solicitud-card .archivo-link {
+        display: inline-block;
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        vertical-align: middle;
+    }
+    /* Limitar nombres de archivo en programar retiro */
+        .archivo-info .nombre-archivo,
+        .archivo-info ul li strong {
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            max-width: 100px !important;
+            display: inline-block !important;
+            vertical-align: middle !important;
+        }
 }

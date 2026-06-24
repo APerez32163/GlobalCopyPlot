@@ -41,7 +41,6 @@
             margin-bottom: 1.5rem;
         }
 
-        /* Tarjeta de cada pedido */
         .solicitud-card {
             background: var(--glass-bg);
             backdrop-filter: blur(20px);
@@ -108,7 +107,6 @@
             color: var(--azul-oscuro);
         }
 
-        /* Badges de estado más bonitos */
         .badge-estado {
             font-size: 0.75rem;
             font-weight: 600;
@@ -125,7 +123,6 @@
         .bg-cancelado  { background: #ef4444; color: white; }
         .bg-otro       { background: #9ca3af; color: white; }
 
-        /* Flecha animada */
         .fa-chevron-down {
             transition: transform 0.3s ease;
             color: var(--azul-oscuro);
@@ -136,7 +133,6 @@
             transform: rotate(180deg);
         }
 
-        /* Archivos como botones glass */
         .archivo-link {
             display: inline-flex;
             align-items: center;
@@ -162,7 +158,16 @@
             color: var(--azul-oscuro);
         }
 
-        /* Menú inferior (idéntico al de las otras páginas) */
+        /* Truncado para nombres de archivo */
+        .nombre-archivo-limitado {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
         .dock-menu {
             position: fixed;
             bottom: 18px;
@@ -274,40 +279,34 @@
                     <p><strong>Total:</strong> Bs. {{ "%.2f"|format(pedido.TOTAL) }}</p>
                     <p><strong>Páginas:</strong> {{ item.detalles[0].CANTIDAD if item.detalles else 'N/A' }}</p>
                     <p><strong>Servicio:</strong> 
-                        {% if pedido.SERVICIO_ID %}
-                            {{ item.servicio_nombre if item.servicio_nombre else 'No especificado' }}
-                            · {{ pedido.TAMANO }}
+                        {% if item.servicio_nombre %}
+                            {{ item.servicio_nombre }}
+                        {% elif pedido.SERVICIO_ID %}
+                            {% set srv = pedido.SERVICIO_ID %}
+                            Servicio #{{ srv }} · {{ pedido.TAMANO }}
                         {% else %}
-                            {% if pedido.COLOR == 'bn' %} Blanco y Negro
-                            {% elif pedido.COLOR == 'color' %} Color
-                            {% elif pedido.COLOR == 'mixto' %} Mixto ({{ pedido.PAGINAS_COLOR }})
-                            {% else %} No especificado
-                            {% endif %}
-                            · {{ pedido.TAMANO }}
+                            No especificado
                         {% endif %}
                     </p>
-                    {% if item.tipo_papel_nombre %}
-                    <p><strong>Tipo de papel:</strong> {{ item.tipo_papel_nombre }}</p>
+                    {% if item.paginas_color %}
+                    <p><strong>Páginas a color:</strong> {{ item.paginas_color }}</p>
                     {% endif %}
-                    {% if item.servicios_extras_nombres %}
-                    <p><strong>Servicios extras:</strong> {{ item.servicios_extras_nombres|join(', ') }}</p>
-                    {% endif %}
-                    {% if pedido.COMENTARIOS %}
-                    <p><strong>Comentarios:</strong> {{ pedido.COMENTARIOS }}</p>
+                    {% if item.comentarios %}
+                    <p><strong>Comentarios:</strong> {{ item.comentarios }}</p>
                     {% endif %}
                     
                     {% if pedido.CODIGO_TICKET %}
                     <p><strong>Código de ticket:</strong> <span class="fw-bold text-primary">{{ pedido.CODIGO_TICKET }}</span></p>
                     {% endif %}
 
-                    <!-- Archivos subidos -->
                     <h6 class="mt-3">Archivos del pedido</h6>
                     <div>
                         {% if item.archivos %}
                             {% for archivo in item.archivos %}
                                 <a href="{{ url_for('static', filename=archivo.RUTA.replace('static/', '', 1).replace('\\', '/')) }}" 
                                    class="archivo-link" target="_blank">
-                                    <i class="fas fa-download"></i> {{ archivo.NOMBRE_ARCHIVO }}
+                                    <i class="fas fa-download"></i> 
+                                    <span class="nombre-archivo-limitado">{{ archivo.NOMBRE_ARCHIVO }}</span>
                                 </a>
                             {% endfor %}
                         {% else %}

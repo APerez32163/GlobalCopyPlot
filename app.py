@@ -2249,16 +2249,42 @@ def ticket_impresion(pedido_id):
 def mis_solicitudes():
     pedidos = Pedido.query.filter_by(ID_USUARIO=current_user.ID).order_by(Pedido.FECHA.desc()).all()
     
-    # Enriquecer cada pedido con datos relacionados
     pedidos_data = []
     for pedido in pedidos:
         archivos = ArchivoPedido.query.filter_by(PEDIDO_ID=pedido.ID).all()
         detalles = DetallePedido.query.filter_by(PEDIDO_ID=pedido.ID).all()
         
+        # Obtener nombre del servicio de impresión (funciona para único y múltiple)
+        servicio_nombre = None
+        tamano = pedido.TAMANO
+        
+        if pedido.DETALLE_ARCHIVOS:
+            # Pedido múltiple: obtener los nombres de servicio de cada archivo
+            servicios_nombres = []
+            for item in pedido.DETALLE_ARCHIVOS:
+                if item.get('servicio_id'):
+                    srv = ServicioImpresion.query.get(item['servicio_id'])
+                    if srv:
+                        servicios_nombres.append(f"{srv.TITULO} · {item.get('tamano', 'Sin tamaño')}")
+            servicio_nombre = ', '.join(servicios_nombres) if servicios_nombres else None
+        elif pedido.SERVICIO_ID:
+            # Pedido único
+            srv = ServicioImpresion.query.get(pedido.SERVICIO_ID)
+            if srv:
+                servicio_nombre = srv.TITULO
+        
+        # Información adicional para servicios mixtos
+        paginas_color = pedido.PAGINAS_COLOR if pedido.PAGINAS_COLOR else None
+        comentarios = pedido.COMENTARIOS if pedido.COMENTARIOS else None
+        
         pedidos_data.append({
             'pedido': pedido,
             'archivos': archivos,
-            'detalles': detalles
+            'detalles': detalles,
+            'servicio_nombre': servicio_nombre,
+            'tamano': tamano,
+            'paginas_color': paginas_color,
+            'comentarios': comentarios
         })
     
     return render_template('tienda/mis_solicitudes.html', pedidos=pedidos_data, active_page='solicitudes')
