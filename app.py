@@ -82,10 +82,9 @@ app = Flask(__name__)
 
 UPLOAD_FOLDER = 'static/uploads'
 UPLOAD_FOLDER_IMPRESION = os.path.join(UPLOAD_FOLDER, 'impresion')
-
 UPLOAD_FOLDER_COMPROBANTES = os.path.join(UPLOAD_FOLDER, 'comprobantes')
-os.makedirs(UPLOAD_FOLDER_COMPROBANTES, exist_ok=True)
 
+os.makedirs(UPLOAD_FOLDER_COMPROBANTES, exist_ok=True)
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(UPLOAD_FOLDER_IMPRESION, exist_ok=True)
 os.makedirs(os.path.join(UPLOAD_FOLDER_IMPRESION, 'temp'), exist_ok=True)
