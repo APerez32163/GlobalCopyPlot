@@ -276,7 +276,7 @@
                             <a class="nav-link {% if request.path == '/admin/solicitudes' %}active{% endif %}" 
                                href="{{ url_for('admin_solicitudes') }}">Todas</a>
                             <a class="nav-link" href="{{ url_for('admin_solicitudes', estado='Pendiente de pago') }}">Nuevas</a>
-                            <a class="nav-link" href="{{ url_for('admin_solicitudes', estado='En proceso') }}">En proceso</a>
+                            <a class="nav-link" href="{{ url_for('admin_solicitudes', estado='Esperando validación,Pago confirmado') }}">En proceso</a>
                             <a class="nav-link" href="{{ url_for('admin_solicitudes', estado='Listo') }}">Listas</a>
                             <a class="nav-link" href="{{ url_for('admin_solicitudes', estado='Cancelado') }}">Canceladas</a>
                         </div>

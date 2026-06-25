@@ -3,7 +3,9 @@ import os
 import zipfile
 import tempfile
 import shutil
+import magic
 import random, string
+import struct
 from pypdf import PdfReader
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from sqlalchemy import text, func, extract
@@ -78,6 +80,106 @@ def detectar_paginas(filepath, filename):
         print(f"Error al detectar páginas de {filename}: {e}")
         return None, f"No se pudo leer el archivo. Error: {str(e)[:100]}"
 
+def validar_mime(filepath, categorias_permitidas):
+    """
+    Verifica que el archivo tenga un MIME válido según la lista de categorías.
+    Retorna (True, None) si es válido, o (False, mensaje) si no lo es.
+    """
+    mime = magic.from_file(filepath, mime=True)
+    
+    mime_permitidos = {
+        'pdf': ['application/pdf'],
+        'imagen': ['image/png', 'image/jpeg', 'image/gif', 'image/bmp', 'image/tiff'],
+        'pptx': ['application/vnd.openxmlformats-officedocument.presentationml.presentation'],
+        'zip': ['application/zip']
+    }
+    
+    permitidos = []
+    for cat in categorias_permitidas:
+        if cat in mime_permitidos:
+            permitidos.extend(mime_permitidos[cat])
+    
+    if mime in permitidos:
+        return True, None
+    else:
+        return False, f"Tipo de archivo no permitido. MIME detectado: {mime}"
+
+def verificar_integridad(filepath, ext):
+    """
+    Comprueba que el archivo no está corrupto usando su librería nativa.
+    Retorna (True, None) si es íntegro, o (False, mensaje) si está corrupto.
+    """
+    try:
+        # PDF
+        if ext == 'pdf':
+            # Validación rápida sin cargar todo el archivo
+            ok, msg = validar_pdf(filepath)
+            if not ok:
+                return False, msg
+            # Si pasa, intentar abrir con PyPDF2 para verificar páginas
+            reader = PdfReader(filepath)
+            _ = len(reader.pages)
+        
+        # Imágenes
+        elif ext in ('png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'tif'):
+            from PIL import Image
+            with Image.open(filepath) as img:
+                img.load()   # fuerza la carga de datos, más tolerante que verify()
+        
+        # PowerPoint
+        elif ext == 'pptx':
+            from pptx import Presentation
+            _ = Presentation(filepath)  # abre la presentación
+        
+        # ZIP
+        elif ext == 'zip':
+            import zipfile
+            with zipfile.ZipFile(filepath, 'r') as zf:
+                _ = zf.namelist()       # lista el contenido; si es corrupto lanza excepción
+        
+        # Si no hay excepción, el archivo es íntegro
+        return True, None
+
+    except Exception as e:
+        # Capturamos cualquier error que indique corrupción
+        return False, f"El archivo está corrupto o no se puede leer. ({str(e)[:80]})"
+
+def validar_pdf(filepath):
+    """
+    Validación segura de PDF sin abrir completamente el archivo con PdfReader.
+    Retorna (True, None) o (False, mensaje).
+    """
+    try:
+        # Leer solo los primeros 1024 bytes para comprobar el header
+        with open(filepath, 'rb') as f:
+            header = f.read(1024)
+        
+        # 1. Verificar firma PDF (%PDF-)
+        if not header.startswith(b'%PDF-'):
+            return False, "El archivo no es un PDF válido (firma incorrecta)."
+        
+        # 2. Verificar que no empiece con basura binaria (bytes no imprimibles)
+        # Un PDF real empieza con %PDF- seguido de la versión (ej: 1.4)
+        # Si el header contiene muchos bytes nulos o basura, es sospechoso
+        non_printable = sum(1 for b in header[:20] if b < 32 and b not in (10, 13, 9))
+        if non_printable > 5:  # más de 5 bytes no imprimibles en el header es sospechoso
+            return False, "El archivo PDF parece corrupto o contiene datos binarios anómalos."
+        
+        # 3. Leer últimos 1024 bytes para verificar el trailer
+        f.seek(0, 2)  # final del archivo
+        size = f.tell()
+        if size > 10 * 1024 * 1024:  # 10 MB máximo para PDF
+            return False, "El archivo PDF es demasiado grande (máx. 10 MB)."
+        
+        f.seek(max(0, size - 1024))
+        trailer = f.read(1024)
+        if b'%%EOF' not in trailer:
+            return False, "El archivo PDF está incompleto (falta marca de fin)."
+        
+        return True, None
+    except Exception as e:
+        return False, f"No se pudo validar el PDF: {str(e)[:80]}"
+
 app = Flask(__name__)
 
 UPLOAD_FOLDER = 'static/uploads'
@@ -90,6 +192,7 @@ os.makedirs(UPLOAD_FOLDER_IMPRESION, exist_ok=True)
 os.makedirs(os.path.join(UPLOAD_FOLDER_IMPRESION, 'temp'), exist_ok=True)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/globalcopyplot'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -1713,60 +1816,101 @@ def detectar_paginas_ajax():
         return {'error': 'Archivo vacío'}, 400
 
     filename = secure_filename(archivo.filename)
-    # Guardar directamente en la carpeta definitiva
     ruta_destino = os.path.join(UPLOAD_FOLDER_IMPRESION, filename)
     archivo.save(ruta_destino)
 
-    paginas, mensaje = detectar_paginas(ruta_destino, filename)
-    if paginas is None:
-        os.remove(ruta_destino)
-        return {'error': mensaje or 'Formato no soportado'}, 400
+    # Obtener extensión una sola vez
+    ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
 
-    # Crear pedido en estado borrador
-    nuevo = Pedido(
-        ID_USUARIO=current_user.ID,
-        FECHA=datetime.now(),
-        ESTADO='borrador',
-        TOTAL=0.0,
-        PAGINAS=paginas
-    )
-    db.session.add(nuevo)
-    db.session.flush()
+    try:
+        # ---------- 1. Validación MIME ----------
+        if ext in ('pdf', 'png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'tif', 'pptx'):
+            valido, error = validar_mime(ruta_destino, ['pdf', 'imagen', 'pptx'])
+        elif ext == 'zip':
+            valido, error = validar_mime(ruta_destino, ['zip'])
+        else:
+            valido, error = False, f"Formato no soportado: .{ext}"
+        if not valido:
+            os.remove(ruta_destino)
+            return {'error': error}, 400
 
-    archivo_bd = ArchivoPedido(
-        PEDIDO_ID=nuevo.ID,
-        NOMBRE_ARCHIVO=filename,
-        RUTA=ruta_destino
-    )
-    db.session.add(archivo_bd)
-    db.session.commit()
+        # ---------- 2. Verificación de integridad (excepto PDF) ----------
+        if ext != 'pdf':
+            integro, error_integridad = verificar_integridad(ruta_destino, ext)
+            if not integro:
+                os.remove(ruta_destino)
+                return {'error': error_integridad}, 400
 
-    limite = datetime.now() - timedelta(minutes=5)
-    pedidos_viejos = Pedido.query.filter(
-        Pedido.ID_USUARIO == current_user.ID,
-        Pedido.ESTADO == 'borrador',
-        Pedido.FECHA < limite
-    ).all()
+        # ---------- 3. Validación específica para PDF ----------
+        if ext == 'pdf':
+            size = os.path.getsize(ruta_destino)
+            if size > 10 * 1024 * 1024:  # 10 MB
+                os.remove(ruta_destino)
+                return {'error': 'El PDF no puede superar los 10 MB.'}, 400
 
-    for p in pedidos_viejos:
-        # Primero eliminar archivos asociados (físicos y registros)
-        for archivo in ArchivoPedido.query.filter_by(PEDIDO_ID=p.ID).all():
-            if os.path.exists(archivo.RUTA):
-                os.remove(archivo.RUTA)
-            db.session.delete(archivo)
-        # Eliminar detalles del pedido
-        DetallePedido.query.filter_by(PEDIDO_ID=p.ID).delete()
-        # Finalmente eliminar el pedido
-        db.session.delete(p)
+            # Verificar cabecera mágica %PDF
+            with open(ruta_destino, 'rb') as f:
+                header = f.read(4)
+                if not header.startswith(b'%PDF'):
+                    os.remove(ruta_destino)
+                    return {'error': 'El archivo PDF no es válido (cabecera incorrecta).'}, 400
 
-    db.session.commit()
+        # ---------- 4. Detección de páginas ----------
+        paginas, mensaje = detectar_paginas(ruta_destino, filename)
+        if paginas is None:
+            os.remove(ruta_destino)
+            return {'error': mensaje or 'Formato no soportado'}, 400
 
-    return {
-        'success': True,
-        'pedido_id': nuevo.ID,
-        'paginas': paginas,
-        'mensaje': mensaje or ''
-    }
+        # ---------- 5. Crear pedido borrador ----------
+        nuevo = Pedido(
+            ID_USUARIO=current_user.ID,
+            FECHA=datetime.now(),
+            ESTADO='borrador',
+            TOTAL=0.0,
+            PAGINAS=paginas
+        )
+        db.session.add(nuevo)
+        db.session.flush()
+
+        archivo_bd = ArchivoPedido(
+            PEDIDO_ID=nuevo.ID,
+            NOMBRE_ARCHIVO=filename,
+            RUTA=ruta_destino
+        )
+        db.session.add(archivo_bd)
+        db.session.commit()
+
+        # ---------- 6. Limpiar borradores viejos ----------
+        limite = datetime.now() - timedelta(minutes=5)
+        pedidos_viejos = Pedido.query.filter(
+            Pedido.ID_USUARIO == current_user.ID,
+            Pedido.ESTADO == 'borrador',
+            Pedido.FECHA < limite
+        ).all()
+
+        for p in pedidos_viejos:
+            for archivo in ArchivoPedido.query.filter_by(PEDIDO_ID=p.ID).all():
+                if os.path.exists(archivo.RUTA):
+                    os.remove(archivo.RUTA)
+                db.session.delete(archivo)
+            DetallePedido.query.filter_by(PEDIDO_ID=p.ID).delete()
+            db.session.delete(p)
+
+        db.session.commit()
+
+        return {
+            'success': True,
+            'pedido_id': nuevo.ID,
+            'paginas': paginas,
+            'mensaje': mensaje or ''
+        }
+
+    except Exception as e:
+        # Si ocurre cualquier error inesperado, limpiar archivo y avisar
+        if os.path.exists(ruta_destino):
+            os.remove(ruta_destino)
+        print(f"Error en detectar_paginas_ajax: {e}")
+        return {'error': f'Error al procesar el archivo. ({str(e)[:80]})'}, 500
 
 @app.route('/detectar-paginas-multiples', methods=['POST'])
 @login_required
@@ -1775,12 +1919,11 @@ def detectar_paginas_multiples():
     if not archivos or len(archivos) == 0:
         return {'error': 'No se recibieron archivos'}, 400
 
-    # Validar límites: máximo 10 documentos, 20 imágenes
     docs = 0
     imgs = 0
     for f in archivos:
         ext = f.filename.rsplit('.', 1)[-1].lower() if '.' in f.filename else ''
-        if ext in ('pdf', 'xlsx', 'xlsm', 'pptx', 'ods', 'odp'):
+        if ext in ('pdf', 'pptx', 'zip'):
             docs += 1
         elif ext in ('png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'tif'):
             imgs += 1
@@ -1792,7 +1935,6 @@ def detectar_paginas_multiples():
     if imgs > 20:
         return {'error': 'Máximo 20 imágenes permitidas'}, 400
 
-    # Crear pedido en estado borrador
     nuevo = Pedido(
         ID_USUARIO=current_user.ID,
         FECHA=datetime.now(),
@@ -1806,65 +1948,104 @@ def detectar_paginas_multiples():
     total_paginas = 0
     detalle_archivos = []
 
-    for f in archivos:
-        filename = secure_filename(f.filename)
-        ruta_destino = os.path.join(UPLOAD_FOLDER_IMPRESION, filename)
-        f.save(ruta_destino)
+    try:
+        for f in archivos:
+            filename = secure_filename(f.filename)
+            ruta_destino = os.path.join(UPLOAD_FOLDER_IMPRESION, filename)
+            f.save(ruta_destino)
 
-        paginas, mensaje = detectar_paginas(ruta_destino, filename)
-        if paginas is None:
-            # Si un archivo falla, eliminar el pedido completo y devolver error
-            db.session.delete(nuevo)
-            db.session.commit()
+            ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
+
+            # 1. Validación MIME
+            if ext in ('pdf', 'png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'tif', 'pptx'):
+                valido, error = validar_mime(ruta_destino, ['pdf', 'imagen', 'pptx'])
+            elif ext == 'zip':
+                valido, error = validar_mime(ruta_destino, ['zip'])
+            else:
+                valido, error = False, f"Formato no soportado: .{ext}"
+            if not valido:
+                os.remove(ruta_destino)
+                raise Exception(error)
+
+            # 2. Integridad (excepto PDF)
+            if ext != 'pdf':
+                integro, error_integridad = verificar_integridad(ruta_destino, ext)
+                if not integro:
+                    os.remove(ruta_destino)
+                    raise Exception(error_integridad)
+
+            # 3. Cabecera y tamaño para PDF
+            if ext == 'pdf':
+                size = os.path.getsize(ruta_destino)
+                if size > 10 * 1024 * 1024:
+                    os.remove(ruta_destino)
+                    raise Exception('El PDF no puede superar los 10 MB.')
+                with open(ruta_destino, 'rb') as fh:
+                    header = fh.read(4)
+                    if not header.startswith(b'%PDF'):
+                        os.remove(ruta_destino)
+                        raise Exception('El archivo PDF no es válido (cabecera incorrecta).')
+
+            # 4. Detección de páginas
+            paginas, mensaje = detectar_paginas(ruta_destino, filename)
+            if paginas is None:
+                os.remove(ruta_destino)
+                raise Exception(f'Error en {filename}: {mensaje}')
+
+            total_paginas += paginas
+            detalle_archivos.append({
+                'nombre': filename,
+                'paginas': paginas,
+                'servicio_id': None,
+                'tamano': None
+            })
+
+            archivo_bd = ArchivoPedido(
+                PEDIDO_ID=nuevo.ID,
+                NOMBRE_ARCHIVO=filename,
+                RUTA=ruta_destino
+            )
+            db.session.add(archivo_bd)
+
+        nuevo.PAGINAS = total_paginas
+        nuevo.DETALLE_ARCHIVOS = detalle_archivos
+        db.session.commit()
+
+        # ---------- Limpiar borradores viejos (CORREGIDO) ----------
+        limite = datetime.now() - timedelta(minutes=5)
+        pedidos_viejos = Pedido.query.filter(
+            Pedido.ID_USUARIO == current_user.ID,
+            Pedido.ESTADO == 'borrador',
+            Pedido.FECHA < limite
+        ).all()
+
+        for p in pedidos_viejos:
+            # 1. Eliminar archivos físicos y registros de ArchivoPedido
+            for a in ArchivoPedido.query.filter_by(PEDIDO_ID=p.ID).all():
+                if os.path.exists(a.RUTA):
+                    os.remove(a.RUTA)
+                db.session.delete(a)
+            # 2. Eliminar detalles del pedido
+            DetallePedido.query.filter_by(PEDIDO_ID=p.ID).delete()
+            # 3. Ahora sí, eliminar el pedido
+            db.session.delete(p)
+
+        db.session.commit()
+
+        return {
+            'success': True,
+            'pedido_id': nuevo.ID,
+            'paginas_totales': total_paginas,
+            'detalle_archivos': detalle_archivos
+        }
+
+    except Exception as e:
+        # Cualquier error → eliminar archivo temporal y hacer rollback
+        if 'ruta_destino' in locals() and os.path.exists(ruta_destino):
             os.remove(ruta_destino)
-            return {'error': f'Error en {filename}: {mensaje}'}, 400
-
-        total_paginas += paginas
-        detalle_archivos.append({
-            'nombre': filename,
-            'paginas': paginas,
-            'servicio_id': None,
-            'tamano': None
-        })
-
-        # Guardar registro del archivo
-        archivo_bd = ArchivoPedido(
-            PEDIDO_ID=nuevo.ID,
-            NOMBRE_ARCHIVO=filename,
-            RUTA=ruta_destino
-        )
-        db.session.add(archivo_bd)
-
-    nuevo.PAGINAS = total_paginas
-    nuevo.DETALLE_ARCHIVOS = detalle_archivos  # solo se rellena si hay múltiples archivos
-    db.session.commit()
-
-    limite = datetime.now() - timedelta(minutes=5)
-    pedidos_viejos = Pedido.query.filter(
-        Pedido.ID_USUARIO == current_user.ID,
-        Pedido.ESTADO == 'borrador',
-        Pedido.FECHA < limite
-    ).all()
-
-    for p in pedidos_viejos:
-        # Primero eliminar archivos asociados (físicos y registros)
-        for archivo in ArchivoPedido.query.filter_by(PEDIDO_ID=p.ID).all():
-            if os.path.exists(archivo.RUTA):
-                os.remove(archivo.RUTA)
-            db.session.delete(archivo)
-        # Eliminar detalles del pedido
-        DetallePedido.query.filter_by(PEDIDO_ID=p.ID).delete()
-        # Finalmente eliminar el pedido
-        db.session.delete(p)
-        
-    db.session.commit()
-
-    return {
-        'success': True,
-        'pedido_id': nuevo.ID,
-        'paginas_totales': total_paginas,
-        'detalle_archivos': detalle_archivos
-    }
+        db.session.rollback()          # revierte la creación del pedido y sus archivos
+        print(f"Error en detectar_paginas_multiples: {e}")
+        return {'error': f'Error al procesar los archivos. ({str(e)[:80]})'}, 500
 
 @app.route('/cancelar-pedido/<int:pedido_id>', methods=['POST'])
 @login_required

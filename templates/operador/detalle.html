@@ -34,16 +34,17 @@
         /* Tarjetas de archivo cuadradas */
         .archivo-card {
             background: rgba(255,255,255,0.6);
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(10px);
             border: 1px solid rgba(255,255,255,0.8);
-            border-radius: 18px;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            height: 100%;
-            min-height: 200px;
-            transition: all 0.2s;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+            transition: all 0.25s ease;
+            position: relative;
+            min-height: 100%;          /* permite que crezca */
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         .archivo-card::before {
             content: '';
@@ -85,6 +86,11 @@
             flex: 1;
             font-size: 1.1rem;
             color: #475569;
+        }
+        .archivo-card .especificacion {
+            white-space: normal;       /* antes podía ser nowrap */
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
         .archivo-card .detalle i { color: #5B9BD5; width: 30px; margin-right: 4px; }
         .archivo-card:hover {
@@ -186,35 +192,71 @@
             {% endif %}
             
             {% if pedido.ESTADO in ['Pago confirmado', 'En proceso'] %}
-            <button type="button" class="btn btn-list w-100" onclick="mostrarConfirmacion()">
+            <button type="button" class="btn btn-list w-100" onclick="abrirConfirmacionListo()">
                 <i class="fas fa-check-circle me-2"></i> Marcar como Listo para retirar
             </button>
-
-            <div id="confirmOverlay" class="confirm-overlay">
-                <div class="confirm-dialog">
-                    <p>¿Marcar el pedido #{{ pedido.ID }} como listo para retirar?</p>
-                    <button type="button" class="btn btn-outline-secondary" onclick="cerrarConfirmacion()">Cancelar</button>
-                    <form method="POST" action="{{ url_for('operador_marcar_listo', pedido_id=pedido.ID) }}" style="display: inline;">
-                        <button type="submit" class="btn btn-primary">Confirmar</button>
-                    </form>
-                </div>
-            </div>
             {% endif %}
         </div>
     </div>
+
+    <script>
+        function abrirConfirmacionListo() {
+            // HTML del modal dinámico (se crea cada vez)
+            const modalHTML = `
+                <div class="modal fade" id="modalConfirmarListo" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-sm">
+                        <div class="modal-content glass-card" style="text-align: center; padding: 20px; border-radius: 20px;">
+                            <i class="fas fa-exclamation-triangle fa-3x mb-3" style="color: #dc3545;"></i>
+                            <h6 class="fw-bold mb-2" style="color: #2F5496;">¿Marcar como Listo?</h6>
+                            <p class="text-muted small">El pedido #{{ pedido.ID }} estará listo para retirar y se notificará al cliente.</p>
+                            <div class="d-flex gap-2 justify-content-center mt-3">
+                                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" id="btnCerrarModalListo">Cancelar</button>
+                                <button type="button" class="btn btn-success rounded-pill px-4" id="btnConfirmarListo">
+                                    <i class="fas fa-check me-1"></i> Confirmar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Eliminar modal anterior si existe
+            const oldModal = document.getElementById('modalConfirmarListo');
+            if (oldModal) oldModal.remove();
+
+            // Insertar el nuevo modal
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            const modalEl = document.getElementById('modalConfirmarListo');
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+
+            // Botón Cancelar → cerrar modal
+            document.getElementById('btnCerrarModalListo').addEventListener('click', function() {
+                modal.hide();
+            });
+
+            // Botón Confirmar → enviar formulario
+            document.getElementById('btnConfirmarListo').addEventListener('click', function() {
+                // Crear un formulario dinámico y enviarlo (para mantener el método POST)
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = "{{ url_for('operador_marcar_listo', pedido_id=pedido.ID) }}";
+                document.body.appendChild(form);
+                form.submit();
+            });
+
+            // Limpiar el modal al cerrarse
+            modalEl.addEventListener('hidden.bs.modal', function() {
+                modalEl.remove();
+                document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+            }, { once: true });
+        }
+    </script>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function mostrarConfirmacion() {
-            document.getElementById('confirmOverlay').style.display = 'flex';
-        }
-        function cerrarConfirmacion() {
-            document.getElementById('confirmOverlay').style.display = 'none';
-        }
-        document.getElementById('confirmOverlay')?.addEventListener('click', function(e) {
-            if (e.target === this) cerrarConfirmacion();
-        });
-    </script>
 
 <!-- Botón Modo Oscuro -->
 <button class="dark-mode-toggle" id="darkModeToggle" title="Modo oscuro">
