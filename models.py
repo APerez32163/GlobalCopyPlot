@@ -54,8 +54,6 @@ class DetallePedido(db.Model):
     CANTIDAD = db.Column(db.Integer, nullable=False)
     PRECIO_UNITARIO = db.Column(db.Numeric(10,2), nullable=True)
     SUBTOTAL = db.Column(db.Numeric(10,2), nullable=False)
-    IVA = db.Column(db.Numeric(3,2))
-    TOTAL_PAGO = db.Column(db.Numeric(10,2))
 
 class ArchivoPedido(db.Model):
     __tablename__ = 'archivo_pedido'

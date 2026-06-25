@@ -2316,16 +2316,12 @@ def programar_retiro(pedido_id):
             detalle_existente.CANTIDAD = paginas
             detalle_existente.PRECIO_UNITARIO = precio_unitario
             detalle_existente.SUBTOTAL = total
-            detalle_existente.TOTAL_PAGO = total
         else:
             nuevo_detalle = DetallePedido(
                 PEDIDO_ID=pedido.ID,
                 CANTIDAD=paginas,
                 PRECIO_UNITARIO=precio_unitario,
-                SUBTOTAL=total,
-                IVA=0,
-                TOTAL_PAGO=total
-            )
+                SUBTOTAL=total)
             db.session.add(nuevo_detalle)
 
         db.session.commit()
