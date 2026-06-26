@@ -106,6 +106,45 @@
         a:hover {
             color: var(--azul-oscuro);
         }
+        /* Prefijo V/E integrado en la barra */
+        .cedula-prefijo {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 5;
+            width: 55px;                     /* ~10 % de la barra */
+            height: calc(100% - 4px);        /* casi toda la altura */
+            border: none !important;
+            background: transparent !important;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--azul-oscuro, #2F5496);
+            padding: 0;
+            text-align: center;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            /* Línea divisoria sutil */
+            border-right: 1px solid rgba(0,0,0,0.1) !important;
+            border-radius: 0 !important;
+        }
+
+        .cedula-prefijo:hover {
+            background: rgba(91,155,213,0.08) !important;
+        }
+
+        .cedula-prefijo:focus,
+        .cedula-prefijo select:focus {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Input de dígitos: reservamos espacio para el prefijo */
+        .cedula-input {
+            padding-left: 65px !important;   /* un poco más que el ancho del prefijo */
+        }
     </style>
 </head>
 <body class="auth-page">
@@ -171,8 +210,14 @@
                 {% endwith %}
                 
                 <form class="form-moderno" action="/login" method="POST">
-                    <div class="mb-3">
-                        <input type="text" name="usuario" class="form-control" placeholder="Cédula de Identidad" maxlength="8" pattern="\d{7,8}" title="Debe tener entre 7 y 8 dígitos" required>
+                    <div class="mb-3 position-relative">
+                        <select class="form-select cedula-prefijo" id="tipoCedulaLogin">
+                            <option value="V" selected>V -</option>
+                            <option value="E">E -</option>
+                        </select>
+                        <input type="text" id="cedulaDigitsLogin" class="form-control cedula-input" 
+                               placeholder="12345678" required maxlength="8" inputmode="numeric" pattern="\d+">
+                        <input type="hidden" name="usuario" id="usuarioLogin">
                     </div>
                     <div class="mb-3 position-relative">
                         <input type="password" name="contrasena" id="loginPassword" class="form-control" placeholder="Contraseña" maxlength="20" required>
@@ -209,6 +254,21 @@
                 eyeIcon.classList.add('fa-eye');
             }
         }
+    </script>
+    <script>
+        const tipoLogin = document.getElementById('tipoCedulaLogin');
+        const digitLogin = document.getElementById('cedulaDigitsLogin');
+        const hiddenLogin = document.getElementById('usuarioLogin');
+
+        tipoLogin.addEventListener('change', function() {
+            digitLogin.value = '';
+            digitLogin.maxLength = this.value === 'V' ? 8 : 12;
+            digitLogin.placeholder = this.value === 'V' ? '12345678' : '123456789012';
+        });
+
+        document.querySelector('form').addEventListener('submit', function() {
+            hiddenLogin.value = digitLogin.value.trim();
+        });
     </script>
 </body>
 </html>

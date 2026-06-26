@@ -264,6 +264,7 @@ def login():
         flash('Correo confirmado. Ya puedes iniciar sesión.', 'success')
     if request.method == 'POST':
         cedula = request.form.get('usuario', '').strip()
+        cedula = re.sub(r'^[VEve]-', '', cedula).strip()
         contrasena = request.form.get('contrasena', '')
 
         error_cedula = validar_cedula(cedula)
@@ -297,6 +298,8 @@ def registro():
         apellido = request.form.get('apellido', '').strip()
         email = request.form.get('email', '').strip().lower()
         cedula = request.form.get('usuario_id', '').strip()
+        cedula = re.sub(r'^[VEve]-?', '', cedula).strip() 
+        cedula = re.sub(r'^[VEve]-', '', cedula).strip()
         telefono = request.form.get('telefono', '').strip()
         contrasena = request.form.get('contrasena', '')
         pregunta1 = request.form.get('pregunta1', '').strip()
@@ -541,6 +544,7 @@ def recuperar():
 
         # --- PASO 1: Ingreso de cédula ---
         cedula = request.form.get('cedula', '').strip()
+        cedula = re.sub(r'^[VEve]-', '', cedula).strip()
         error_cedula = validar_cedula(cedula)
         if error_cedula:
             flash(error_cedula, 'danger')
@@ -1176,6 +1180,7 @@ def admin_operadores():
 @admin_required
 def admin_operadores_buscar():
     cedula = request.form.get('cedula', '').strip()
+    cedula = re.sub(r'^[VEve]-', '', cedula).strip()
     if not cedula:
         return {'error': 'Debe ingresar una cédula'}, 400
     
@@ -1553,9 +1558,13 @@ def validar_nombre_apellido(texto, campo="Nombre"):
 def validar_cedula(cedula):
     if not cedula:
         return "La cédula es obligatoria."
-    if not re.match(r'^\d{7,8}$', cedula):
-        return "La cédula debe tener entre 7 y 8 dígitos numéricos."
-    return None
+    cedula = cedula.strip().upper()
+    
+    # Aceptar solo dígitos de 7 a 12 caracteres
+    if re.match(r'^\d{7,12}$', cedula):
+        return None
+    
+    return "Formato de cédula no válido. Use de 7 a 12 dígitos."
 
 def validar_telefono(telefono):
     if not telefono:

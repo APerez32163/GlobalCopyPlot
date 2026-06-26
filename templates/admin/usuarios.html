@@ -42,7 +42,7 @@
                     <div class="d-flex gap-2">
                         <a href="{{ url_for('admin_usuario_detalle', user_id=usuario.ID) }}" 
                            class="btn btn-sm btn-outline-primary rounded-pill">
-                            <i class="fas fa-eye me-1"></i> Ver detalle
+                            <i class="fas fa-eye me-1"></i> Ver
                         </a>
                         <button type="button" 
                                 class="btn btn-sm btn-outline-danger rounded-pill"
@@ -57,42 +57,52 @@
     </table>
 </div>
 
-<!-- Modal de confirmación para eliminar usuario -->
-<div class="modal fade" id="modalEliminarUsuario" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content glass-card p-3">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirmar eliminación</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>¿Estás seguro de que deseas eliminar al usuario <strong id="nombreUsuario"></strong>?</p>
-                <p class="text-danger small">Esta acción eliminará todos sus datos: pedidos, archivos y configuración. No se puede deshacer.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cancelar</button>
-                <form id="formEliminarUsuario" method="POST" action="">
-                    <button type="submit" class="btn btn-danger rounded-pill">
-                        <i class="fas fa-trash me-1"></i> Eliminar definitivamente
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
     function confirmarEliminacion(userId, nombreCompleto) {
-        // Configurar el formulario con la URL correcta
-        const form = document.getElementById('formEliminarUsuario');
-        form.action = '/admin/usuario/' + userId + '/eliminar';
-        
-        // Mostrar el nombre del usuario en el modal
-        document.getElementById('nombreUsuario').textContent = nombreCompleto;
-        
-        // Mostrar el modal
-        const modal = new bootstrap.Modal(document.getElementById('modalEliminarUsuario'));
+        // Construir el modal dinámicamente
+        const modalHTML = `
+            <div class="modal fade" id="modalEliminarUsuarioDin" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content glass-card p-3">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Confirmar eliminación</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>¿Estás seguro de que deseas eliminar al usuario <strong>${nombreCompleto}</strong>?</p>
+                            <p class="text-danger small">Esta acción tambien eliminará todos sus datos: pedidos, archivos y configuración. No se puede deshacer.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                            <form method="POST" action="/admin/usuario/${userId}/eliminar">
+                                <button type="submit" class="btn btn-danger rounded-pill">
+                                    <i class="fas fa-trash me-1"></i> Eliminar definitivamente
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Eliminar modal anterior si existe
+        const oldModal = document.getElementById('modalEliminarUsuarioDin');
+        if (oldModal) oldModal.remove();
+
+        // Insertar el nuevo modal en el DOM
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        const modalEl = document.getElementById('modalEliminarUsuarioDin');
+        const modal = new bootstrap.Modal(modalEl);
         modal.show();
+
+        // Limpiar el modal completamente al cerrarse
+        modalEl.addEventListener('hidden.bs.modal', function() {
+            modalEl.remove();
+            document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        });
     }
 </script>
 {% endblock %}

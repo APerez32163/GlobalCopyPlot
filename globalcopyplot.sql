@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 24-06-2026 a las 20:05:04
+-- Tiempo de generación: 26-06-2026 a las 21:48:14
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -33,16 +33,6 @@ CREATE TABLE `archivo_pedido` (
   `NOMBRE_ARCHIVO` varchar(255) NOT NULL,
   `RUTA` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Volcado de datos para la tabla `archivo_pedido`
---
-
-INSERT INTO `archivo_pedido` (`ID`, `PEDIDO_ID`, `NOMBRE_ARCHIVO`, `RUTA`) VALUES
-(566, 305, 'PNFI-Trayecto2Seccion2.pdf', 'static/uploads\\impresion\\PNFI-Trayecto2Seccion2.pdf'),
-(567, 305, '1000374192.png', 'static/uploads\\comprobantes\\1000374192.png'),
-(568, 306, 'PNFI-Trayecto2Seccion2.pdf', 'static/uploads\\impresion\\PNFI-Trayecto2Seccion2.pdf'),
-(569, 306, '1000374192.png', 'static/uploads\\comprobantes\\1000374192.png');
 
 -- --------------------------------------------------------
 
@@ -119,18 +109,8 @@ CREATE TABLE `detalle` (
   `CANTIDAD` int(5) DEFAULT NULL,
   `SUBTOTAL` decimal(10,2) DEFAULT NULL,
   `PEDIDO_ID` int(11) NOT NULL,
-  `PRECIO_UNITARIO` decimal(10,2) DEFAULT NULL,
-  `IVA` decimal(3,2) DEFAULT NULL,
-  `TOTAL_PAGO` decimal(10,2) DEFAULT NULL
+  `PRECIO_UNITARIO` decimal(10,2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Volcado de datos para la tabla `detalle`
---
-
-INSERT INTO `detalle` (`ID`, `CANTIDAD`, `SUBTOTAL`, `PEDIDO_ID`, `PRECIO_UNITARIO`, `IVA`, `TOTAL_PAGO`) VALUES
-(158, 65, 6300.00, 305, 80.00, 0.00, 6300.00),
-(159, 65, 5200.00, 306, 80.00, 0.00, 5200.00);
 
 -- --------------------------------------------------------
 
@@ -157,14 +137,6 @@ CREATE TABLE `pedido` (
   `REFERENCIA_PAGO` varchar(100) DEFAULT NULL,
   `DETALLE_ARCHIVOS` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`DETALLE_ARCHIVOS`))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Volcado de datos para la tabla `pedido`
---
-
-INSERT INTO `pedido` (`ID`, `FECHA`, `ESTADO`, `TOTAL`, `TAMANO`, `PAGINAS_COLOR`, `ID_USUARIO`, `FECHA_RETIRO`, `HORA_RETIRO`, `CODIGO_TICKET`, `COMENTARIOS`, `VISTO_ADMIN`, `VISTO_OPERADOR`, `PAGINAS`, `SERVICIO_ID`, `REFERENCIA_PAGO`, `DETALLE_ARCHIVOS`) VALUES
-(305, '2026-06-24 13:51:18', 'Entregado', 6300.00, 'Carta', '55', 19, '2026-06-25', '08:30:00', 'TICK-305-5JCR', '', 1, 1, 65, 21, '535353536355353', NULL),
-(306, '2026-06-24 14:02:47', 'Entregado', 5200.00, 'Carta', NULL, 19, '2026-06-25', '09:00:00', 'TICK-306-2PZN', '', 1, 1, 65, 22, '535353536355353', NULL);
 
 -- --------------------------------------------------------
 
@@ -229,7 +201,7 @@ INSERT INTO `servicio_impresion_tamano` (`ID`, `SERVICIO_ID`, `NOMBRE`, `PRECIO_
 
 CREATE TABLE `usuario` (
   `ID` int(11) NOT NULL,
-  `ID_USUARIO` varchar(10) DEFAULT NULL,
+  `ID_USUARIO` varchar(15) NOT NULL,
   `NOMBRE` varchar(50) NOT NULL,
   `APELLIDO` varchar(50) NOT NULL,
   `EMAIL` varchar(120) NOT NULL,
@@ -251,8 +223,7 @@ CREATE TABLE `usuario` (
 INSERT INTO `usuario` (`ID`, `ID_USUARIO`, `NOMBRE`, `APELLIDO`, `EMAIL`, `CONTRASEÑA`, `TELEFONO`, `CONFIRMADO`, `ES_ADMIN`, `ES_OPERADOR`, `PREGUNTA1`, `RESPUESTA1`, `PREGUNTA2`, `RESPUESTA2`) VALUES
 (18, '00000000', 'Prueba', 'Operador', 'andresperez32163@gmail.com', 'scrypt:32768:8:1$Av0UTck9Oy74TFF5$889113c6c2d26297e109ea79852e0e18d150689564653910b8d801eeed6749fe087f3984da000ac8e1d0988cc2ba1d315a960afec1b68f055827671b4d217ada', '00000000000', 1, 0, 1, 'color', 'ROJO', 'comida', 'PASTA'),
 (19, '11111111', 'Prueba', 'Admin', 'andreseduardo32163@gmail.com', 'scrypt:32768:8:1$T0B5k0eET9Q4QtWS$9f4c563d170e1be3c2dd95c122b31a1d28deea41895ace38febe77ec7d7dbc1536a1b1a70d36af7c3d09320b388f5b93a2236b43eeb1f52a2080379afd7fcae6', '11111111111', 1, 1, 0, 'color', 'ROJO', 'comida', 'PASTA'),
-(20, '22222222', 'Prueba', 'Usuario Cliente', 'kenyersoncrespo6@gmail.com', 'scrypt:32768:8:1$i1jzZAWBIIDfJA5J$f2ca81b00b2758323a510d52d61871107d07e82653de499dd6fe535fca85f24ac98ff3f5f6d042ebbd385dbb8bd4a98b519ffbb3737756e60f1b823140d66d71', '22222222222', 1, 0, 0, 'color', 'ROJO', 'comida', 'PASTA'),
-(26, '32163794', 'pedro', 'alfonso', 'ps34kprosl@gmail.com', 'scrypt:32768:8:1$G1nGc7R0AICE7Hoo$5fa79fe3b4fb8b82242e3f7532b3c011208e060bd44b46a660388d0985da1597c12bfd74abf9934125ce551d83a081c9bcd9586cf7d548965b1ea0a3d32359f5', '04126987456', 1, 0, 0, 'mascota', 'DANTE', 'naciste', 'VZLA');
+(20, '22222222', 'Prueba', 'Usuario Cliente', 'kenyersoncrespo6@gmail.com', 'scrypt:32768:8:1$i1jzZAWBIIDfJA5J$f2ca81b00b2758323a510d52d61871107d07e82653de499dd6fe535fca85f24ac98ff3f5f6d042ebbd385dbb8bd4a98b519ffbb3737756e60f1b823140d66d71', '22222222222', 1, 0, 0, 'color', 'ROJO', 'comida', 'PASTA');
 
 --
 -- Índices para tablas volcadas
@@ -325,7 +296,7 @@ ALTER TABLE `usuario`
 -- AUTO_INCREMENT de la tabla `archivo_pedido`
 --
 ALTER TABLE `archivo_pedido`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=570;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=774;
 
 --
 -- AUTO_INCREMENT de la tabla `catalogo`
@@ -343,13 +314,13 @@ ALTER TABLE `configuracion`
 -- AUTO_INCREMENT de la tabla `detalle`
 --
 ALTER TABLE `detalle`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=160;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=172;
 
 --
 -- AUTO_INCREMENT de la tabla `pedido`
 --
 ALTER TABLE `pedido`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=307;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=396;
 
 --
 -- AUTO_INCREMENT de la tabla `servicio_impresion`
@@ -367,7 +338,7 @@ ALTER TABLE `servicio_impresion_tamano`
 -- AUTO_INCREMENT de la tabla `usuario`
 --
 ALTER TABLE `usuario`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- Restricciones para tablas volcadas

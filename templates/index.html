@@ -106,6 +106,28 @@
             background: var(--azul-pale);
             color: var(--azul-deep);
         }
+        /* Botón "Iniciar sesión" */
+        .nav-login {
+            background: linear-gradient(135deg, rgba(91, 155, 213, 0.2) 0%, rgba(47, 84, 150, 0.15) 100%);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            color: var(--azul-deep) !important;
+            font-weight: 600;
+            padding: 8px 22px;
+            border-radius: 60px;
+            transition: all 0.3s ease;
+            margin-left: 6px;
+            box-shadow: 0 2px 8px rgba(47, 84, 150, 0.1);
+        }
+
+        .nav-login:hover {
+            background: var(--azul-claro);
+            color: var(--azul-deep) !important;  
+            border-color: var(--azul-claro);
+            box-shadow: 0 6px 18px rgba(91, 155, 213, 0.35);
+            transform: translateY(-1px);
+        }
         /* Botón CTA (Centro de Impresión) */
         .btn-imprimir-nav {
             background: linear-gradient(135deg, #5B9BD5, #2F5496) !important;
@@ -878,7 +900,7 @@
         }
         .lightbox-img {
             max-width: 100%;
-            max-height: 70vh;
+            max-height: 90vh;
             object-fit: contain;
             display: block;
             border-radius: 0;
@@ -945,17 +967,13 @@
             .scroll-dot {
                 background: rgba(255,255,255,0.8);
             }
-            .carousel-slide { flex: 0 0 100%; }
-            .carousel-wrapper { padding: 0 40px; }
-            .stat-divider { display: none; }
-            footer .footer-inner { flex-direction: column; text-align: center; }
         }
 
         @media (max-width: 991px) {
             .nav-links { display: none; }
             .nav-hamburger { display: block; }
-            .carousel-slide { flex: 0 0 calc(50% - 12px); }
-            .carousel-wrapper { padding: 0 48px; }
+            .carousel-slide { flex: 0 0 calc(110% - 12px); }
+            .carousel-wrapper { padding: 0 20px; }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -1003,7 +1021,11 @@
                     </ul>
                 </li>
             {% else %}
-                <li><a href="/login" class="nav-cta"><i class="fas fa-sign-in-alt me-1"></i> Iniciar Sesión</a></li>
+                <li>
+                    <a href="/login" class="nav-login">
+                        <i class="fas fa-sign-in-alt me-1"></i> Iniciar sesión
+                    </a>
+                </li>
             {% endif %}
         </ul>
         <button class="nav-hamburger" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuOffcanvas" aria-label="Menú">
@@ -1012,7 +1034,7 @@
     </div>
 </nav>
 
-<!-- ================== OFFCANVAS MÓVIL DEFINITIVO ================== -->
+<!-- ================== OFFCANVAS MÓVIL ================== -->
 <div class="offcanvas offcanvas-end" tabindex="-1" id="menuOffcanvas" 
      style="background: rgba(47, 84, 150, 0.15); backdrop-filter: blur(24px); 
             -webkit-backdrop-filter: blur(24px); border-left: 1px solid rgba(255,255,255,0.4);

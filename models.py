@@ -5,7 +5,7 @@ from datetime import datetime
 class Usuario(UserMixin, db.Model):
     __tablename__ = 'usuario'
     ID = db.Column(db.Integer, primary_key=True)
-    ID_USUARIO = db.Column(db.String(10), unique=True, nullable=False)
+    ID_USUARIO = db.Column(db.String(15), unique=True, nullable=False)
     NOMBRE = db.Column(db.String(50), nullable=False)
     APELLIDO = db.Column(db.String(50), nullable=False)
     EMAIL = db.Column(db.String(120), unique=True, nullable=False)

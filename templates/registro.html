@@ -79,6 +79,46 @@
         .is-invalid, .border-danger {
             border-color: #dc3545 !important;
         }
+
+        /* Prefijo V/E integrado en la barra */
+        .cedula-prefijo {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 5;
+            width: 55px;                     /* ~10 % de la barra */
+            height: calc(100% - 4px);        /* casi toda la altura */
+            border: none !important;
+            background: transparent !important;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--azul-oscuro, #2F5496);
+            padding: 0;
+            text-align: center;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            /* Línea divisoria sutil */
+            border-right: 1px solid rgba(0,0,0,0.1) !important;
+            border-radius: 0 !important;
+        }
+
+        .cedula-prefijo:hover {
+            background: rgba(91,155,213,0.08) !important;
+        }
+
+        .cedula-prefijo:focus,
+        .cedula-prefijo select:focus {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Input de dígitos: reservamos espacio para el prefijo */
+        .cedula-input {
+            padding-left: 65px !important;   /* un poco más que el ancho del prefijo */
+        }
     </style>
 </head>
 <body>
@@ -133,11 +173,15 @@
                 <input type="text" name="telefono" class="form-control {% if field_errors.telefono %}is-invalid{% endif %}" placeholder="Teléfono" maxlength="11" value="{{ form_data.telefono if form_data else '' }}" required>
                 {% if field_errors.telefono %}<div class="invalid-feedback">{{ field_errors.telefono }}</div>{% endif %}
             </div>
-            <div class="mb-3">
-                <input type="text" name="usuario_id" class="form-control {% if field_errors.usuario_id %}is-invalid{% endif %}" placeholder="Cédula de Identidad" maxlength="8" value="{{ form_data.usuario_id if form_data else '' }}" required>
-                {% if field_errors.usuario_id %}<div class="invalid-feedback">{{ field_errors.usuario_id }}</div>{% endif %}
+            <div class="mb-3 position-relative">
+                <select class="form-select cedula-prefijo" id="tipoCedulaReg">
+                    <option value="V" selected>V</option>
+                    <option value="E">E</option>
+                </select>
+                <input type="text" id="cedulaDigitsReg" class="form-control cedula-input" 
+                       placeholder="12345678" required maxlength="8" inputmode="numeric" pattern="\d+">
+                <input type="hidden" name="usuario_id" id="usuarioReg">
             </div>
-
             <hr class="my-3">
             <p class="text-muted small mb-3"><i class="fas fa-shield-alt me-1"></i> Preguntas de seguridad para recuperar tu cuenta</p>
 
@@ -222,6 +266,38 @@
                 eyeIcon.classList.add('fa-eye');
             }
         }
+    </script>
+    <script>
+        const tipoReg = document.getElementById('tipoCedulaReg');
+        const digitReg = document.getElementById('cedulaDigitsReg');
+        const hiddenReg = document.getElementById('usuarioReg');
+
+        // Actualizar longitud máxima y placeholder al cambiar el tipo
+        function actualizarTipo() {
+            const esE = tipoReg.value === 'E';
+            digitReg.value = '';
+            digitReg.maxLength = esE ? 12 : 8;
+            digitReg.placeholder = esE ? '123456789012' : '12345678';
+        }
+
+        tipoReg.addEventListener('change', actualizarTipo);
+
+        // Al enviar, llenar el campo oculto solo con los dígitos (sin el prefijo)
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            // Validación extra: si el campo está vacío, evitamos envío
+            const digitos = digitReg.value.trim();
+            if (digitos === '') {
+                e.preventDefault();
+                alert('Debes escribir el número de cédula.');
+                return;
+            }
+            // Enviar solo los dígitos (el backend limpiará cualquier prefijo si hiciera falta)
+            hiddenReg.value = digitos;
+        });
+
+        // Inicializar el estado por si el navegador recuerda la selección
+        actualizarTipo();
     </script>
 </body>
 </html>
