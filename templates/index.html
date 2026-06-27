@@ -165,56 +165,55 @@
 
         /* ===================== DROPDOWN MI CUENTA ===================== */
         .nav-links .dropdown-menu {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
             border-radius: 22px;
             box-shadow: 0 12px 30px rgba(0,0,0,0.12);
-            padding: 10px 0;
-            margin-top: 8px;
+            padding: 8px 0;
             min-width: 200px;
+            max-width: 260px;        
+            overflow: hidden;         
         }
+
         .nav-links .dropdown-item {
+            display: block;
+            width: auto;               
+            margin: 2px 12px;         
+            padding: 10px 16px;
+            border-radius: 30px;
             font-size: 0.9rem;
             font-weight: 500;
-            padding: 10px 20px;
-            margin: 2px 10px;
-            border-radius: 30px;
             color: var(--ink-mid);
-            transition: all 0.2s ease;
+            transition: background 0.2s ease, color 0.2s ease;
+            white-space: nowrap;
+            background: transparent;  
         }
+
+        .nav-links .dropdown-item i {
+            width: 18px;
+            text-align: center;
+            margin-right: 6px;
+        }
+
         .nav-links .dropdown-item:hover {
-            background: rgba(91, 155, 213, 0.12);
+            background: rgba(91, 155, 213, 0.12);  
             color: var(--azul-deep);
         }
+
         .nav-links .dropdown-item.text-danger {
             color: #dc3545;
         }
+
         .nav-links .dropdown-item.text-danger:hover {
             background: rgba(220, 53, 69, 0.1);
             color: #b02a37;
         }
+
         .nav-links .dropdown-divider {
             border-color: rgba(0,0,0,0.06);
-            margin: 6px 20px;
-        }
-        .nav-links .dropdown-toggle {
-            font-size: 0.88rem;
-            font-weight: 500;
-            color: var(--ink-mid);
-            text-decoration: none;
-            padding: 7px 16px;
-            border-radius: 50px;
-            transition: all var(--transition);
-            background: none;
-            border: none;
-            cursor: pointer;
-        }
-        .nav-links .dropdown-toggle:hover,
-        .nav-links .dropdown-toggle:focus {
-            background: var(--azul-pale);
-            color: var(--azul-deep);
+            margin: 6px 16px;
         }
 
         /* ===================== OFFCANVAS ===================== */
@@ -1152,6 +1151,20 @@
           {% endif %}
         {% endwith %}
 
+        {% if request.args.get('bloqueado') == '1' %}
+        <div class="flash-container">
+            <div class="flash-alert flash-danger">
+                <div class="flash-icon">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div class="flash-content">Demasiados intentos fallidos. Debes esperar 1 minuto antes de volver a intentar.</div>
+                <span class="flash-close-btn" onclick="this.closest('.flash-alert').remove()">
+                    <i class="fas fa-times"></i>
+                </span>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Mensaje de cancelación de pedido -->
         {% if request.args.get('cancelado') == '1' %}
           <div class="flash-container">
@@ -1628,7 +1641,7 @@
     }
 </script>
 
-<!-- Botón Volver arriba (bonito) -->
+<!-- Botón Volver arriba -->
 <div id="btn-scroll-top" style="
     position: fixed;
     bottom: 30px;
@@ -1656,13 +1669,13 @@
 </div>
 
 <script>
-(function() {
-    var btn = document.getElementById('btn-scroll-top');
-    if (!btn) return;
-    window.addEventListener('scroll', function() {
-        btn.style.display = (window.scrollY > 400) ? 'flex' : 'none';
-    });
-})();
+    (function() {
+        var btn = document.getElementById('btn-scroll-top');
+        if (!btn) return;
+        window.addEventListener('scroll', function() {
+            btn.style.display = (window.scrollY > 400) ? 'flex' : 'none';
+        });
+    })();
 </script>
 
 </body>

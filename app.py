@@ -274,18 +274,41 @@ def login():
 
         user = Usuario.query.filter_by(ID_USUARIO=cedula).first()
 
+        # --- NUEVO: Verificar si el usuario está bloqueado temporalmente ---
+        if user and user.BLOQUEADO_HASTA and user.BLOQUEADO_HASTA > datetime.now():
+            minutos_restantes = int((user.BLOQUEADO_HASTA - datetime.now()).total_seconds() // 60) + 1
+            flash(f'Demasiados intentos fallidos. Espera {minutos_restantes} minuto(s) o restablece tu contraseña.', 'danger')
+            return render_template('login.html')
+
         if user and check_password_hash(user.CONTRASEÑA, contrasena):
             if not user.CONFIRMADO:
                 flash('Debes confirmar tu correo electrónico antes de iniciar sesión.', 'warning')
             else:
+                # --- NUEVO: Resetear intentos fallidos y desbloquear ---
+                user.INTENTOS_FALLIDOS = 0
+                user.BLOQUEADO_HASTA = None
+                db.session.commit()
+
                 login_user(user)
-                # Mensaje para usuarios normales
                 if not user.ES_ADMIN and not user.ES_OPERADOR:
                     flash('¡Ahora puedes realizar peticiones en línea desde el centro de impresión!', 'info')
                 flash(f'¡Bienvenido {user.NOMBRE}!', 'success')
                 return redirect(url_for('index'))
         else:
-            flash('Cédula o contraseña incorrectos.', 'danger')
+            # --- NUEVO: Incrementar contador de intentos fallidos ---
+            if user:
+                user.INTENTOS_FALLIDOS = (user.INTENTOS_FALLIDOS or 0) + 1
+                if user.INTENTOS_FALLIDOS >= 5:
+                    user.BLOQUEADO_HASTA = datetime.now() + timedelta(minutes=1)
+                    user.INTENTOS_FALLIDOS = 0  # reiniciar contador para cuando se desbloquee
+                    db.session.commit()
+                    flash('Has superado el límite de intentos. Espera 1 minuto o restablece tu contraseña.', 'danger')
+                    return redirect(url_for('index', bloqueado=1))
+                else:
+                    db.session.commit()
+                    flash('Cédula o contraseña incorrectos.', 'danger')
+            else:
+                flash('Cédula o contraseña incorrectos.', 'danger')
 
     return render_template('login.html')
 # ------------------------------------------------------------

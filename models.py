@@ -18,6 +18,8 @@ class Usuario(UserMixin, db.Model):
     RESPUESTA1 = db.Column(db.String(200), nullable=True)
     PREGUNTA2 = db.Column(db.String(200), nullable=True)
     RESPUESTA2 = db.Column(db.String(200), nullable=True)
+    INTENTOS_FALLIDOS = db.Column(db.Integer, default=0)
+    BLOQUEADO_HASTA = db.Column(db.DateTime, nullable=True)
 
     def get_id(self):
         return str(self.ID)
