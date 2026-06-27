@@ -737,3 +737,95 @@ html.dark-mode .modal-ordenar .btn-close,
 body.dark-mode .modal-ordenar .btn-close {
     filter: invert(1);
 }
+/* ========== MODO OSCURO: TARJETAS DE PREFERENCIAS DE IMPRESIÓN (Admin - Detalle de Solicitud) ========== */
+html.dark-mode #info .archivo-card,
+body.dark-mode #info .archivo-card {
+    background: rgba(30, 33, 40, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ddd;
+}
+
+html.dark-mode #info .archivo-card .nombre-archivo,
+body.dark-mode #info .archivo-card .nombre-archivo {
+    color: #ffffff;
+}
+
+html.dark-mode #info .archivo-card .dato,
+body.dark-mode #info .archivo-card .dato {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ccc;
+}
+
+html.dark-mode #info .archivo-card .dato i,
+body.dark-mode #info .archivo-card .dato i {
+    color: #7bb3e0;
+}
+
+/* ========== MODO OSCURO: TARJETAS DEL MODAL DE REPORTES (el "ojo") ========== */
+html.dark-mode #modalDetalleDinamico .archivo-mini-card,
+body.dark-mode #modalDetalleDinamico .archivo-mini-card {
+    background: rgba(30, 33, 40, 0.8);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #ddd;
+}
+
+html.dark-mode #modalDetalleDinamico .archivo-mini-card .nombre-archivo,
+body.dark-mode #modalDetalleDinamico .archivo-mini-card .nombre-archivo {
+    color: #ffffff;
+}
+
+html.dark-mode #modalDetalleDinamico .archivo-mini-card .detalle span,
+body.dark-mode #modalDetalleDinamico .archivo-mini-card .detalle span {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ccc;
+}
+
+html.dark-mode #modalDetalleDinamico .archivo-mini-card .detalle i,
+body.dark-mode #modalDetalleDinamico .archivo-mini-card .detalle i {
+    color: #7bb3e0;
+}
+
+html.dark-mode #modalDetalleDinamico .archivo-mini-card .btn-solicitar,
+body.dark-mode #modalDetalleDinamico .archivo-mini-card .btn-solicitar {
+    background-color: #5b9bd5;
+    border-color: #5b9bd5;
+    color: #fff;
+}
+
+/* ========== MODO OSCURO: TARJETAS DE ARCHIVOS EN PANEL DE OPERADOR ========== */
+html.dark-mode .archivo-card,
+body.dark-mode .archivo-card {
+    background: rgba(30, 33, 40, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ddd;
+}
+
+html.dark-mode .archivo-card .nombre,
+body.dark-mode .archivo-card .nombre {
+    color: #ffffff;
+}
+
+html.dark-mode .archivo-card .detalle,
+html.dark-mode .archivo-card .especificacion,
+body.dark-mode .archivo-card .detalle,
+body.dark-mode .archivo-card .especificacion {
+    color: #bbb;
+}
+
+html.dark-mode .archivo-card .detalle i,
+html.dark-mode .archivo-card .especificacion i,
+body.dark-mode .archivo-card .detalle i,
+body.dark-mode .archivo-card .especificacion i {
+    color: #7bb3e0;
+}
+
+html.dark-mode .archivo-card .btn-descargar,
+body.dark-mode .archivo-card .btn-descargar {
+    background: #5b9bd5;
+    color: white;
+}
+
+html.dark-mode .archivo-card .btn-descargar:hover,
+body.dark-mode .archivo-card .btn-descargar:hover {
+    background: #2f5496;
+}
