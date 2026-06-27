@@ -241,7 +241,7 @@ def index():
     # Obtener imágenes del catálogo (si usas la tabla catalogo)
     try:
         with db.engine.connect() as conn:
-            result = conn.execute(text("SELECT IMAGEN FROM catalogo ORDER BY ID"))
+            result = conn.execute(text("SELECT IMAGEN FROM catalogo ORDER BY ORDEN"))
             imagenes = [row[0] for row in result]
     except Exception as e:
         imagenes = []
@@ -897,7 +897,7 @@ def admin_eliminar_solicitud(pedido_id):
 @admin_required
 def admin_catalogos():
     tab = request.args.get('tab', 'servicios')
-    imagenes = Catalogo.query.order_by(Catalogo.ID).all()          
+    imagenes = Catalogo.query.order_by(Catalogo.ORDEN).all()          
     servicios = ServicioImpresion.query.order_by(ServicioImpresion.TITULO).all()
 
     return render_template('admin/catalogos.html', 
@@ -964,6 +964,24 @@ def admin_actualizar_imagen(imagen_id):
         flash('No se seleccionó una nueva imagen.', 'info')
     return redirect(url_for('admin_catalogos'))
 
+@app.route('/admin/catalogos/orden-actual')
+@login_required
+@admin_required
+def admin_orden_actual():
+    imagenes = Catalogo.query.order_by(Catalogo.ORDEN).all()
+    orden = [{'id': img.ID, 'nombre': img.IMAGEN} for img in imagenes]
+    return {'orden': orden}
+
+@app.route('/admin/catalogos/reordenar', methods=['POST'])
+@login_required
+@admin_required
+def admin_reordenar_catalogo():
+    data = request.get_json()
+    orden_ids = data.get('orden', [])
+    for idx, img_id in enumerate(orden_ids):
+        Catalogo.query.filter_by(ID=img_id).update({'ORDEN': idx})
+    db.session.commit()
+    return {'success': True}
 
 # SERVICIOS DE IMPRESIÓN
 @app.route('/admin/servicios-impresion')

@@ -702,3 +702,38 @@ body.dark-mode .contador-nuevos {
     background: rgba(220, 53, 69, 0.1);
     border-color: rgba(220, 53, 69, 0.25);
 }
+/* ========== MODO OSCURO PARA EL MODAL DE ORDENAMIENTO ========== */
+html.dark-mode .modal-ordenar .modal-content,
+body.dark-mode .modal-ordenar .modal-content {
+    background: rgba(20, 23, 28, 0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e0e0e0;
+}
+
+html.dark-mode .modal-ordenar .modal-header,
+body.dark-mode .modal-ordenar .modal-header {
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+html.dark-mode .modal-ordenar .modal-footer,
+body.dark-mode .modal-ordenar .modal-footer {
+    border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+html.dark-mode #lista-ordenable li,
+body.dark-mode #lista-ordenable li {
+    background: rgba(30, 33, 40, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #e0e0e0;
+}
+
+html.dark-mode #lista-ordenable li:hover,
+body.dark-mode #lista-ordenable li:hover {
+    background: rgba(40, 44, 52, 0.9);
+}
+
+html.dark-mode .modal-ordenar .btn-close,
+body.dark-mode .modal-ordenar .btn-close {
+    filter: invert(1);
+}

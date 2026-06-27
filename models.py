@@ -26,6 +26,7 @@ class Catalogo(db.Model):
     __tablename__ = 'catalogo'
     ID = db.Column(db.Integer, primary_key=True)
     IMAGEN = db.Column(db.String(50), unique=True, nullable=False)
+    ORDEN = db.Column(db.Integer, default=0)
 
 class Pedido(db.Model):
     __tablename__ = 'pedido'
