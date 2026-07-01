@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 26-06-2026 a las 21:48:14
+-- Tiempo de generación: 01-07-2026 a las 01:57:52
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -34,6 +34,14 @@ CREATE TABLE `archivo_pedido` (
   `RUTA` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Volcado de datos para la tabla `archivo_pedido`
+--
+
+INSERT INTO `archivo_pedido` (`ID`, `PEDIDO_ID`, `NOMBRE_ARCHIVO`, `RUTA`) VALUES
+(778, 397, 'PNFI-Trayecto2Seccion2.pdf', 'static/uploads\\impresion\\PNFI-Trayecto2Seccion2.pdf'),
+(779, 397, '1000379156.png', 'static/uploads\\comprobantes\\1000379156.png');
+
 -- --------------------------------------------------------
 
 --
@@ -42,28 +50,29 @@ CREATE TABLE `archivo_pedido` (
 
 CREATE TABLE `catalogo` (
   `ID` int(11) NOT NULL,
-  `IMAGEN` varchar(50) NOT NULL
+  `IMAGEN` varchar(50) NOT NULL,
+  `ORDEN` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `catalogo`
 --
 
-INSERT INTO `catalogo` (`ID`, `IMAGEN`) VALUES
-(1, '1.png'),
-(10, '10.png'),
-(11, '11.png'),
-(12, '12.png'),
-(13, '13.png'),
-(16, '14.png'),
-(2, '2.png'),
-(3, '3.png'),
-(4, '4.png'),
-(5, '5.png'),
-(6, '6.png'),
-(7, '7.png'),
-(8, '8.png'),
-(9, '9.png');
+INSERT INTO `catalogo` (`ID`, `IMAGEN`, `ORDEN`) VALUES
+(2, '2.png', 1),
+(3, '3.png', 2),
+(4, '4.png', 3),
+(5, '5.png', 4),
+(6, '6.png', 5),
+(7, '7.png', 6),
+(8, '8.png', 7),
+(9, '9.png', 8),
+(10, '10.png', 9),
+(11, '11.png', 10),
+(12, '12.png', 11),
+(13, '13.png', 12),
+(16, '14.png', 13),
+(17, '1.png', 0);
 
 -- --------------------------------------------------------
 
@@ -112,6 +121,13 @@ CREATE TABLE `detalle` (
   `PRECIO_UNITARIO` decimal(10,2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Volcado de datos para la tabla `detalle`
+--
+
+INSERT INTO `detalle` (`ID`, `CANTIDAD`, `SUBTOTAL`, `PEDIDO_ID`, `PRECIO_UNITARIO`) VALUES
+(173, 80, 6400.00, 397, 80.00);
+
 -- --------------------------------------------------------
 
 --
@@ -137,6 +153,13 @@ CREATE TABLE `pedido` (
   `REFERENCIA_PAGO` varchar(100) DEFAULT NULL,
   `DETALLE_ARCHIVOS` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`DETALLE_ARCHIVOS`))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `pedido`
+--
+
+INSERT INTO `pedido` (`ID`, `FECHA`, `ESTADO`, `TOTAL`, `TAMANO`, `PAGINAS_COLOR`, `ID_USUARIO`, `FECHA_RETIRO`, `HORA_RETIRO`, `CODIGO_TICKET`, `COMENTARIOS`, `VISTO_ADMIN`, `VISTO_OPERADOR`, `PAGINAS`, `SERVICIO_ID`, `REFERENCIA_PAGO`, `DETALLE_ARCHIVOS`) VALUES
+(397, '2026-06-27 14:27:38', 'Pago confirmado', 6400.00, 'Carta', NULL, 20, '2026-06-29', '09:30:00', 'TICK-397-JXI0', '', 1, 1, 80, 22, '535353536355353', NULL);
 
 -- --------------------------------------------------------
 
@@ -213,17 +236,19 @@ CREATE TABLE `usuario` (
   `PREGUNTA1` varchar(200) DEFAULT NULL,
   `RESPUESTA1` varchar(200) DEFAULT NULL,
   `PREGUNTA2` varchar(200) DEFAULT NULL,
-  `RESPUESTA2` varchar(200) DEFAULT NULL
+  `RESPUESTA2` varchar(200) DEFAULT NULL,
+  `INTENTOS_FALLIDOS` int(11) DEFAULT 0,
+  `BLOQUEADO_HASTA` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `usuario`
 --
 
-INSERT INTO `usuario` (`ID`, `ID_USUARIO`, `NOMBRE`, `APELLIDO`, `EMAIL`, `CONTRASEÑA`, `TELEFONO`, `CONFIRMADO`, `ES_ADMIN`, `ES_OPERADOR`, `PREGUNTA1`, `RESPUESTA1`, `PREGUNTA2`, `RESPUESTA2`) VALUES
-(18, '00000000', 'Prueba', 'Operador', 'andresperez32163@gmail.com', 'scrypt:32768:8:1$Av0UTck9Oy74TFF5$889113c6c2d26297e109ea79852e0e18d150689564653910b8d801eeed6749fe087f3984da000ac8e1d0988cc2ba1d315a960afec1b68f055827671b4d217ada', '00000000000', 1, 0, 1, 'color', 'ROJO', 'comida', 'PASTA'),
-(19, '11111111', 'Prueba', 'Admin', 'andreseduardo32163@gmail.com', 'scrypt:32768:8:1$T0B5k0eET9Q4QtWS$9f4c563d170e1be3c2dd95c122b31a1d28deea41895ace38febe77ec7d7dbc1536a1b1a70d36af7c3d09320b388f5b93a2236b43eeb1f52a2080379afd7fcae6', '11111111111', 1, 1, 0, 'color', 'ROJO', 'comida', 'PASTA'),
-(20, '22222222', 'Prueba', 'Usuario Cliente', 'kenyersoncrespo6@gmail.com', 'scrypt:32768:8:1$i1jzZAWBIIDfJA5J$f2ca81b00b2758323a510d52d61871107d07e82653de499dd6fe535fca85f24ac98ff3f5f6d042ebbd385dbb8bd4a98b519ffbb3737756e60f1b823140d66d71', '22222222222', 1, 0, 0, 'color', 'ROJO', 'comida', 'PASTA');
+INSERT INTO `usuario` (`ID`, `ID_USUARIO`, `NOMBRE`, `APELLIDO`, `EMAIL`, `CONTRASEÑA`, `TELEFONO`, `CONFIRMADO`, `ES_ADMIN`, `ES_OPERADOR`, `PREGUNTA1`, `RESPUESTA1`, `PREGUNTA2`, `RESPUESTA2`, `INTENTOS_FALLIDOS`, `BLOQUEADO_HASTA`) VALUES
+(18, '00000000', 'Prueba', 'Operador', 'andresperez32163@gmail.com', 'scrypt:32768:8:1$Av0UTck9Oy74TFF5$889113c6c2d26297e109ea79852e0e18d150689564653910b8d801eeed6749fe087f3984da000ac8e1d0988cc2ba1d315a960afec1b68f055827671b4d217ada', '00000000000', 1, 0, 1, 'color', 'ROJO', 'comida', 'PASTA', 0, NULL),
+(19, '11111111', 'Prueba', 'Admin', 'andreseduardo32163@gmail.com', 'scrypt:32768:8:1$T0B5k0eET9Q4QtWS$9f4c563d170e1be3c2dd95c122b31a1d28deea41895ace38febe77ec7d7dbc1536a1b1a70d36af7c3d09320b388f5b93a2236b43eeb1f52a2080379afd7fcae6', '11111111111', 1, 1, 0, 'color', 'ROJO', 'comida', 'PASTA', 0, '2026-06-27 15:03:48'),
+(20, '22222222', 'Prueba', 'Usuario Cliente', 'kenyersoncrespo6@gmail.com', 'scrypt:32768:8:1$i1jzZAWBIIDfJA5J$f2ca81b00b2758323a510d52d61871107d07e82653de499dd6fe535fca85f24ac98ff3f5f6d042ebbd385dbb8bd4a98b519ffbb3737756e60f1b823140d66d71', '22222222222', 1, 0, 0, 'color', 'ROJO', 'comida', 'PASTA', 0, NULL);
 
 --
 -- Índices para tablas volcadas
@@ -296,13 +321,13 @@ ALTER TABLE `usuario`
 -- AUTO_INCREMENT de la tabla `archivo_pedido`
 --
 ALTER TABLE `archivo_pedido`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=774;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=780;
 
 --
 -- AUTO_INCREMENT de la tabla `catalogo`
 --
 ALTER TABLE `catalogo`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT de la tabla `configuracion`
@@ -314,13 +339,13 @@ ALTER TABLE `configuracion`
 -- AUTO_INCREMENT de la tabla `detalle`
 --
 ALTER TABLE `detalle`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=172;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=174;
 
 --
 -- AUTO_INCREMENT de la tabla `pedido`
 --
 ALTER TABLE `pedido`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=396;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=398;
 
 --
 -- AUTO_INCREMENT de la tabla `servicio_impresion`
