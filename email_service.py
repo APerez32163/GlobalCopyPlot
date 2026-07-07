@@ -5,7 +5,7 @@ from email.message import EmailMessage
 from flask import url_for
 
 SMTP_SERVER = 'smtp.gmail.com'
-SMTP_PORT = 587
+SMTP_PORT = 465
 SMTP_USER = 'SupportGlobalCopyPlot@gmail.com'
 SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD') 
 
@@ -25,8 +25,8 @@ def enviar_correo_restablecimiento(email_destino, token):
         msg['To'] = email_destino
         msg.set_content(cuerpo, charset='utf-8')
 
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            server.starttls()
+        with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT) as server:
+            #server.starttls()
             server.login(SMTP_USER, SMTP_PASSWORD)
             server.send_message(msg)
         return True, None
@@ -47,8 +47,8 @@ def enviar_correo_confirmacion(email_destino, token):
         msg['From'] = SMTP_USER
         msg['To'] = email_destino
         msg.set_content(cuerpo, charset='utf-8')
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            server.starttls()
+        with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT) as server:
+            #server.starttls()
             server.login(SMTP_USER, SMTP_PASSWORD)
             server.send_message(msg)
         return True, None
@@ -73,8 +73,8 @@ Gracias por confiar en GlobalCopyPlot."""
         msg['To'] = email_destino
         msg.set_content(cuerpo, charset='utf-8')
 
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            server.starttls()
+        with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT) as server:
+            #server.starttls()
             server.login(SMTP_USER, SMTP_PASSWORD)
             server.send_message(msg)
         return True, None

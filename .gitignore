@@ -1,6 +1,7 @@
 .env
 iniciar.bat
 databaseinfo.txt
+Support_Email.txt
 globalcopyplot.sql
 venv/
 # Byte-compiled / optimized / DLL files
