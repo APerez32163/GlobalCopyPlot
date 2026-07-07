@@ -1,0 +1,67 @@
+{% extends "admin/base_admin.html" %}
+{% block content %}
+<h2 class="mb-4">Resumen General de Pedidos</h2>
+<div class="table-responsive">
+    <table class="table glass-card">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Usuario</th>
+                <th>Fecha</th>
+                <th>Total</th>
+                <th>Estado</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for pedido in pedidos %}
+            <tr>
+                <td>#{{ pedido.ID }}</td>
+                <td>{{ pedido.ID_USUARIO }}</td>
+                <td>{{ pedido.FECHA.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td>Bs. {{ "%.2f"|format(pedido.TOTAL) }}</td>
+                <td><span class="badge bg-info">{{ pedido.ESTADO }}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-solicitar" data-bs-toggle="modal" data-bs-target="#estadoModal" data-id="{{ pedido.ID }}" data-estado="{{ pedido.ESTADO }}">Cambiar</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal para cambiar estado (muy básico) -->
+<div class="modal fade" id="estadoModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content glass-card">
+            <form method="POST" action="{{ url_for('cambiar_estado') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cambiar estado</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="pedido_id" id="modalPedidoId">
+                    <select name="estado" class="form-select" id="modalEstadoSelect">
+                        <option value="Pendiente de pago">Pendiente de pago</option>
+                        <option value="Pago verificado">Pago verificado</option>
+                        <option value="En proceso">En proceso</option>
+                        <option value="Listo">Listo</option>
+                        <option value="Entregado">Entregado</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-solicitar">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    const estadoModal = document.getElementById('estadoModal');
+    estadoModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        document.getElementById('modalPedidoId').value = button.getAttribute('data-id');
+        document.getElementById('modalEstadoSelect').value = button.getAttribute('data-estado');
+    });
+</script>
+{% endblock %}

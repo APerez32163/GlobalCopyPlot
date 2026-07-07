@@ -1,0 +1,103 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Solicitudes{% endblock %}
+{% block content %}
+<h2 class="mb-4">Solicitudes {% if estado_filtro %}<span class="badge bg-info">{{ estado_filtro }}</span>{% endif %}</h2>
+
+<!-- Filtros por estado -->
+<div class="mb-3">
+    <a href="{{ url_for('admin_solicitudes') }}" class="btn btn-sm btn-outline-secondary rounded-pill me-2">Todas</a>
+    <a href="{{ url_for('admin_solicitudes', estado='Pendiente de pago') }}" class="btn btn-sm btn-outline-warning rounded-pill me-2">Nuevas</a>
+    <a href="{{ url_for('admin_solicitudes', estado='Esperando validación,Pago confirmado') }}" 
+       class="btn btn-sm btn-outline-info rounded-pill me-2">
+       En proceso
+    </a>
+    <a href="{{ url_for('admin_solicitudes', estado='Listo') }}" class="btn btn-sm btn-outline-success rounded-pill me-2">Listas</a>
+    <a href="{{ url_for('admin_solicitudes', estado='Cancelado') }}" class="btn btn-sm btn-outline-danger rounded-pill">Canceladas</a>
+</div>
+
+<div class="table-responsive glass-card p-3">
+    <table class="table table-hover align-middle">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Cédula</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Fecha</th>
+                <th>Total</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% from "admin/helpers.html" import badge_estado %}
+            {% for item in pedidos %}
+            {% set pedido = item.pedido %}
+            {% set usuario = item.usuario %}
+            <tr>
+                <td>
+                    {% if not pedido.VISTO_ADMIN %}
+                        <i class="fas fa-circle text-danger me-1" style="font-size: 0.6rem;" title="Nuevo"></i>
+                    {% endif %}
+                    #{{ pedido.ID }}
+                </td>
+                <td>{{ usuario.ID_USUARIO if usuario else 'N/A' }}</td>
+                <td>{{ usuario.NOMBRE if usuario else 'N/A' }}</td>
+                <td>{{ usuario.APELLIDO if usuario else 'N/A' }}</td>
+                <td>{{ pedido.FECHA.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td>Bs. {{ "%.2f"|format(pedido.TOTAL) }}</td>
+                <td>{{ badge_estado(pedido.ESTADO) }}</td>
+                <td>
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('admin_solicitud_detalle', pedido_id=item.pedido.ID) }}" class="btn btn-sm btn-outline-primary rounded-pill">
+                            <i class="fas fa-eye me-1"></i> Ver
+                        </a>
+                        <button type="button" 
+                                class="btn btn-sm btn-outline-danger rounded-pill"
+                                onclick="confirmarEliminacion({{ pedido.ID }})">
+                            <i class="fas fa-trash me-1"></i> Eliminar
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal de confirmación para eliminar -->
+<div class="modal fade" id="modalEliminar" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar esta solicitud? Esta acción no se puede deshacer.</p>
+                <p class="text-muted small">Se eliminarán todos los datos asociados: detalles, archivos y comprobantes.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                <form id="formEliminar" method="POST" action="" style="display: inline;">
+                    <button type="submit" class="btn btn-danger rounded-pill">
+                        <i class="fas fa-trash me-1"></i> Eliminar definitivamente
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function confirmarEliminacion(pedidoId) {
+        // Configurar la acción del formulario con el ID correcto
+        const form = document.getElementById('formEliminar');
+        form.action = '/admin/solicitud/' + pedidoId + '/eliminar';
+        
+        // Mostrar el modal
+        const modal = new bootstrap.Modal(document.getElementById('modalEliminar'));
+        modal.show();
+    }
+</script>
+{% endblock %}

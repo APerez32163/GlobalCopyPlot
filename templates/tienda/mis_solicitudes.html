@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Mis Solicitudes · GlobalCopyPlot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+    <style>
+        :root {
+            --azul-claro: #5B9BD5;
+            --azul-oscuro: #2F5496;
+            --glass-bg: rgba(255, 255, 255, 0.45);
+            --glass-border: rgba(255, 255, 255, 0.7);
+            --texto: #1e293b;
+        }
+
+        body {
+            background: url("{{ url_for('static', filename='img/fondoimprimir.png') }}") center/cover no-repeat;
+            background-attachment: fixed;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 0 0 120px 0;
+            min-height: 100vh;
+            color: var(--texto);
+        }
+
+        .solicitudes-container {
+            max-width: 650px;
+            margin: 0 auto;
+            padding: 24px 20px;
+        }
+
+        h2 {
+            font-weight: 700;
+            font-size: 1.9rem;
+            letter-spacing: -0.5px;
+            color: var(--azul-oscuro);
+            margin-bottom: 1.5rem;
+        }
+
+        .solicitud-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .solicitud-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .solicitud-header {
+            padding: 16px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .solicitud-header:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .solicitud-header .pedido-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .solicitud-header .pedido-id {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--azul-oscuro);
+        }
+
+        .solicitud-header .pedido-fecha {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        .solicitud-body {
+            padding: 0 20px 20px;
+            border-top: 1px solid rgba(0,0,0,0.05);
+            display: none;
+        }
+
+        .solicitud-body.show {
+            display: block;
+        }
+
+        .solicitud-body p {
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .solicitud-body strong {
+            color: var(--azul-oscuro);
+        }
+
+        .badge-estado {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 20px;
+            letter-spacing: 0.3px;
+        }
+
+        .bg-pendiente  { background: #fbbf24; color: #78350f; } 
+        .bg-esperando  { background: #f59e0b; color: #78350f; }
+        .bg-confirmado { background: #3b82f6; color: white; }
+        .bg-listo      { background: #10b981; color: white; } 
+        .bg-entregado  { background: #6b7280; color: white; }
+        .bg-cancelado  { background: #ef4444; color: white; }
+        .bg-otro       { background: #9ca3af; color: white; }
+
+        .fa-chevron-down {
+            transition: transform 0.3s ease;
+            color: var(--azul-oscuro);
+            font-size: 1rem;
+        }
+
+        .fa-chevron-down.rotada {
+            transform: rotate(180deg);
+        }
+
+        .archivo-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.8);
+            padding: 6px 14px;
+            border-radius: 30px;
+            color: var(--azul-oscuro);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+        }
+
+        .archivo-link:hover {
+            background: rgba(91,155,213,0.15);
+            border-color: var(--azul-claro);
+            color: var(--azul-oscuro);
+        }
+
+        /* Truncado para nombres de archivo */
+        .nombre-archivo-limitado {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .dock-menu {
+            position: fixed;
+            bottom: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 85%;
+            max-width: 400px;
+            background: rgba(90, 150, 220, 0.80);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 40px;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 20px 35px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+            z-index: 100;
+        }
+
+        .dock-item {
+            color: rgba(255, 255, 255, 0.85);
+            text-align: center;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.4px;
+            transition: transform 0.3s ease, color 0.3s ease;
+            padding: 6px 10px;
+        }
+
+        .dock-item i {
+            font-size: 1.6rem;
+            margin-bottom: 3px;
+            transition: transform 0.3s ease, color 0.3s ease, text-shadow 0.3s ease;
+        }
+
+        .dock-item.active {
+            color: #ffffff;
+            transform: translateY(-6px);
+        }
+
+        .dock-item.active i {
+            transform: scale(1.15);
+            color: #ffffff;
+            text-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
+            animation: iconoBrillo 1.5s ease-in-out infinite;
+        }
+
+        .dock-item:hover {
+            color: #ffffff;
+            transform: translateY(-3px);
+        }
+
+        .dock-item:hover i {
+            transform: scale(1.1);
+        }
+
+        .dock-item:active {
+            transform: scale(0.9);
+        }
+
+        @keyframes iconoBrillo {
+            0%, 100% { text-shadow: 0 0 8px rgba(255,255,255,0.6); }
+            50% { text-shadow: 0 0 18px rgba(255,255,255,1), 0 0 30px rgba(91,155,213,0.8); }
+        }
+
+        @media (max-width: 576px) {
+            .solicitud-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .solicitud-header .d-flex {
+                margin-top: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="solicitudes-container">
+        <h2 class="text-center">Mis Solicitudes</h2>
+        
+        {% if pedidos %}
+            {% for item in pedidos %}
+            {% set pedido = item.pedido %}
+            <div class="solicitud-card">
+                <div class="solicitud-header" onclick="toggleBody(this)">
+                    <div class="pedido-info">
+                        <span class="pedido-id">Pedido #{{ pedido.ID }}</span>
+                        <span class="pedido-fecha">{{ pedido.FECHA.strftime('%d/%m/%Y %H:%M') }}</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge-estado 
+                            {% if pedido.ESTADO == 'Pendiente de pago' %}bg-pendiente
+                            {% elif pedido.ESTADO == 'Cancelado' %}bg-cancelado
+                            {% elif pedido.ESTADO == 'Esperando validación' %}bg-esperando
+                            {% elif pedido.ESTADO == 'Pago confirmado' %}bg-confirmado
+                            {% elif pedido.ESTADO == 'Listo' %}bg-listo
+                            {% elif pedido.ESTADO == 'Entregado' %}bg-entregado
+                            {% else %}bg-otro{% endif %}">
+                            {{ pedido.ESTADO }}
+                        </span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+                <div class="solicitud-body">
+                    <p><strong>Total:</strong> Bs. {{ "%.2f"|format(pedido.TOTAL) }}</p>
+                    <p><strong>Páginas:</strong> {{ item.detalles[0].CANTIDAD if item.detalles else 'N/A' }}</p>
+                    <p><strong>Servicio:</strong> 
+                        {% if item.servicio_nombre %}
+                            {{ item.servicio_nombre }}
+                        {% elif pedido.SERVICIO_ID %}
+                            {% set srv = pedido.SERVICIO_ID %}
+                            Servicio #{{ srv }} · {{ pedido.TAMANO }}
+                        {% else %}
+                            No especificado
+                        {% endif %}
+                    </p>
+                    {% if item.paginas_color %}
+                    <p><strong>Páginas a color:</strong> {{ item.paginas_color }}</p>
+                    {% endif %}
+                    {% if item.comentarios %}
+                    <p><strong>Comentarios:</strong> {{ item.comentarios }}</p>
+                    {% endif %}
+                    
+                    {% if pedido.CODIGO_TICKET %}
+                    <p><strong>Código de ticket:</strong> <span class="fw-bold text-primary">{{ pedido.CODIGO_TICKET }}</span></p>
+                    {% endif %}
+
+                    <h6 class="mt-3">Archivos del pedido</h6>
+                    <div>
+                        {% if item.archivos %}
+                            {% for archivo in item.archivos %}
+                                <a href="{{ url_for('static', filename=archivo.RUTA.replace('static/', '', 1).replace('\\', '/')) }}" 
+                                   class="archivo-link" target="_blank">
+                                    <i class="fas fa-download"></i> 
+                                    <span class="nombre-archivo-limitado">{{ archivo.NOMBRE_ARCHIVO }}</span>
+                                </a>
+                            {% endfor %}
+                        {% else %}
+                            <small class="text-muted">Sin archivos</small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="text-center mt-5">
+                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                <p class="text-muted fs-5">No tienes solicitudes aún.</p>
+                <a href="/imprimir" class="btn btn-primary-gradient mt-2">Crear una impresión</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Menú inferior -->
+    <nav class="dock-menu">
+        <a href="/imprimir" class="dock-item {% if active_page == 'imprimir' %}active{% endif %}">
+            <i class="fas fa-print"></i>
+            <span>Imprimir</span>
+        </a>
+        <a href="/mis-solicitudes" class="dock-item {% if active_page == 'solicitudes' %}active{% endif %}">
+            <i class="fas fa-list-check"></i>
+            <span>Solicitudes</span>
+        </a>
+        <a href="{{ url_for('index') }}" class="dock-item {% if active_page == 'inicio' %}active{% endif %}">
+            <i class="fas fa-home"></i>
+            <span>Inicio</span>
+        </a>
+    </nav>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function toggleBody(header) {
+            const body = header.nextElementSibling;
+            const icon = header.querySelector('.fa-chevron-down');
+            body.classList.toggle('show');
+            icon.classList.toggle('rotada');
+        }
+    </script>
+</body>
+</html>

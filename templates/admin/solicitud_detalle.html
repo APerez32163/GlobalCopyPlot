@@ -1,0 +1,312 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Solicitud #{{ pedido.ID }}{% endblock %}
+{% block content %}
+<h2 class="mb-4">Solicitud #{{ pedido.ID }}</h2>
+
+<ul class="nav nav-pills mb-4" id="detalleTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#info" type="button">Información</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#archivos" type="button">Archivos a imprimir</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#historial" type="button">Historial</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#estado" type="button">Actualizar estado y reportar pago</button>
+    </li>
+</ul>
+
+<div class="tab-content">
+    
+    <!-- Información -->
+    <div class="tab-pane fade show active" id="info">
+        <div class="glass-card p-4">
+            <h5>Datos del pedido</h5>
+            <div class="row">
+                <div class="col-lg-6 col-md-12">
+                    <p><strong>Cliente:</strong> {{ usuario.NOMBRE }} {{ usuario.APELLIDO }}</p>
+                    <p><strong>Cédula:</strong> {{ usuario.ID_USUARIO }}</p>
+                    <p><strong>Email:</strong> {{ usuario.EMAIL }}</p>
+                    <p><strong>Teléfono:</strong> {{ usuario.TELEFONO }}</p>
+                </div>
+                <div class="col-lg-6 col-md-12">
+                    <h3 class="fw-bold" style="color: #2F5496;">
+                        Pedido #{{ pedido.ID }}
+                        {% if pedido.CODIGO_TICKET %}
+                            <small class="text-muted ms-2" style="font-size: 0.9rem;">Ticket: {{ pedido.CODIGO_TICKET }}</small>
+                        {% endif %}
+                    </h3>
+                    <p><strong>Fecha de solicitud:</strong> {{ pedido.FECHA.strftime('%d/%m/%Y %H:%M') }}</p>
+                    <p><strong>Total:</strong> Bs. {{ "%.2f"|format(pedido.TOTAL) }}</p>
+                    <p><strong>Estado:</strong> 
+                        {% from "admin/helpers.html" import badge_estado %}
+                        {{ badge_estado(pedido.ESTADO) }}
+                    </p>
+                </div>
+            </div>
+
+            <hr>
+
+            <h5>Preferencias de impresión</h5>
+            {% if archivos_info %}
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+                    {% for item in archivos_info %}
+                    <div class="col">
+                        <div class="archivo-card">
+                            <div class="nombre-archivo">
+                                <i class="fas fa-file-alt"></i> 
+                                <span class="nombre-archivo-limitado" style="max-width: 180px; display: inline-block; vertical-align: middle;">{{ item.nombre }}</span>
+                            </div>
+                            <div class="archivo-detalle">
+                                <span class="dato"><i class="fas fa-copy"></i> {{ item.paginas }} pág.</span>
+                                {% if item.servicio_nombre %}
+                                    <span class="dato"><i class="fas fa-tag"></i> {{ item.servicio_nombre }} · {{ item.tamano or '—' }}</span>
+                                {% endif %}
+                                {% if item.precio is not none %}
+                                    <span class="dato"><i class="fas fa-dollar-sign"></i> Bs. {{ "%.2f"|format(item.precio) }}</span>
+                                {% endif %}
+                                {% if item.paginas_color %}
+                                    <span class="dato"><i class="fas fa-palette"></i> {{ item.paginas_color }} color</span>
+                                {% endif %}
+                                {% if item.comentarios %}
+                                    <span class="dato"><i class="fas fa-comment"></i> {{ item.comentarios }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted">No se especificó un servicio de impresión.</p>
+            {% endif %}
+
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <p><strong>Fecha de retiro:</strong> 
+                        {{ pedido.FECHA_RETIRO.strftime('%d/%m/%Y') if pedido.FECHA_RETIRO else 'No especificada' }}
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Hora de retiro:</strong> 
+                        {{ pedido.HORA_RETIRO.strftime('%I:%M %p') if pedido.HORA_RETIRO else 'No especificada' }}
+                    </p>
+                </div>
+            </div>
+
+            <hr>
+
+            <h5>Detalles de facturación</h5>
+            <ul>
+                {% for d in detalles %}
+                <li>
+                    {{ d.CANTIDAD }} página(s)
+                    {% if d.PRECIO_UNITARIO %}
+                        a Bs. {{ "%.2f"|format(d.PRECIO_UNITARIO) }} c/u = Bs. {{ "%.2f"|format(d.SUBTOTAL) }}
+                    {% else %}
+                        (precio mixto) = Bs. {{ "%.2f"|format(d.SUBTOTAL) }}
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Archivos a imprimir -->
+    <div class="tab-pane fade" id="archivos">
+        <div class="glass-card p-4">
+            {% set ns = namespace(encontro=false) %}
+            {% for a in archivos %}
+                {% if 'comprobantes' not in a.RUTA %}
+                    {% set ns.encontro = true %}
+                {% endif %}
+            {% endfor %}
+
+            {% if ns.encontro %}
+                <ul class="list-group">
+                {% for a in archivos %}
+                    {% if 'comprobantes' not in a.RUTA %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="nombre-archivo-limitado" style="max-width: 500px; display: inline-block; vertical-align: middle;">
+                                   {{ a.NOMBRE_ARCHIVO }}
+                                </span>
+                                <span class="badge bg-primary rounded-pill">Documento a imprimir</span>
+                            </div>
+                            <a href="{{ url_for('static', filename=a.RUTA.replace('static/', '', 1).replace('\\', '/')) }}" 
+                               class="btn btn-sm btn-solicitar" target="_blank">
+                                <i class="fas fa-download me-1"></i> Descargar
+                            </a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">No hay archivos para imprimir.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Historial -->
+    <div class="tab-pane fade" id="historial">
+        <div class="glass-card p-4">
+            <ul class="list-unstyled">
+                {% for h in historial %}
+                <li class="mb-2">
+                    <span class="text-muted">{{ h.fecha.strftime('%d/%m/%Y %H:%M') if h.fecha is defined else h.fecha }}</span> - 
+                    <span class="badge bg-secondary">{{ h.estado }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Actualizar estado y reportar pago -->
+    <div class="tab-pane fade" id="estado">
+        <div class="glass-card p-4">
+            {% set ns = namespace(comprobante=false) %}
+            {% for a in archivos %}
+                {% if 'comprobantes' in a.RUTA %}
+                    {% set ns.comprobante = true %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Comprobante de pago</label>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="nombre-archivo-limitado" style="max-width: 500px; display: inline-block; vertical-align: middle;">
+                               {{ a.NOMBRE_ARCHIVO }}
+                            </span>
+                            <a href="{{ url_for('static', filename=a.RUTA.replace('static/', '', 1).replace('\\', '/')) }}" 
+                               class="btn btn-sm btn-solicitar" target="_blank">
+                                <i class="fas fa-download me-1"></i> Descargar
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+
+            {% if pedido.REFERENCIA_PAGO %}
+                <p class="mt-2">
+                    <strong>Referencia de pago:</strong>
+                    <code class="fs-6">{{ pedido.REFERENCIA_PAGO }}</code>
+                </p>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('admin_actualizar_estado', pedido_id=pedido.ID) }}">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nuevo estado</label>
+                    <select class="form-select" name="estado">
+                        <option value="Listo" {% if pedido.ESTADO == 'Listo' %}selected{% endif %}>Listo</option>
+                        <option value="Entregado" {% if pedido.ESTADO == 'Entregado' %}selected{% endif %}>Entregado</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-solicitar">Actualizar estado</button>
+            </form>
+
+            {% if pedido.ESTADO == 'Esperando validación' %}
+            <form method="POST" action="{{ url_for('admin_confirmar_pago', pedido_id=pedido.ID) }}" class="mt-3">
+                <button type="submit" class="btn btn-success btn-lg w-100 py-3">
+                    <i class="fas fa-check-circle me-2"></i> Confirmar pago
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    /* ===================== PREFERENCIAS DE IMPRESIÓN ===================== */
+
+    /* Contenedor principal de la tarjeta */
+    .archivo-card {
+        background: rgba(255,255,255,0.6);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(91,155,213,0.4);
+        border-radius: 18px;
+        padding: 16px;
+        min-height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: all 0.3s ease;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    .archivo-card:hover {
+        background: rgba(255,255,255,0.8);
+        border-color: #5B9BD5;                
+        box-shadow: 0 0 15px rgba(91,155,213,0.5), 0 8px 20px rgba(0,0,0,0.08);
+        transform: translateY(-2px);
+    }
+
+    /* Cabecera con el nombre del archivo */
+    .archivo-card .nombre-archivo {
+        font-weight: 600;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+        min-width: 0; /* Permite que el texto se encoja */
+    }
+    .archivo-card .nombre-archivo i {
+        color: #5B9BD5;
+        flex-shrink: 0;
+    }
+
+    /* Clase para truncar el nombre del archivo */
+    .nombre-archivo-limitado {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+        display: inline-block; /* Se aplica en el HTML con un max-width específico */
+        vertical-align: middle;
+    }
+
+    /* Contenedor de los detalles */
+    .archivo-detalle {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    /* Estilo de cada dato (página, servicio, precio, etc.) */
+    .dato {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: rgba(91,155,213,0.08);
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        color: #2F5496;
+        font-weight: 500;
+        white-space: normal;      
+        word-break: break-word;
+    }
+    .dato i {
+        width: 16px;
+        color: #5B9BD5;
+    }
+
+    /* Evita que la tarjeta de información se estire demasiado */
+    #info .glass-card {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    /* Ajuste para la tabla de archivos múltiples (si se usara) */
+    #info .table-responsive {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    /* Responsive: en pantallas pequeñas, las tarjetas se apilan */
+    @media (max-width: 768px) {
+        .row-cols-md-2 .col {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+    }
+</style>
+{% endblock %}

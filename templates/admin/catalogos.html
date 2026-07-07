@@ -1,0 +1,503 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Catálogos{% endblock %}
+{% block content %}
+<h2 class="mb-4">Catálogos</h2>
+
+<ul class="nav nav-pills mb-4" id="catalogoTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#servicios" type="button">Servicios (imágenes)</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#serviciosImpresion" type="button">Servicios de impresión</button>
+    </li>
+</ul>
+
+<div class="tab-content">
+    <!-- ======================== SERVICIOS IMÁGENES ======================== -->
+    <div class="tab-pane fade show active" id="servicios">
+        <div class="glass-card p-4">
+            <div class="d-flex justify-content-end mb-3">
+                <button class="btn btn-solicitar" onclick="abrirModalAgregarImagen()">
+                    <i class="fas fa-plus me-2"></i> Agregar imagen
+                </button> 
+                <button class="btn btn-solicitar" onclick="abrirModalOrdenar()">
+                    <i class="fas fa-sort me-2"></i> Ordenar
+                </button>
+            </div>
+
+            <div class="row row-cols-2 row-cols-md-4 row-cols-lg-6 g-4">
+                {% for img in imagenes %}
+                <div class="col">
+                    <div class="card bg-light border-0 rounded-3 overflow-hidden position-relative">
+                        <img src="{{ url_for('static', filename='img/' + img.IMAGEN) }}" class="card-img-top" alt="Servicio" style="height: 150px; object-fit: cover;">
+                        <div class="card-body text-center p-2">
+                            <small class="text-muted">{{ img.IMAGEN }}</small>
+                        </div>
+                        <div class="d-flex justify-content-center gap-2 p-2">
+                            <button class="btn btn-sm btn-outline-primary rounded-pill" onclick="abrirModalEditarImagen({{ img.ID }}, '{{ img.IMAGEN }}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger rounded-pill" onclick="abrirModalEliminarImagen({{ img.ID }})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================== SERVICIOS DE IMPRESIÓN ======================== -->
+    <div class="tab-pane fade" id="serviciosImpresion">
+        <div class="glass-card p-4">
+            <div class="d-flex justify-content-end mb-3">
+                <button class="btn btn-solicitar" onclick="abrirModalAgregarServicio()">
+                    <i class="fas fa-plus me-2"></i> Agregar servicio
+                </button>
+            </div>
+
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                {% for srv in servicios %}
+                <div class="col">
+                    {% set mixto = srv.ES_MIXTO %}
+                    <div class="card bg-light border-0 rounded-4 p-3 h-100"
+                         id="servicio-{{ srv.ID }}"
+                         data-titulo="{{ srv.TITULO }}"
+                         data-descripcion="{{ srv.DESCRIPCION or '' }}"
+                         data-activo="{{ '1' if srv.ACTIVO else '0' }}"
+                         data-esmixto="{{ '1' if mixto else '0' }}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5 class="fw-bold mb-1">{{ srv.TITULO }}</h5>
+                                {% if srv.DESCRIPCION %}<p class="text-muted small mb-2">{{ srv.DESCRIPCION }}</p>{% endif %}
+                            </div>
+                            <div>
+                                {% if srv.ACTIVO %}<span class="badge bg-success">Activo</span>{% else %}<span class="badge bg-secondary">Inactivo</span>{% endif %}
+                                {% if mixto %}<span class="badge bg-warning text-dark ms-1">Mixto</span>{% endif %}
+                            </div>
+                        </div>
+                        <ul class="list-unstyled mb-0 mt-2">
+                            {% for t in srv.tamanos %}
+                                <li class="d-flex justify-content-between">
+                                    <span>{{ t.NOMBRE }}</span>
+                                    {% if mixto %}
+                                        <span class="small">BN: {{ "%.2f"|format(t.PRECIO_BN) }} / Color: {{ "%.2f"|format(t.PRECIO_COLOR) }} Bs.</span>
+                                    {% else %}
+                                        <strong>{{ "%.2f"|format(t.PRECIO_BN) }} Bs.</strong>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        <div class="d-flex gap-2 mt-3">
+                            <button class="btn btn-sm btn-outline-primary rounded-pill" onclick="abrirModalEditarServicio({{ srv.ID }})">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger rounded-pill" onclick="abrirModalEliminarServicio({{ srv.ID }})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* ========== MODAL DE ORDENAMIENTO ========== */
+    .modal-ordenar .modal-content {
+        background: rgba(255, 255, 255, 0.65);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.7);
+        border-radius: 24px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+
+    .modal-ordenar .modal-header {
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .modal-ordenar .modal-footer {
+        border-top: 1px solid rgba(0,0,0,0.05);
+    }
+
+    /* Lista dentro del modal */
+    #lista-ordenable {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    #lista-ordenable li {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        border-radius: 14px;
+        padding: 12px 16px;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        transition: background 0.2s;
+    }
+
+    #lista-ordenable li:hover {
+        background: rgba(255, 255, 255, 0.9);
+    }
+
+    #lista-ordenable .sortable-handle {
+        cursor: grab;
+        color: #5B9BD5;
+        font-size: 1.3rem;
+        padding: 4px 8px;
+        border-radius: 8px;
+        transition: background 0.2s;
+    }
+
+    #lista-ordenable .sortable-handle:hover {
+        background: rgba(91, 155, 213, 0.15);
+    }
+
+    #lista-ordenable .sortable-handle:active {
+        cursor: grabbing;
+    }
+
+    .sortable-ghost {
+        opacity: 0.4;
+        background: rgba(91, 155, 213, 0.2);
+    }
+
+    /* Scroll interno en el modal */
+    .modal-ordenar .modal-body {
+        max-height: 60vh;
+        overflow-y: auto;
+        padding-right: 10px;
+    }
+
+    /* Estilo de la barra de scroll */
+    .modal-ordenar .modal-body::-webkit-scrollbar {
+        width: 6px;
+    }
+    .modal-ordenar .modal-body::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .modal-ordenar .modal-body::-webkit-scrollbar-thumb {
+        background: rgba(91, 155, 213, 0.4);
+        border-radius: 3px;
+    }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+<!-- ======================== SCRIPTS ======================== -->
+<script>
+    // ========== FUNCIÓN GENÉRICA PARA MODALES ==========
+    function abrirModalDinamico(html, id, onShown) {
+        const old = document.getElementById(id);
+        if (old) old.remove();
+
+        document.body.insertAdjacentHTML('beforeend', html);
+        const modalEl = document.getElementById(id);
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+
+        if (onShown) {
+            modalEl.addEventListener('shown.bs.modal', onShown, { once: true });
+        }
+
+        modalEl.addEventListener('hidden.bs.modal', function() {
+            modalEl.remove();
+            document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }, { once: true });
+    }
+
+    // ========== IMÁGENES ==========
+    function abrirModalAgregarImagen() {
+        const html = `
+            <div class="modal fade" id="modalAgregarImagenDin" tabindex="-1">
+                <div class="modal-dialog"><div class="modal-content glass-card p-3">
+                    <h5>Agregar nueva imagen</h5>
+                    <form method="POST" action="{{ url_for('admin_agregar_imagen') }}" enctype="multipart/form-data">
+                        <input type="file" name="imagen" class="form-control mb-2" accept="image/*" required>
+                        <button type="submit" class="btn btn-solicitar w-100">Subir imagen</button>
+                    </form>
+                </div></div>
+            </div>`;
+        abrirModalDinamico(html, 'modalAgregarImagenDin');
+    }
+
+    function abrirModalEditarImagen(imagenId, nombre) {
+        const html = `
+            <div class="modal fade" id="modalEditarImagenDin" tabindex="-1">
+                <div class="modal-dialog"><div class="modal-content glass-card p-3">
+                    <h5>Editar imagen: ${nombre}</h5>
+                    <p class="text-muted">Selecciona un nuevo archivo para reemplazarla.</p>
+                    <form method="POST" action="/admin/catalogos/actualizar/${imagenId}" enctype="multipart/form-data">
+                        <input type="file" name="imagen" class="form-control mb-2" accept="image/*" required>
+                        <button type="submit" class="btn btn-solicitar w-100">Reemplazar imagen</button>
+                    </form>
+                </div></div>
+            </div>`;
+        abrirModalDinamico(html, 'modalEditarImagenDin');
+    }
+
+    function abrirModalEliminarImagen(imagenId) {
+        const html = `
+            <div class="modal fade" id="modalEliminarImagenDin" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered"><div class="modal-content glass-card p-3">
+                    <h5>Confirmar eliminación</h5>
+                    <p>¿Estás seguro de eliminar esta imagen del catálogo? También se borrará el archivo.</p>
+                    <form method="POST" action="/admin/catalogos/eliminar/${imagenId}">
+                        <div class="d-flex gap-2 justify-content-end">
+                            <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-danger rounded-pill">Eliminar</button>
+                        </div>
+                    </form>
+                </div></div>
+            </div>`;
+        abrirModalDinamico(html, 'modalEliminarImagenDin');
+    }
+
+    function abrirModalOrdenar() {
+        fetch('/admin/catalogos/orden-actual')
+            .then(r => r.json())
+            .then(data => {
+                let listaHTML = '';
+                data.orden.forEach((img, idx) => {
+                    listaHTML += `
+                        <li data-img-id="${img.id}">
+                            <span class="fw-bold me-3">${idx + 1}.</span>
+                            <span class="flex-grow-1">${img.nombre}</span>
+                            <span class="sortable-handle">
+                                <i class="fas fa-grip-vertical"></i>
+                            </span>
+                        </li>`;
+                });
+
+                const modalHTML = `
+                    <div class="modal fade modal-ordenar" id="modalOrdenarDin" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-lg modal-dialog-centered">
+                            <div class="modal-content glass-card p-4">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Ordenar imágenes</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p class="text-muted small mb-3">Arrastra los ítems usando el ícono <i class="fas fa-grip-vertical"></i> para reordenar.</p>
+                                    <ul class="list-group" id="lista-ordenable">
+                                        ${listaHTML}
+                                    </ul>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cerrar</button>
+                                    <button type="button" class="btn btn-solicitar" onclick="guardarOrdenModal()">
+                                        <i class="fas fa-save me-2"></i> Guardar cambios
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+
+                const oldModal = document.getElementById('modalOrdenarDin');
+                if (oldModal) oldModal.remove();
+
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+                const modalEl = document.getElementById('modalOrdenarDin');
+                const modal = new bootstrap.Modal(modalEl);
+                modal.show();
+
+                // Activar SortableJS
+                const lista = document.getElementById('lista-ordenable');
+                if (lista) {
+                    new Sortable(lista, {
+                        handle: '.sortable-handle',
+                        animation: 150,
+                        ghostClass: 'sortable-ghost'
+                    });
+                }
+
+                modalEl.addEventListener('hidden.bs.modal', function() {
+                    modalEl.remove();
+                    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+                    document.body.classList.remove('modal-open');
+                    document.body.style.overflow = '';
+                    document.body.style.paddingRight = '';
+                });
+            });
+    }
+
+    function guardarOrdenModal() {
+        const items = document.querySelectorAll('#lista-ordenable li');
+        const nuevoOrden = [];
+        items.forEach(item => {
+            const imgId = item.getAttribute('data-img-id');
+            if (imgId) nuevoOrden.push(parseInt(imgId));
+        });
+
+        fetch('/admin/catalogos/reordenar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orden: nuevoOrden })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                const modalEl = document.getElementById('modalOrdenarDin');
+                if (modalEl) {
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    if (modal) modal.hide();
+                }
+                location.reload();
+            } else {
+                alert('Error al guardar el orden.');
+            }
+        });
+    }
+
+    // ========== SERVICIOS DE IMPRESIÓN ==========
+    function abrirModalAgregarServicio() {
+        const html = `
+            <div class="modal fade" id="modalAgregarServicioDin" tabindex="-1">
+                <div class="modal-dialog modal-lg"><div class="modal-content glass-card p-4">
+                    <h5>Agregar servicio de impresión</h5>
+                    <form method="POST" action="{{ url_for('admin_agregar_servicio_impresion') }}">
+                        <div class="mb-3"><label>Título *</label><input type="text" name="titulo" class="form-control" required></div>
+                        <div class="mb-3"><label>Descripción</label><textarea name="descripcion" class="form-control" rows="2"></textarea></div>
+                        <div class="form-check mb-3"><input type="checkbox" name="activo" class="form-check-input" checked><label class="form-check-label">Activo</label></div>
+                        <div class="form-check mb-3"><input type="checkbox" name="es_mixto" class="form-check-input" id="chkMixtoAgregarDin"><label class="form-check-label">Servicio mixto (BN/Color)</label></div>
+                        <h6>Tamaños y precios</h6>
+                        <div id="contenedorTamanosAgregarDin"></div>
+                        <button type="button" class="btn btn-outline-secondary btn-sm mb-3" id="btnAgregarTamanoDin"><i class="fas fa-plus"></i> Agregar tamaño</button>
+                        <div class="text-end"><button type="submit" class="btn btn-solicitar">Guardar servicio</button></div>
+                    </form>
+                </div></div>
+            </div>`;
+        abrirModalDinamico(html, 'modalAgregarServicioDin', function() {
+            const chk = document.getElementById('chkMixtoAgregarDin');
+            const cont = document.getElementById('contenedorTamanosAgregarDin');
+            const btn = document.getElementById('btnAgregarTamanoDin');
+            let modo = false;
+            function crearFila() {
+                const div = document.createElement('div');
+                div.className = 'input-group mb-2';
+                if (modo) {
+                    div.innerHTML = `<input type="text" name="tam_nombre[]" class="form-control" placeholder="Nombre" required><input type="number" step="0.01" name="tam_precio_bn[]" class="form-control" placeholder="Precio B/N" required><input type="number" step="0.01" name="tam_precio_color[]" class="form-control" placeholder="Precio Color" required><button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`;
+                } else {
+                    div.innerHTML = `<input type="text" name="tam_nombre[]" class="form-control" placeholder="Nombre" required><input type="number" step="0.01" name="tam_precio_bn[]" class="form-control" placeholder="Precio" required><button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`;
+                }
+                cont.appendChild(div);
+            }
+            chk.addEventListener('change', function() { modo = this.checked; cont.innerHTML = ''; crearFila(); });
+            btn.addEventListener('click', function(e) { e.preventDefault(); crearFila(); });
+            if (cont.children.length === 0) crearFila();
+        });
+    }
+
+    function abrirModalEditarServicio(servicioId) {
+        const card = document.getElementById(`servicio-${servicioId}`);
+        const titulo = card.getAttribute('data-titulo');
+        const desc = card.getAttribute('data-descripcion');
+        const activo = card.getAttribute('data-activo') === '1';
+        const mixto = card.getAttribute('data-esmixto') === '1';
+
+        // Obtener los tamaños desde el DOM (lista <li>)
+        const tamanos = [];
+        card.querySelectorAll('ul.list-unstyled li').forEach(li => {
+            const nombre = li.querySelector('span').textContent.trim();
+            const precioTexto = li.querySelector('strong, .small').textContent.trim();
+            let precioBN = 0, precioColor = 0;
+            if (mixto) {
+                const partes = precioTexto.match(/BN:\s*([\d.]+)\s*\/\s*Color:\s*([\d.]+)/);
+                if (partes) {
+                    precioBN = parseFloat(partes[1]);
+                    precioColor = parseFloat(partes[2]);
+                }
+            } else {
+                precioBN = parseFloat(precioTexto);
+                precioColor = precioBN;
+            }
+            tamanos.push({ nombre, precioBN, precioColor });
+        });
+
+        let tamanosHTML = '';
+        tamanos.forEach(t => {
+            const campos = mixto ?
+                `<input type="number" step="0.01" name="tam_precio_bn[]" class="form-control" placeholder="Precio B/N" value="${t.precioBN}">
+                 <input type="number" step="0.01" name="tam_precio_color[]" class="form-control" placeholder="Precio Color" value="${t.precioColor}">`
+                : `<input type="number" step="0.01" name="tam_precio_bn[]" class="form-control" placeholder="Precio" value="${t.precioBN}">`;
+            tamanosHTML += `
+                <div class="input-group mb-2">
+                    <input type="text" name="tam_nombre[]" class="form-control" placeholder="Nombre" value="${t.nombre}">
+                    ${campos}
+                    <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                </div>`;
+        });
+
+        const html = `
+            <div class="modal fade" id="modalEditarServicioDin" tabindex="-1">
+                <div class="modal-dialog modal-lg"><div class="modal-content glass-card p-4">
+                    <h5>Editar servicio</h5>
+                    <form method="POST" action="/admin/servicio-impresion/${servicioId}/editar">
+                        <div class="mb-3"><label>Título *</label><input type="text" name="titulo" class="form-control" value="${titulo}" required></div>
+                        <div class="mb-3"><label>Descripción</label><textarea name="descripcion" class="form-control" rows="2">${desc}</textarea></div>
+                        <div class="form-check mb-3"><input type="checkbox" name="activo" class="form-check-input" ${activo ? 'checked' : ''}><label class="form-check-label">Activo</label></div>
+                        <div class="form-check mb-3"><input type="checkbox" name="es_mixto" class="form-check-input" ${mixto ? 'checked' : ''}><label class="form-check-label">Servicio mixto (BN/Color)</label></div>
+                        <h6>Tamaños y precios</h6>
+                        <div id="contenedorEditarServicioDin">${tamanosHTML}</div>
+                        <button type="button" class="btn btn-outline-secondary btn-sm mb-3" onclick="agregarFilaEditarDin(${mixto})"><i class="fas fa-plus"></i> Agregar tamaño</button>
+                        <div class="text-end"><button type="submit" class="btn btn-solicitar">Guardar cambios</button></div>
+                    </form>
+                </div></div>
+            </div>`;
+        abrirModalDinamico(html, 'modalEditarServicioDin');
+    }
+
+    function abrirModalEliminarServicio(servicioId) {
+        const html = `
+            <div class="modal fade" id="modalEliminarServicioDin" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered"><div class="modal-content glass-card p-3">
+                    <h5>Confirmar eliminación</h5>
+                    <p>¿Eliminar este servicio y todos sus tamaños?</p>
+                    <form method="POST" action="/admin/servicio-impresion/${servicioId}/eliminar">
+                        <div class="d-flex gap-2 justify-content-end">
+                            <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-danger rounded-pill">Eliminar</button>
+                        </div>
+                    </form>
+                </div></div>
+            </div>`;
+        abrirModalDinamico(html, 'modalEliminarServicioDin');
+    }
+
+    // ========== AYUDA PARA AGREGAR FILA EN EDITAR ==========
+    window.agregarFilaEditarDin = function(esMixto) {
+        const div = document.createElement('div');
+        div.className = 'input-group mb-2';
+        if (esMixto) {
+            div.innerHTML = `<input type="text" name="tam_nombre[]" class="form-control" placeholder="Nombre" required><input type="number" step="0.01" name="tam_precio_bn[]" class="form-control" placeholder="Precio B/N" required><input type="number" step="0.01" name="tam_precio_color[]" class="form-control" placeholder="Precio Color" required><button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`;
+        } else {
+            div.innerHTML = `<input type="text" name="tam_nombre[]" class="form-control" placeholder="Nombre" required><input type="number" step="0.01" name="tam_precio_bn[]" class="form-control" placeholder="Precio" required><button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`;
+        }
+        document.getElementById('contenedorEditarServicioDin').appendChild(div);
+    };
+
+    // ========== ACTIVAR PESTAÑA SEGÚN TAB ==========
+    document.addEventListener('DOMContentLoaded', function() {
+        var tabPill = document.querySelector('#catalogoTabs button[data-bs-target="#{{ tab_activa }}"]');
+        if (tabPill) {
+            document.querySelectorAll('#catalogoTabs .nav-link').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('show', 'active'));
+            tabPill.classList.add('active');
+            var targetPane = document.querySelector('#{{ tab_activa }}');
+            if (targetPane) {
+                targetPane.classList.add('show', 'active');
+            }
+        }
+    });
+</script>
+{% endblock %}

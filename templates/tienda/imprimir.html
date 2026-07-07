@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Imprimir · GlobalCopyPlot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+    <style>
+        :root {
+            --azul-claro: #5B9BD5;
+            --azul-oscuro: #2F5496;
+            --glass-bg: rgba(255, 255, 255, 0.45);
+            --glass-border: rgba(255, 255, 255, 0.7);
+            --texto: #1e293b;
+        }
+
+        body {
+            background: url("{{ url_for('static', filename='img/fondoimprimir.png') }}") center/cover no-repeat;
+            background-attachment: fixed;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: var(--texto);
+        }
+
+        .header {
+            text-align: center;
+            padding: 24px 20px 8px;
+        }
+
+        .header h2 {
+            font-weight: 700;
+            color: var(--azul-oscuro);
+            margin: 0;
+            font-size: 1.9rem;
+            letter-spacing: -0.5px;
+        }
+
+        .wizard-container {
+            flex: 1;
+            padding: 10px 20px 100px;
+            max-width: 520px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .step {
+            display: none;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 28px;
+            padding: 28px 24px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        .step h5 {
+            font-weight: 700;
+            color: var(--azul-oscuro);
+            margin-bottom: 1.2rem;
+            font-size: 1.2rem;
+        }
+
+        .upload-area {
+            border: 2px dashed rgba(91, 155, 213, 0.4);
+            border-radius: 24px;
+            padding: 36px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .upload-area:hover,
+        .upload-area.dragover {
+            border-color: var(--azul-claro);
+            background: rgba(91, 155, 213, 0.08);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        .upload-area i {
+            font-size: 2.8rem;
+            color: var(--azul-claro);
+            margin-bottom: 8px;
+        }
+
+        .upload-area .upload-title {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--azul-oscuro);
+            margin: 8px 0 4px;
+        }
+
+        .upload-area .upload-subtitle {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .file-info {
+            background: rgba(255, 255, 255, 0.55);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 18px;
+            padding: 14px 16px;
+            margin-top: 14px;
+            display: none;
+        }
+
+        .file-info.show {
+            display: block;
+        }
+
+        #fileNameDisplay {
+            display: block;
+            max-width: 220px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-weight: 600;
+            color: var(--texto);
+        }
+
+        .btn-primary-gradient {
+            background: linear-gradient(135deg, #5B9BD5, #2F5496);
+            border: none;
+            border-radius: 50px;
+            padding: 14px 24px;
+            font-weight: 700;
+            font-size: 1rem;
+            color: white;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 18px rgba(47, 84, 150, 0.25);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary-gradient:hover {
+            background: linear-gradient(135deg, #2F5496, #1e3c6e);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(47, 84, 150, 0.35);
+        }
+
+        .btn-primary-gradient:active {
+            transform: scale(0.97);
+        }
+
+        .btn-outline-danger {
+            border-radius: 50px;
+            padding: 8px 16px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+            background: rgba(255, 255, 255, 0.6);
+            color: #dc3545;
+            transition: all 0.3s;
+        }
+
+        .btn-outline-danger:hover {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+
+        .dock-menu {
+            position: fixed;
+            bottom: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 85%;
+            max-width: 400px;
+            background: rgba(90, 150, 220, 0.80);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 40px;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 20px 35px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+            z-index: 100;
+        }
+
+        .dock-item {
+            color: rgba(255, 255, 255, 0.85);
+            text-align: center;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.4px;
+            transition: transform 0.3s ease, color 0.3s ease;
+            padding: 6px 10px;
+        }
+
+        .dock-item i {
+            font-size: 1.6rem;
+            margin-bottom: 3px;
+            transition: transform 0.3s ease, color 0.3s ease, text-shadow 0.3s ease;
+        }
+
+        /* Ítem activo: se eleva, blanco puro y con animación de brillo */
+        .dock-item.active {
+            color: #ffffff;
+            transform: translateY(-6px);
+        }
+
+        .dock-item.active i {
+            transform: scale(1.15);
+            color: #ffffff;
+            text-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
+            animation: iconoBrillo 1.5s ease-in-out infinite;
+        }
+
+        /* Efecto hover en todos */
+        .dock-item:hover {
+            color: #ffffff;
+            transform: translateY(-3px);
+        }
+
+        .dock-item:hover i {
+            transform: scale(1.1);
+        }
+
+        .dock-item:active {
+            transform: scale(0.9);
+        }
+
+        /* Animación de brillo pulsante para el icono activo */
+        @keyframes iconoBrillo {
+            0%, 100% { text-shadow: 0 0 8px rgba(255,255,255,0.6); }
+            50% { text-shadow: 0 0 18px rgba(255,255,255,1), 0 0 30px rgba(91,155,213,0.8); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>Imprimir Documento</h2>
+    </div>
+
+    <div class="wizard-container">
+        <!-- Paso 1: Subir archivo -->
+        <div class="step active" id="step1">
+            <h5><i class="fas fa-cloud-upload-alt me-2"></i> Subir archivo</h5>
+            <div class="upload-area" id="uploadArea">
+                <i class="fas fa-file-pdf"></i>
+                <p class="upload-title" id="uploadText">Seleccionar archivo</p>
+                <small class="text-muted">Formatos: PDF, PowerPoint, Imágenes, ZIP. Máx. 10 docs / 20 imágenes / 50 MB por archivo</small>
+                <input type="file" id="archivoInput" name="archivos" multiple
+                   accept=".pdf,.pptx,.png,.jpg,.jpeg,.bmp,.tiff,.tif,.zip"
+                   hidden>
+            </div>
+
+            <div class="file-info" id="fileInfo">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span id="fileNameDisplay"><i class="fas fa-file me-2"></i></span>
+                    <button type="button" class="btn btn-sm btn-outline-danger" id="removeFile">
+                        <i class="fas fa-times me-1"></i> Quitar
+                    </button>
+                </div>
+            </div>
+
+            <div id="resultadoDeteccion" class="mt-3" style="display: none;">
+                <div class="alert alert-info py-3 px-4 rounded-pill d-flex justify-content-between align-items-center">
+                    <span id="txtPaginas"></span>
+                    <i class="fas fa-check-circle text-success"></i>
+                </div>
+                <div id="uploadProgress" style="display: none; margin-top: 14px;">
+                    <div class="progress" style="height: 8px; border-radius: 20px; background: rgba(255,255,255,0.4);">
+                        <div id="uploadProgressBar" class="progress-bar" 
+                             style="width: 0%; background: linear-gradient(90deg, #5B9BD5, #2F5496); border-radius: 20px; transition: width 0.4s ease;">
+                        </div>
+                    </div>
+                    <p class="text-muted small mt-2 text-center" id="uploadProgressText">Analizando archivo...</p>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end mt-4">
+                <button type="button" class="btn btn-primary-gradient" id="btnSiguiente1" disabled>
+                    Continuar <i class="fas fa-arrow-right ms-1"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MENU -->
+    <nav class="dock-menu">
+        <a href="/imprimir" class="dock-item {% if active_page == 'imprimir' %}active{% endif %}">
+            <i class="fas fa-print"></i>
+            <span>Imprimir</span>
+        </a>
+        <a href="/mis-solicitudes" class="dock-item {% if active_page == 'solicitudes' %}active{% endif %}">
+            <i class="fas fa-list-check"></i>
+            <span>Solicitudes</span>
+        </a>
+        <a href="{{ url_for('index') }}" class="dock-item {% if active_page == 'inicio' %}active{% endif %}">
+            <i class="fas fa-home"></i>
+            <span>Inicio</span>
+        </a>
+    </nav>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Referencias DOM
+        const uploadArea = document.getElementById('uploadArea');
+        const archivoInput = document.getElementById('archivoInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileNameDisplay = document.getElementById('fileNameDisplay');
+        const removeFileBtn = document.getElementById('removeFile');
+        const uploadText = document.getElementById('uploadText');
+        const btnSiguiente1 = document.getElementById('btnSiguiente1');
+        const resultadoDeteccion = document.getElementById('resultadoDeteccion');
+        const txtPaginas = document.getElementById('txtPaginas');
+
+        let pedidoIdActual = null;
+
+        // Manejo de archivos
+        uploadArea.addEventListener('click', () => archivoInput.click());
+        archivoInput.addEventListener('change', handleFileSelect);
+        removeFileBtn.addEventListener('click', removeFile);
+
+        uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+        uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            archivoInput.files = e.dataTransfer.files;
+            handleFileSelect();
+        });
+
+        function handleFileSelect() {
+            const files = Array.from(archivoInput.files);
+            if (files.length === 0) return;
+
+            // Mostrar nombres de archivos seleccionados
+            fileNameDisplay.innerHTML = files.map(f =>
+                `<i class="fas fa-file me-2"></i> ${f.name} (${formatBytes(f.size)})`
+            ).join('<br>');
+            fileInfo.classList.add('show');
+            uploadText.textContent = files.length > 1 ? `${files.length} archivo(s) seleccionado(s)` : 'Archivo seleccionado';
+            uploadArea.style.borderColor = 'var(--azul-claro)';
+            uploadArea.style.borderStyle = 'solid';
+
+            if (files.length === 1) {
+                // Flujo original para un solo archivo
+                detectarPaginas(files[0]);
+            } else {
+                // Flujo múltiple
+                detectarPaginasMultiples(files);
+            }
+        }
+
+        function removeFile() {
+            if (pedidoIdActual) {
+                fetch(`/cancelar-pedido/${pedidoIdActual}`, { method: 'POST' })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (!data.success) {
+                            console.warn('El pedido no se pudo cancelar:', data.error);
+                        }
+                    })
+                    .catch(err => {
+                        console.warn('Error al cancelar el pedido:', err);
+                    })
+                    .finally(() => {
+                        // Limpiar la interfaz pase lo que pase
+                        pedidoIdActual = null;
+                        archivoInput.value = '';
+                        fileNameDisplay.innerHTML = '';
+                        fileInfo.classList.remove('show');
+                        resultadoDeteccion.style.display = 'none';
+                        uploadText.textContent = 'Seleccionar archivo';
+                        uploadArea.style.borderColor = 'rgba(91, 155, 213, 0.4)';
+                        uploadArea.style.borderStyle = 'dashed';
+                        uploadArea.style.pointerEvents = 'auto';
+                        removeFileBtn.style.display = '';
+                        btnSiguiente1.disabled = true;
+                        if (window.location.search.includes('pedido_id')) {
+                            history.replaceState(null, '', window.location.pathname);
+                        }
+                    });
+            } else {
+                // Si no hay pedido activo, simplemente limpiamos la UI
+                archivoInput.value = '';
+                fileNameDisplay.innerHTML = '';
+                fileInfo.classList.remove('show');
+                resultadoDeteccion.style.display = 'none';
+                uploadText.textContent = 'Seleccionar archivo';
+                uploadArea.style.borderColor = 'rgba(91, 155, 213, 0.4)';
+                uploadArea.style.borderStyle = 'dashed';
+                uploadArea.style.pointerEvents = 'auto';
+                removeFileBtn.style.display = '';
+                btnSiguiente1.disabled = true;
+            }
+        }
+        async function detectarPaginas(file) {
+            const progressDiv = document.getElementById('uploadProgress');
+            const progressBar = document.getElementById('uploadProgressBar');
+            const progressText = document.getElementById('uploadProgressText');
+            resultadoDeteccion.style.display = 'none';
+            progressDiv.style.display = 'block';
+            btnSiguiente1.disabled = true;
+            progressBar.style.width = '30%';
+            progressText.textContent = 'Analizando archivo...';
+
+            const formData = new FormData();
+            formData.append('archivo', file);
+
+            try {
+                progressBar.style.width = '60%';
+                progressText.textContent = 'Detectando páginas...';
+                const response = await fetch('/detectar-paginas', { method: 'POST', body: formData });
+                const data = await response.json();
+                progressBar.style.width = '100%';
+                progressText.textContent = 'Completado';
+
+                if (response.ok && data.success) {
+                    pedidoIdActual = data.pedido_id;
+                    history.replaceState(null, '', `?pedido_id=${data.pedido_id}`);
+                    txtPaginas.innerHTML = `📄 ${data.paginas} página(s) detectadas`;
+                    resultadoDeteccion.style.display = 'block';
+                    btnSiguiente1.disabled = false;
+                    btnSiguiente1.onclick = () => {
+                        window.location.href = `/configurar/${pedidoIdActual}?reset=1`;
+                    };
+                } else {
+                    alert(data.error || 'Error al detectar páginas');
+                    removeFile();
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Error de conexión');
+                removeFile();
+            } finally {
+                setTimeout(() => { progressDiv.style.display = 'none'; progressBar.style.width = '0%'; }, 500);
+            }
+        }
+
+        async function detectarPaginasMultiples(files) {
+            const progressDiv = document.getElementById('uploadProgress');
+            const progressBar = document.getElementById('uploadProgressBar');
+            const progressText = document.getElementById('uploadProgressText');
+            resultadoDeteccion.style.display = 'none';
+            progressDiv.style.display = 'block';
+            btnSiguiente1.disabled = true;
+            progressBar.style.width = '20%';
+            progressText.textContent = 'Analizando archivos...';
+
+            const formData = new FormData();
+            files.forEach(file => formData.append('archivos[]', file));
+
+            try {
+                progressBar.style.width = '60%';
+                progressText.textContent = 'Detectando páginas...';
+                const response = await fetch('/detectar-paginas-multiples', { method: 'POST', body: formData });
+                const data = await response.json();
+                progressBar.style.width = '100%';
+                progressText.textContent = 'Completado';
+
+                if (response.ok && data.success) {
+                    pedidoIdActual = data.pedido_id;
+                    history.replaceState(null, '', `?pedido_id=${data.pedido_id}`);
+                    txtPaginas.innerHTML = `📄 ${data.paginas_totales} página(s) totales en ${files.length} archivo(s).`;
+                    resultadoDeteccion.style.display = 'block';
+                    btnSiguiente1.disabled = false;
+                    btnSiguiente1.onclick = () => {
+                        window.location.href = `/configurar-multiple/${pedidoIdActual}?reset=1`;
+                    };
+                } else {
+                    alert(data.error || 'Error al detectar páginas');
+                    removeFile();
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Error de conexión');
+                removeFile();
+            } finally {
+                setTimeout(() => { progressDiv.style.display = 'none'; progressBar.style.width = '0%'; }, 500);
+            }
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Manejo de retorno desde configurar (archivo ya cargado)
+        const urlParams = new URLSearchParams(window.location.search);
+        const pedidoIdParam = urlParams.get('pedido_id');
+
+        if (pedidoIdParam && !pedidoIdActual) {
+            pedidoIdActual = pedidoIdParam;
+            fetch(`/api/pedido/${pedidoIdActual}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.error) {
+                        console.warn('Pedido no disponible');
+                        pedidoIdActual = null;
+                        limpiarUI();
+                        return;
+                    }
+                    // Mostrar nombres según cantidad de archivos
+                    if (data.archivos && data.archivos.length > 1) {
+                        fileNameDisplay.innerHTML = data.archivos.map(a =>
+                            `<i class="fas fa-file me-2"></i> ${a.nombre}`
+                        ).join('<br>');
+                        uploadText.textContent = `${data.archivos.length} archivo(s) cargados`;
+                    } else {
+                        fileNameDisplay.innerHTML = `<i class="fas fa-file me-2"></i> ${data.archivo_nombre}`;
+                        uploadText.textContent = 'Archivo ya cargado';
+                    }
+                    fileInfo.classList.add('show');
+                    uploadArea.style.borderColor = 'var(--azul-claro)';
+                    uploadArea.style.borderStyle = 'solid';
+                    resultadoDeteccion.style.display = 'block';
+                    txtPaginas.innerHTML = `📄 ${data.paginas} página(s) detectadas`;
+                    removeFileBtn.style.display = '';
+                    btnSiguiente1.disabled = false;
+                    btnSiguiente1.onclick = () => {
+                        const baseUrl = data.detalle_archivos && data.detalle_archivos.length > 1 
+                            ? `/configurar-multiple/${pedidoIdActual}` 
+                            : `/configurar/${pedidoIdActual}`;
+                        // Si el pedido ya existía (volvemos de un retroceso), forzar reseteo de configuración
+                        window.location.href = baseUrl + '?reset=1';
+                    };
+                })
+                .catch(err => {
+                    console.warn('Error al cargar el pedido:', err);
+                    pedidoIdActual = null;
+                    limpiarUI();
+                });
+        }
+
+        // Función auxiliar para limpiar la interfaz (añádela al final del script)
+        function limpiarUI() {
+            archivoInput.value = '';
+            fileNameDisplay.innerHTML = '';
+            fileInfo.classList.remove('show');
+            resultadoDeteccion.style.display = 'none';
+            uploadText.textContent = 'Seleccionar archivo';
+            uploadArea.style.borderColor = 'rgba(91, 155, 213, 0.4)';
+            uploadArea.style.borderStyle = 'dashed';
+            uploadArea.style.pointerEvents = 'auto';
+            removeFileBtn.style.display = '';
+            btnSiguiente1.disabled = true;
+        }
+
+        function updateIndicator() {
+            const active = dock.querySelector('.dock-item.active');
+            if (active) {
+                const rect = active.getBoundingClientRect();
+                const dockRect = dock.getBoundingClientRect();
+                const left = rect.left - dockRect.left;
+                const width = rect.width;
+                indicator.style.left = left + 'px';
+                indicator.style.width = width + 'px';
+            }
+        }
+
+        items.forEach(item => {
+            item.addEventListener('click', function(e) {
+                items.forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                updateIndicator();
+            });
+        });
+
+        window.addEventListener('load', updateIndicator);
+        window.addEventListener('resize', updateIndicator);
+        setTimeout(updateIndicator, 100);
+    </script>
+    <script>
+        // Deslizar el indicador bajo el ítem activo
+        const dock = document.getElementById('dockMenu');
+        const indicator = document.getElementById('dockIndicator');
+        const items = dock.querySelectorAll('.dock-item');
+
+        function updateIndicator() {
+            const active = dock.querySelector('.dock-item.active');
+            if (active) {
+                const rect = active.getBoundingClientRect();
+                const dockRect = dock.getBoundingClientRect();
+                const left = rect.left - dockRect.left;
+                const width = rect.width;
+                indicator.style.left = left + 'px';
+                indicator.style.width = width + 'px';
+            }
+        }
+
+        // Al hacer clic en un ítem, mover el activo (para entornos donde no se recarga la página)
+        items.forEach(item => {
+            item.addEventListener('click', function(e) {
+                // Quitar activo de todos
+                items.forEach(i => i.classList.remove('active'));
+                // Activar el clickeado
+                this.classList.add('active');
+                updateIndicator();
+                // No evitamos la navegación, el enlace funciona normal
+            });
+        });
+
+        // Actualizar indicador al cargar y al redimensionar
+        window.addEventListener('load', updateIndicator);
+        window.addEventListener('resize', updateIndicator);
+        // Pequeño retardo para asegurar el renderizado CSS
+        setTimeout(updateIndicator, 100);
+    </script>
+</body>
+</html>

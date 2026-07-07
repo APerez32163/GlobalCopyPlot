@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Validando pago · GlobalCopyPlot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+    <style>
+        :root {
+            --azul-claro: #5B9BD5;
+            --azul-oscuro: #2F5496;
+            --glass-bg: rgba(255, 255, 255, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.65);
+            --texto: #1e293b;
+        }
+
+        body {
+            background: url("{{ url_for('static', filename='img/fondoimprimir.png') }}") center/cover no-repeat;
+            background-attachment: fixed;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--texto);
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
+            border: 1px solid var(--glass-border);
+            border-radius: 36px;
+            padding: 40px 28px;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.12), 0 0 0 1px rgba(255,255,255,0.5) inset;
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .spinner-wrapper {
+            position: relative;
+            width: 90px;
+            height: 90px;
+            margin: 0 auto 24px;
+        }
+
+        .spinner-outer {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 4px solid rgba(91, 155, 213, 0.15);
+            border-top-color: var(--azul-claro);
+            animation: spin 1.2s linear infinite;
+        }
+
+        .spinner-inner {
+            position: absolute;
+            top: 15px; left: 15px;
+            width: calc(100% - 30px);
+            height: calc(100% - 30px);
+            border-radius: 50%;
+            background: rgba(255,255,255,0.4);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: var(--azul-oscuro);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        h4 {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--azul-oscuro);
+            margin-bottom: 10px;
+        }
+
+        .estado-texto {
+            color: #475569;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .barra-indeterminada {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .barra-indeterminada .relleno {
+            width: 40%;
+            height: 100%;
+            background: linear-gradient(90deg, #5B9BD5, #2F5496);
+            border-radius: 10px;
+            animation: deslizar 1.8s ease-in-out infinite;
+        }
+
+        @keyframes deslizar {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(350%); }
+        }
+
+        .pedido-badge {
+            display: inline-block;
+            background: rgba(91,155,213,0.15);
+            border: 1px solid rgba(91,155,213,0.25);
+            border-radius: 20px;
+            padding: 6px 18px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--azul-oscuro);
+            margin-bottom: 24px;
+        }
+
+        .btn-inicio {
+            background: linear-gradient(135deg, #5B9BD5, #2F5496);
+            border: none;
+            border-radius: 50px;
+            padding: 14px 24px;
+            font-weight: 700;
+            font-size: 1rem;
+            color: white;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 18px rgba(47,84,150,0.25);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-inicio:hover {
+            background: linear-gradient(135deg, #2F5496, #1e3c6e);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(47,84,150,0.35);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="glass-card">
+        <!-- Spinner animado con reloj en el centro -->
+        <div class="spinner-wrapper">
+            <div class="spinner-outer"></div>
+            <div class="spinner-inner">
+                <i class="fas fa-clock"></i>
+            </div>
+        </div>
+
+        <h4>Validando tu pago</h4>
+        <p class="estado-texto">
+            Tu comprobante ha sido recibido y está siendo revisado por nuestro equipo.<br>
+            Serás redirigido automáticamente cuando se confirme.
+        </p>
+
+        <!-- Barra de progreso animada -->
+        <div class="barra-indeterminada">
+            <div class="relleno"></div>
+        </div>
+
+        <span class="pedido-badge">Pedido #{{ pedido.ID }}</span>
+
+        <a href="{{ url_for('index') }}" class="btn-inicio">
+            <i class="fas fa-home"></i> Volver al inicio
+        </a>
+    </div>
+
+    <script>
+        // Polling cada 5 segundos para verificar el estado del pedido
+        const pedidoId = {{ pedido.ID }};
+        const checkInterval = setInterval(() => {
+            fetch(`/api/estado-pedido/${pedidoId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.estado === 'Pago confirmado' || data.estado === 'En proceso' || data.estado === 'Listo' || data.estado === 'Entregado') {
+                        clearInterval(checkInterval);
+                        window.location.href = `/ticket/${pedidoId}`;
+                    }
+                })
+                .catch(err => console.error('Error verificando estado:', err));
+        }, 5000);
+    </script>
+</body>
+</html>

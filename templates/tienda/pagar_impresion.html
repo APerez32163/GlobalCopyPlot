@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Pagar · GlobalCopyPlot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+    <style>
+        :root {
+            --azul-claro: #5B9BD5;
+            --azul-oscuro: #2F5496;
+            --glass-bg: rgba(255, 255, 255, 0.45);
+            --glass-border: rgba(255, 255, 255, 0.7);
+            --texto: #1e293b;
+        }
+
+        body {
+            background: url("{{ url_for('static', filename='img/fondoimprimir.png') }}") center/cover no-repeat;
+            background-attachment: fixed;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--texto);
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 32px;
+            padding: 32px 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+            max-width: 450px;
+            width: 100%;
+        }
+
+        .pedido-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .pedido-header .num-pedido {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--azul-oscuro);
+        }
+
+        .total-pagar {
+            background: rgba(91, 155, 213, 0.12);
+            border-radius: 20px;
+            padding: 16px;
+            text-align: center;
+            margin-bottom: 24px;
+            font-weight: 600;
+            color: var(--azul-oscuro);
+            border: 1px solid rgba(91, 155, 213, 0.2);
+        }
+
+        .total-pagar .monto {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--azul-oscuro);
+            letter-spacing: -0.5px;
+        }
+
+        .section-title {
+            font-weight: 700;
+            color: var(--azul-oscuro);
+            margin-bottom: 12px;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.55);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 16px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            gap: 10px;
+        }
+
+        .data-row .label {
+            font-weight: 500;
+            color: #64748b;
+            white-space: nowrap;
+        }
+
+        .data-row .value {
+            font-weight: 600;
+            color: var(--texto);
+            word-break: break-word;
+            flex: 1;
+            text-align: right;
+        }
+
+        .copy-btn {
+            cursor: pointer;
+            background: var(--azul-claro);
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            color: white;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .copy-btn:hover {
+            background: var(--azul-oscuro);
+            transform: scale(1.08);
+        }
+
+        .copy-btn.copiado {
+            background: #10b981;
+        }
+
+        .divider {
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+            margin: 24px 0;
+        }
+
+        .form-control {
+            border-radius: 18px !important;
+            padding: 14px 18px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: var(--azul-claro);
+            box-shadow: 0 0 0 4px rgba(91, 155, 213, 0.15);
+            background: white;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--azul-oscuro);
+            margin-bottom: 6px;
+        }
+
+        .btn-subir {
+            background: linear-gradient(135deg, #5B9BD5, #2F5496);
+            border: none;
+            border-radius: 50px;
+            padding: 18px 20px;
+            font-weight: 700;
+            font-size: 1rem;
+            color: white;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 18px rgba(47, 84, 150, 0.25);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-subir:hover {
+            background: linear-gradient(135deg, #2F5496, #1e3c6e);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(47, 84, 150, 0.35);
+        }
+
+        .btn-cancelar {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(220, 53, 69, 0.3);
+            border-radius: 50px;
+            padding: 10px 24px;
+            font-weight: 500;
+            color: #dc3545;
+            width:100%;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .btn-cancelar:hover {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+
+        @media (max-width: 480px) {
+            .glass-card {
+                padding: 24px 18px;
+            }
+            .data-row {
+                flex-wrap: wrap;
+                text-align: left;
+            }
+            .data-row .value {
+                text-align: left;
+                flex: unset;
+                width: 100%;
+            }
+        }
+        .btn-examinar {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 18px 0 0 18px;
+            padding: 10px 18px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: #2F5496;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .btn-examinar:hover {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: #5B9BD5;
+        }
+    </style>
+</head>
+<body>
+    <div class="glass-card">
+        <!-- Encabezado del pedido -->
+        <div class="pedido-header">
+            <span class="num-pedido">Pedido #{{ pedido.ID }}</span>
+        </div>
+
+        <!-- Total a pagar -->
+        <div class="total-pagar">
+            <span>Total a pagar</span>
+            <div class="monto">Bs. {{ "%.2f"|format(pedido.TOTAL) }}</div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Datos de PagoMóvil -->
+        <div class="section-title">
+            <i class="fas fa-mobile-alt"></i> Datos de PagoMóvil
+        </div>
+
+        {% set banco = config_pago.get('pago_movil_banco', 'No disponible') %}
+        {% set telefono = config_pago.get('pago_movil_telefono', 'No disponible') | replace('-', '') %}
+        {% set cedula = config_pago.get('pago_movil_cedula', 'No disponible') %}
+
+        <div class="data-row">
+            <span class="label">Banco</span>
+            <span class="value" id="banco">{{ banco }}</span>
+        </div>
+
+        <div class="data-row">
+            <span class="label">Teléfono</span>
+            <span class="value" id="telefono">{{ telefono }}</span>
+            <button class="copy-btn" data-copy="{{ telefono }}" title="Copiar teléfono">
+                <i class="fas fa-copy"></i>
+            </button>
+        </div>
+
+        <div class="data-row">
+            <span class="label">Cédula</span>
+            <span class="value" id="cedula">{{ cedula }}</span>
+            <button class="copy-btn" data-copy="{{ cedula }}" title="Copiar cédula">
+                <i class="fas fa-copy"></i>
+            </button>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Formulario de subida de comprobante -->
+        <form method="POST" enctype="multipart/form-data" id="formPago">
+            <div class="mb-3">
+                <label class="form-label">Número de referencia</label>
+                <input type="text" name="referencia" id="referenciaInput" class="form-control" 
+                       placeholder="Ej: 12345678" required pattern="\d{4,15}" 
+                       title="Debe tener entre 4 y 15 dígitos numéricos" maxlength="15">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Comprobante de pago</label>
+                <div class="input-group">
+                    <button type="button" class="btn btn-examinar" onclick="document.getElementById('inputComprobante').click()">
+                        <i class="fas fa-folder-open me-2"></i> Examinar
+                    </button>
+                    <input type="text" class="form-control" id="nombreArchivo" placeholder="Ningún archivo seleccionado" readonly>
+                    <input type="file" name="comprobante" id="inputComprobante" class="d-none" accept="image/*" required
+                           onchange="document.getElementById('nombreArchivo').value = this.files[0]?.name || ''">
+                </div>
+            </div>
+            <hr></hr>
+            <button type="submit" class="btn-subir">
+                <i class="fas fa-cloud-upload-alt me-2"></i> Subir comprobante
+            </button>
+            <button type="button" class="btn-cancelar mt-3" onclick="cancelarPedido()">
+                <i class="fas fa-times-circle me-2"></i> Cancelar pedido
+            </button>
+        </form>
+    </div>
+
+    <script>
+        // Cancelar pedido
+        function cancelarPedido() {
+            if (confirm('¿Estás seguro de cancelar este pedido?')) {
+                fetch('/cancelar-impresion/{{ pedido.ID }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                }).then(response => {
+                    if (response.ok) {
+                        window.location.href = "{{ url_for('index') }}";
+                    } else {
+                        alert('Error al cancelar el pedido.');
+                    }
+                });
+            }
+        }
+        // Copiar al portapapeles
+        function copiarTexto(texto, boton) {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(texto).then(() => {
+                    mostrarCopiado(boton);
+                }).catch(() => {
+                    copiarFallback(texto, boton);
+                });
+            } else {
+                copiarFallback(texto, boton);
+            }
+        }
+
+        function copiarFallback(texto, boton) {
+            const textarea = document.createElement('textarea');
+            textarea.value = texto;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                mostrarCopiado(boton);
+            } catch (err) {
+                alert('No se pudo copiar automáticamente. Copia manualmente: ' + texto);
+            }
+            document.body.removeChild(textarea);
+        }
+
+        function mostrarCopiado(boton) {
+            const icono = boton.querySelector('i');
+            icono.classList.remove('fa-copy');
+            icono.classList.add('fa-check');
+            boton.classList.add('copiado');
+            setTimeout(() => {
+                icono.classList.remove('fa-check');
+                icono.classList.add('fa-copy');
+                boton.classList.remove('copiado');
+            }, 2000);
+        }
+
+        document.querySelectorAll('.copy-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const texto = this.getAttribute('data-copy');
+                copiarTexto(texto, this);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,100 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h2 class="mb-4">Dashboard</h2>
+
+<div class="row g-4">
+    <!-- Pendientes de pago -->
+    <div class="col-md-3">
+        <a href="{{ url_for('admin_solicitudes', estado='Pendiente de pago') }}" class="text-decoration-none">
+            <div class="glass-card p-3 text-center position-relative">
+                <i class="fas fa-clock fa-2x mb-2 text-warning"></i>
+                <h5>{{ pendientes }}</h5>
+                <p>Pendientes de pago</p>
+                {% if nuevos_pendientes > 0 %}
+                    <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger rounded-circle" 
+                          style="width: 14px; height: 14px; display: inline-block;">
+                        <span class="visually-hidden">Nuevos pendientes</span>
+                    </span>
+                {% endif %}
+            </div>
+        </a>
+    </div>
+
+    <!-- En proceso -->
+    <div class="col-md-3">
+        <a href="{{ url_for('admin_solicitudes', estado='Esperando validación,Pago confirmado') }}" class="text-decoration-none">
+            <div class="glass-card p-3 text-center position-relative">
+                <i class="fas fa-cog fa-2x mb-2 text-info"></i>
+                <h5>{{ proceso }}</h5>
+                <p>En proceso</p>
+                {% if nuevos_proceso > 0 %}
+                    <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger rounded-circle" 
+                          style="width: 14px; height: 14px; display: inline-block;">
+                        <span class="visually-hidden">Nuevos en proceso</span>
+                    </span>
+                {% endif %}
+            </div>
+        </a>
+    </div>
+
+    <!-- Listos para retirar -->
+    <div class="col-md-3">
+        <a href="{{ url_for('admin_solicitudes', estado='Listo') }}" class="text-decoration-none">
+            <div class="glass-card p-3 text-center">
+                <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
+                <h5>{{ listos }}</h5>
+                <p>Listos para retirar</p>
+            </div>
+        </a>
+    </div>
+
+    <!-- Ingresos -->
+    <div class="col-md-3">
+        <a href="{{ url_for('admin_reportes', tab='ingresos') }}" class="text-decoration-none">
+            <div class="glass-card p-3 text-center">
+                <i class="fas fa-dollar-sign fa-2x mb-2 text-primary"></i>
+                <h5>Bs. {{ "%.2f"|format(ingresos) }}</h5>
+                <p>Ingresos</p>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Accesos rápidos -->
+<div class="mt-5">
+    <h4>Accesos rápidos</h4>
+    <div class="row g-3">
+        <div class="col-md-4">
+            <a href="{{ url_for('admin_solicitudes') }}" class="btn btn-solicitar w-100 py-3">
+                <i class="fas fa-file-invoice me-2"></i> Ver todas las solicitudes
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="{{ url_for('admin_catalogos') }}" class="btn btn-outline-primary w-100 py-3 rounded-pill">
+                <i class="fas fa-images me-2"></i> Catálogos
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="{{ url_for('admin_usuarios') }}" class="btn btn-outline-primary w-100 py-3 rounded-pill">
+                <i class="fas fa-users me-2"></i> Clientes
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="{{ url_for('admin_reportes') }}" class="btn btn-outline-primary w-100 py-3 rounded-pill">
+                <i class="fas fa-chart-bar me-2"></i> Reportes
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="{{ url_for('admin_configuracion') }}" class="btn btn-outline-primary w-100 py-3 rounded-pill">
+                <i class="fas fa-cog me-2"></i> Configuración
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary w-100 py-3 rounded-pill">
+                <i class="fas fa-home me-2"></i> Ir al inicio
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

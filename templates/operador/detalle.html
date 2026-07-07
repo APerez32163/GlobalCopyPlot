@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <script>
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.documentElement.classList.add('dark-mode');
+        }
+    </script>
+
+    <meta charset="UTF-8">
+    <title>Pedido #{{ pedido.ID }} - Operador</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}">
+
+    <style>
+        body { background: #f8f9fa; font-family: 'Inter', sans-serif; }
+        .glass-card { background: rgba(255,255,255,0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.8); border-radius: 20px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
+        .btn-list { background: #5B9BD5; color: white; border-radius: 25px; padding: 0.5rem 2rem; font-weight: 600; border: none; }
+        .btn-list:hover { background: #2F5496; color: white; }
+
+        .confirm-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.3); z-index: 9999; justify-content: center; align-items: center;
+        }
+        .confirm-dialog {
+            background: white; border-radius: 16px; padding: 25px 20px; text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15); max-width: 320px; width: 90%;
+        }
+        .confirm-dialog p { margin: 0 0 15px; font-size: 1rem; color: #333; }
+        .confirm-dialog .btn { border-radius: 50px; padding: 8px 18px; margin: 0 5px; font-weight: 500; }
+
+        /* Tarjetas de archivo cuadradas */
+        .archivo-card {
+            background: rgba(255,255,255,0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.8);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+            transition: all 0.25s ease;
+            position: relative;
+            min-height: 100%;          /* permite que crezca */
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        .archivo-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 20px;
+            padding: 2px;
+            background: linear-gradient(135deg, rgba(91,155,213,0.4), rgba(47,84,150,0.4));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            transition: all 0.3s;
+        }
+        .archivo-card:hover {
+            background: rgba(255,255,255,0.8);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+        }
+        .archivo-card:hover::before {
+            background: linear-gradient(135deg, #5B9BD5, #2F5496, #5B9BD5);
+            padding: 2px;
+        }
+        .archivo-card .nombre {
+            font-weight: 600;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            min-width: 0;
+        }
+        .archivo-card .nombre i { color: #5B9BD5; font-size: 1.2rem; }
+        .archivo-card .detalle {
+            flex: 1;
+            font-size: 1.1rem;
+            color: #475569;
+        }
+        .archivo-card .especificacion {
+            white-space: normal;       /* antes podía ser nowrap */
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+        .archivo-card .detalle i { color: #5B9BD5; width: 30px; margin-right: 4px; }
+        .archivo-card:hover {
+            background: rgba(255,255,255,0.8);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.08);
+        }
+        .btn-descargar {
+            background: #5B9BD5;
+            color: white;
+            border-radius: 25px;
+            padding: 6px 16px;
+            font-weight: 500;
+            font-size: 0.85rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 10px;
+            align-self: flex-start;
+            transition: background 0.3s;
+        }
+        .btn-descargar:hover { background: #2F5496; color: white; }
+        .glass-card .btn-list {
+            margin-top: 30px;         /* separa el botón del contenido anterior */
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <a href="/operador" class="btn btn-outline-secondary rounded-pill mb-3"><i class="fas fa-arrow-left me-1"></i> Volver al panel</a>
+        
+        <div class="glass-card">
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <h3 class="fw-bold" style="color: #2F5496;">Pedido #{{ pedido.ID }}</h3>
+                <span class="badge bg-info fs-6">{{ pedido.ESTADO }}</span>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <h5><i class="fas fa-user me-2"></i>Datos del cliente</h5>
+                    <p><strong>Nombre:</strong> {{ usuario.NOMBRE }} {{ usuario.APELLIDO }}</p>
+                    <p><strong>Cédula:</strong> {{ usuario.ID_USUARIO }}</p>
+                    <p><strong>Teléfono:</strong> {{ usuario.TELEFONO }}</p>
+                </div>
+                <div class="col-md-6">
+                    <h5><i class="fas fa-cog me-2"></i>Especificaciones generales</h5>
+                    <p><strong>Páginas totales:</strong> {{ pedido.PAGINAS }}</p>
+                    {% if referencia_pago %}
+                        <p><strong>Ref. pago:</strong> <code>{{ referencia_pago }}</code></p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <hr class="my-4">
+            
+            <h5><i class="fas fa-paperclip me-2"></i>Archivos para imprimir</h5>
+            {% if archivos_info %}
+                <div class="row row-cols-1 row-cols-md-3 g-3">
+                    {% for item in archivos_info %}
+                        {% set archivo_real = archivos | selectattr("NOMBRE_ARCHIVO", "equalto", item.nombre) | list | first %}
+                        <div class="col">
+                            <div class="archivo-card">
+                                <div>
+                                    <div class="nombre">
+                                        <i class="fas fa-file-alt"></i> {{ item.nombre }}
+                                    </div>
+                                    <div class="detalle">
+                                        <div><i class="fas fa-copy"></i> {{ item.paginas }} pág.</div>
+                                        <div><i class="fas fa-tag"></i>
+                                            {% if item.servicio_id and item.servicio_id in todos_servicios %}
+                                                {{ todos_servicios[item.servicio_id] }} · {{ item.tamano }}
+                                            {% elif pedido.SERVICIO_ID and pedido.SERVICIO_ID in todos_servicios %}
+                                                {{ todos_servicios[pedido.SERVICIO_ID] }} · {{ pedido.TAMANO }}
+                                            {% else %}
+                                                Sin servicio
+                                            {% endif %}
+                                        </div>
+                                        {% if item.paginas_color %}
+                                            <div class="especificacion"><i class="fas fa-palette"></i> {{ item.paginas_color }} pág. a color</div>
+                                        {% endif %}
+                                        {% if item.comentarios %}
+                                            <div class="especificacion"><i class="fas fa-comment"></i> {{ item.comentarios }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% if archivo_real %}
+                                <a href="{{ url_for('static', filename=archivo_real.RUTA.replace('static/', '', 1).replace('\\', '/')) }}" 
+                                   class="btn-descargar" target="_blank">
+                                    <i class="fas fa-download"></i> Descargar
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted">No hay archivos para imprimir.</p>
+            {% endif %}
+            
+            {% if pedido.ESTADO in ['Pago confirmado', 'En proceso'] %}
+            <button type="button" class="btn btn-list w-100" onclick="abrirConfirmacionListo()">
+                <i class="fas fa-check-circle me-2"></i> Marcar como Listo para retirar
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        function abrirConfirmacionListo() {
+            // HTML del modal dinámico (se crea cada vez)
+            const modalHTML = `
+                <div class="modal fade" id="modalConfirmarListo" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-sm">
+                        <div class="modal-content glass-card" style="text-align: center; padding: 20px; border-radius: 20px;">
+                            <i class="fas fa-exclamation-triangle fa-3x mb-3" style="color: #dc3545;"></i>
+                            <h6 class="fw-bold mb-2" style="color: #2F5496;">¿Marcar como Listo?</h6>
+                            <p class="text-muted small">El pedido #{{ pedido.ID }} estará listo para retirar y se notificará al cliente.</p>
+                            <div class="d-flex gap-2 justify-content-center mt-3">
+                                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" id="btnCerrarModalListo">Cancelar</button>
+                                <button type="button" class="btn btn-success rounded-pill px-4" id="btnConfirmarListo">
+                                    <i class="fas fa-check me-1"></i> Confirmar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Eliminar modal anterior si existe
+            const oldModal = document.getElementById('modalConfirmarListo');
+            if (oldModal) oldModal.remove();
+
+            // Insertar el nuevo modal
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            const modalEl = document.getElementById('modalConfirmarListo');
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+
+            // Botón Cancelar → cerrar modal
+            document.getElementById('btnCerrarModalListo').addEventListener('click', function() {
+                modal.hide();
+            });
+
+            // Botón Confirmar → enviar formulario
+            document.getElementById('btnConfirmarListo').addEventListener('click', function() {
+                // Crear un formulario dinámico y enviarlo (para mantener el método POST)
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = "{{ url_for('operador_marcar_listo', pedido_id=pedido.ID) }}";
+                document.body.appendChild(form);
+                form.submit();
+            });
+
+            // Limpiar el modal al cerrarse
+            modalEl.addEventListener('hidden.bs.modal', function() {
+                modalEl.remove();
+                document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+            }, { once: true });
+        }
+    </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Botón Modo Oscuro -->
+<button class="dark-mode-toggle" id="darkModeToggle" title="Modo oscuro">
+    <i class="fas fa-moon"></i>
+</button>
+
+<script>
+    const toggle = document.getElementById('darkModeToggle');
+    if (toggle) {
+        if (document.documentElement.classList.contains('dark-mode')) {
+            toggle.innerHTML = '<i class="fas fa-sun"></i>';
+        } else {
+            toggle.innerHTML = '<i class="fas fa-moon"></i>';
+        }
+
+        toggle.addEventListener('click', function() {
+            const html = document.documentElement;
+            const isDark = html.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', isDark);
+            toggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        });
+    }
+</script>
+    
+</body>
+</html>

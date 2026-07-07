@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - GlobalCopyPlot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+    <style>
+        :root {
+            --azul-claro: #5B9BD5;
+            --azul-oscuro: #2F5496;
+            --texto: #333333;
+        }
+        body {
+            background: url("{{ url_for('static', filename='img/fondologin.png') }}") center/cover no-repeat;
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 28px;
+            padding: 30px 25px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+            max-width: 450px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .form-moderno .form-control {
+            border-radius: 30px;
+            padding: 12px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.3);
+            color: #333;
+            transition: all 0.3s ease;
+        }
+        .form-moderno .form-control:focus {
+            background: rgba(255, 255, 255, 0.6);
+            border-color: var(--azul-claro);
+            box-shadow: 0 0 10px rgba(91,155,213,0.3);
+        }
+
+        .btn-primary {
+            border-radius: 30px;
+            padding: 12px;
+            background-color: var(--azul-claro);
+            border: none;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: var(--azul-oscuro);
+            transform: scale(1.02);
+            box-shadow: 0 8px 20px rgba(47,84,150,0.3);
+        }
+
+        a {
+            color: var(--azul-claro);
+            text-decoration: none;
+        }
+        a:hover {
+            color: var(--azul-oscuro);
+        }
+
+        /* Mantener visibilidad de errores rojos */
+        .is-invalid, .border-danger {
+            border-color: #dc3545 !important;
+        }
+
+        /* Prefijo V/E integrado en la barra */
+        .cedula-prefijo {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 5;
+            width: 55px;                     /* ~10 % de la barra */
+            height: calc(100% - 4px);        /* casi toda la altura */
+            border: none !important;
+            background: transparent !important;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--azul-oscuro, #2F5496);
+            padding: 0;
+            text-align: center;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            /* Línea divisoria sutil */
+            border-right: 1px solid rgba(0,0,0,0.1) !important;
+            border-radius: 0 !important;
+        }
+
+        .cedula-prefijo:hover {
+            background: rgba(91,155,213,0.08) !important;
+        }
+
+        .cedula-prefijo:focus,
+        .cedula-prefijo select:focus {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Input de dígitos: reservamos espacio para el prefijo */
+        .cedula-input {
+            padding-left: 65px !important;   /* un poco más que el ancho del prefijo */
+        }
+    </style>
+</head>
+<body>
+    <div class="glass-card">
+        <div class="text-center mb-3">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" width="80" class="rounded-circle mb-2">
+            <h3>Crear Cuenta</h3>
+            <p class="text-muted">GlobalCopyPlot</p>
+        </div>
+
+        <!-- Mensajes flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-container">
+              {% for category, message in messages %}
+                <div class="flash-alert flash-{{ category }}">
+                  <div class="flash-icon">
+                    {% if category == 'success' %}
+                      <i class="fas fa-check-circle"></i>
+                    {% elif category == 'danger' or category == 'error' %}
+                      <i class="fas fa-times-circle"></i>
+                    {% elif category == 'warning' %}
+                      <i class="fas fa-exclamation-triangle"></i>
+                    {% else %}
+                      <i class="fas fa-info-circle"></i>
+                    {% endif %}
+                  </div>
+                  <div class="flash-content">{{ message }}</div>
+                  <span class="flash-close-btn" onclick="this.closest('.flash-alert').style.display='none'">
+                    <i class="fas fa-times"></i>
+                  </span>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <form class="form-moderno" action="/registro" method="POST">
+            <div class="mb-3">
+                <input type="text" name="nombre" class="form-control {% if field_errors.nombre %}is-invalid{% endif %}" placeholder="Nombre" maxlength="50" value="{{ form_data.nombre if form_data else '' }}" required>
+                {% if field_errors.nombre %}<div class="invalid-feedback">{{ field_errors.nombre }}</div>{% endif %}
+            </div>
+            <div class="mb-3">
+                <input type="text" name="apellido" class="form-control {% if field_errors.apellido %}is-invalid{% endif %}" placeholder="Apellido" maxlength="50" value="{{ form_data.apellido if form_data else '' }}" required>
+                {% if field_errors.apellido %}<div class="invalid-feedback">{{ field_errors.apellido }}</div>{% endif %}
+            </div>
+            <div class="mb-3">
+                <input type="email" name="email" class="form-control {% if field_errors.email %}is-invalid{% endif %}" placeholder="Correo electrónico" maxlength="40" value="{{ form_data.email if form_data else '' }}" required>
+                {% if field_errors.email %}<div class="invalid-feedback">{{ field_errors.email }}</div>{% endif %}
+            </div>
+            <div class="mb-3">
+                <input type="text" name="telefono" class="form-control {% if field_errors.telefono %}is-invalid{% endif %}" placeholder="Teléfono" maxlength="11" value="{{ form_data.telefono if form_data else '' }}" required>
+                {% if field_errors.telefono %}<div class="invalid-feedback">{{ field_errors.telefono }}</div>{% endif %}
+            </div>
+            <div class="mb-3 position-relative">
+                <select class="form-select cedula-prefijo" id="tipoCedulaReg">
+                    <option value="V" selected>V</option>
+                    <option value="E">E</option>
+                </select>
+                <input type="text" id="cedulaDigitsReg" class="form-control cedula-input" 
+                       placeholder="12345678" required maxlength="8" inputmode="numeric" pattern="\d+">
+                <input type="hidden" name="usuario_id" id="usuarioReg">
+            </div>
+            <hr class="my-3">
+            <p class="text-muted small mb-3"><i class="fas fa-shield-alt me-1"></i> Preguntas de seguridad para recuperar tu cuenta</p>
+
+            <div class="mb-3">
+                <label class="form-label">Pregunta de seguridad 1</label>
+                <input type="text" name="pregunta1" class="form-control {% if field_errors.pregunta1 %}is-invalid{% endif %}" 
+                       placeholder="Ej: ¿Nombre de tu primera mascota?" 
+                       maxlength="20" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s?]+" 
+                       title="Solo letras y espacios (máx. 20 caracteres)"
+                       oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s?]/g, '')"
+                       value="{{ form_data.pregunta1 if form_data else '' }}" required>
+                {% if field_errors.pregunta1 %}<div class="invalid-feedback">{{ field_errors.pregunta1 }}</div>{% endif %}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Respuesta 1</label>
+                <input type="text" name="respuesta1" class="form-control {% if field_errors.respuesta1 %}is-invalid{% endif %}" 
+                       placeholder="Escribe tu respuesta" 
+                       maxlength="20" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s?]+" 
+                       title="Solo letras y espacios (máx. 20 caracteres)"
+                       oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s?]/g, '')"
+                       value="{{ form_data.respuesta1 if form_data else '' }}" required>
+                {% if field_errors.respuesta1 %}<div class="invalid-feedback">{{ field_errors.respuesta1 }}</div>{% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Pregunta de seguridad 2</label>
+                <input type="text" name="pregunta2" class="form-control {% if field_errors.pregunta2 %}is-invalid{% endif %}" 
+                       placeholder="Ej: ¿Ciudad donde naciste?" 
+                       maxlength="20" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s?]+" 
+                       title="Solo letras y espacios (máx. 20 caracteres)"
+                       oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s?]/g, '')"
+                       value="{{ form_data.pregunta2 if form_data else '' }}" required>
+                {% if field_errors.pregunta2 %}<div class="invalid-feedback">{{ field_errors.pregunta2 }}</div>{% endif %}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Respuesta 2</label>
+                <input type="text" name="respuesta2" class="form-control {% if field_errors.respuesta2 %}is-invalid{% endif %}" 
+                       placeholder="Escribe tu respuesta" 
+                       maxlength="20" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s?]+" 
+                       title="Solo letras y espacios (máx. 20 caracteres)"
+                       oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s?]/g, '')"
+                       value="{{ form_data.respuesta2 if form_data else '' }}" required>
+                {% if field_errors.respuesta2 %}<div class="invalid-feedback">{{ field_errors.respuesta2 }}</div>{% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <div class="position-relative">
+                    <input type="password" name="contrasena" id="regPassword" 
+                           class="form-control {% if field_errors.contrasena %}border-danger{% endif %}"
+                           placeholder="Contraseña" maxlength="20" required
+                           style="padding-right: 40px;">
+                    <span class="position-absolute top-50 end-0 translate-middle-y me-3" 
+                          onclick="togglePassword('regPassword', this)" 
+                          style="cursor:pointer; z-index: 5;">
+                        <i class="far fa-eye"></i>
+                    </span>
+                </div>
+                {% if field_errors.contrasena %}
+                    <div class="text-danger small mt-1">{{ field_errors.contrasena }}</div>
+                {% endif %}
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Registrarse</button>
+        </form>
+
+        <div class="text-center mt-3">
+            <a href="/login">¿Ya tienes cuenta? Inicia sesión</a><br>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function togglePassword(inputId, icon) {
+            const input = document.getElementById(inputId);
+            const eyeIcon = icon.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                eyeIcon.classList.remove('fa-eye');
+                eyeIcon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                eyeIcon.classList.remove('fa-eye-slash');
+                eyeIcon.classList.add('fa-eye');
+            }
+        }
+    </script>
+    <script>
+        const tipoReg = document.getElementById('tipoCedulaReg');
+        const digitReg = document.getElementById('cedulaDigitsReg');
+        const hiddenReg = document.getElementById('usuarioReg');
+
+        // Actualizar longitud máxima y placeholder al cambiar el tipo
+        function actualizarTipo() {
+            const esE = tipoReg.value === 'E';
+            digitReg.value = '';
+            digitReg.maxLength = esE ? 12 : 8;
+            digitReg.placeholder = esE ? '123456789012' : '12345678';
+        }
+
+        tipoReg.addEventListener('change', actualizarTipo);
+
+        // Al enviar, llenar el campo oculto solo con los dígitos (sin el prefijo)
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            // Validación extra: si el campo está vacío, evitamos envío
+            const digitos = digitReg.value.trim();
+            if (digitos === '') {
+                e.preventDefault();
+                alert('Debes escribir el número de cédula.');
+                return;
+            }
+            // Enviar solo los dígitos (el backend limpiará cualquier prefijo si hiciera falta)
+            hiddenReg.value = digitos;
+        });
+
+        // Inicializar el estado por si el navegador recuerda la selección
+        actualizarTipo();
+    </script>
+</body>
+</html>

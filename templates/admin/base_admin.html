@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <script>
+        // Aplicar modo oscuro inmediatamente para evitar parpadeos
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.documentElement.classList.add('dark-mode');
+        }
+    </script>
+
+    <meta charset="UTF-8">
+    <title>{% block title %}Panel Admin{% endblock %} · GlobalCopyPlot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}">
+    <style>
+        :root {
+            --sidebar-width: 280px;
+            --azul-claro: #5B9BD5;
+            --azul-oscuro: #2F5496;
+            --glass-bg: rgba(255, 255, 255, 0.45);
+            --glass-border: rgba(255, 255, 255, 0.6);
+            --glass-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+            --transition: 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        body {
+            background: linear-gradient(135deg, #f0f4f8 0%, #e9eff5 100%);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            color: #1e293b;
+        }
+
+        /* ---- CONTENEDOR PRINCIPAL ---- */
+        .admin-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ---- SIDEBAR ---- */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-right: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.05), inset 0 0 20px rgba(255, 255, 255, 0.6);
+            padding: 1.8rem 0;
+            transition: transform 0.35s ease;
+            position: fixed;
+            top: 0; left: 0; bottom: 0;
+            z-index: 1040;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-radius: 0 30px 30px 0;
+        }
+
+        .sidebar.hidden {
+            transform: translateX(-100%);
+        }
+
+        /* Logo */
+        .sidebar-brand {
+            text-align: center;
+            padding: 0.5rem 1rem 1.8rem;
+            flex-shrink: 0;
+        }
+
+        .sidebar-logo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1), 0 0 0 8px rgba(91, 155, 213, 0.15);
+            transition: transform 0.3s;
+        }
+
+        .sidebar-logo:hover {
+            transform: scale(1.05) rotate(3deg);
+        }
+
+        /* Menú con scroll */
+        .sidebar-menu {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 1.2rem;
+        }
+
+        .sidebar-menu::-webkit-scrollbar {
+            width: 5px;
+        }
+        .sidebar-menu::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .sidebar-menu::-webkit-scrollbar-thumb {
+            background: rgba(91, 155, 213, 0.35);
+            border-radius: 10px;
+        }
+
+        /* Enlaces del menú */
+        .sidebar .nav-link {
+            color: var(--azul-oscuro);
+            border-radius: 16px;
+            padding: 0.75rem 1.2rem;
+            margin-bottom: 0.35rem;
+            transition: all var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            background: transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar .nav-link i {
+            width: 24px;
+            text-align: center;
+            font-size: 1.15rem;
+            color: var(--azul-claro);
+            transition: transform 0.3s;
+        }
+
+        .sidebar .nav-link:hover i {
+            transform: translateX(3px);
+        }
+
+        .sidebar .nav-link::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 4px;
+            background: var(--azul-claro);
+            border-radius: 0 4px 4px 0;
+            transform: scaleY(0);
+            transition: transform 0.3s;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: rgba(255, 255, 255, 0.75);
+            color: var(--azul-oscuro);
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .sidebar .nav-link:hover::before,
+        .sidebar .nav-link.active::before {
+            transform: scaleY(1);
+        }
+
+        /* Submenú */
+        .sidebar .submenu .nav-link {
+            padding-left: 2.8rem;
+            font-size: 0.88rem;
+            font-weight: 400;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .sidebar .submenu .nav-link:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .sidebar hr {
+            margin: 1.2rem 0.8rem;
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        /* ---- CONTENIDO PRINCIPAL ---- */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 1.5rem;
+            transition: margin-left 0.35s ease;
+        }
+
+        .main-content.expanded {
+            margin-left: 0;
+        }
+
+        /* Envoltorio de cristal para el contenido */
+        .main-glass {
+            background: rgba(255, 255, 255, 0.55);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            border-radius: 32px;
+            padding: 2rem;
+            box-shadow: var(--glass-shadow);
+            min-height: calc(100vh - 3rem);
+        }
+
+        /* ---- BOTÓN HAMBURGUESA ---- */
+        .hamburger-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            color: var(--azul-oscuro);
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+            font-size: 1.3rem;
+        }
+
+        .hamburger-btn:hover {
+            background: var(--azul-claro);
+            color: white;
+            transform: scale(1.08);
+            box-shadow: 0 12px 30px rgba(47, 84, 150, 0.25);
+        }
+
+        /* ---- RESPONSIVE ---- */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .main-glass {
+                border-radius: 20px;
+                padding: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <button class="hamburger-btn" id="toggleSidebar" title="Menú">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="admin-wrapper">
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="GlobalCopyPlot" class="sidebar-logo">
+            </div>
+
+            <div class="sidebar-menu">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/admin' %}active{% endif %}" 
+                           href="{{ url_for('panel_admin') }}">
+                            <i class="fas fa-chart-pie"></i> <span>Dashboard</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/admin/solicitudes' in request.path or '/admin/solicitud/' in request.path %}active{% endif %}" 
+                           data-bs-toggle="collapse" href="#subSolicitudes" role="button">
+                            <i class="fas fa-file-invoice"></i> <span>Solicitudes</span>
+                        </a>
+                        <div class="collapse submenu {% if '/admin/solicitudes' in request.path or '/admin/solicitud/' in request.path %}show{% endif %}" 
+                             id="subSolicitudes">
+                            <a class="nav-link {% if request.path == '/admin/solicitudes' %}active{% endif %}" 
+                               href="{{ url_for('admin_solicitudes') }}">Todas</a>
+                            <a class="nav-link" href="{{ url_for('admin_solicitudes', estado='Pendiente de pago') }}">Nuevas</a>
+                            <a class="nav-link" href="{{ url_for('admin_solicitudes', estado='Esperando validación,Pago confirmado') }}">En proceso</a>
+                            <a class="nav-link" href="{{ url_for('admin_solicitudes', estado='Listo') }}">Listas</a>
+                            <a class="nav-link" href="{{ url_for('admin_solicitudes', estado='Cancelado') }}">Canceladas</a>
+                        </div>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/admin/catalogos' in request.path %}active{% endif %}" 
+                           href="{{ url_for('admin_catalogos') }}">
+                            <i class="fas fa-images"></i> <span>Catálogos</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/admin/usuarios' in request.path or '/admin/usuario/' in request.path or '/admin/perfil' in request.path %}active{% endif %}" 
+                           data-bs-toggle="collapse" href="#subUsuarios" role="button">
+                            <i class="fas fa-users"></i> <span>Usuarios</span>
+                        </a>
+                        <div class="collapse submenu {% if '/admin/usuarios' in request.path or '/admin/usuario/' in request.path or '/admin/perfil' in request.path %}show{% endif %}" 
+                             id="subUsuarios">
+                            <a class="nav-link {% if request.path == '/admin/usuarios' %}active{% endif %}" 
+                               href="{{ url_for('admin_usuarios') }}">Clientes</a>
+                            <a class="nav-link {% if request.path == '/admin/operadores' %}active{% endif %}" 
+                                href="{{ url_for('admin_operadores') }}">Operadores</a>
+                        </div>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/admin/reportes' in request.path %}active{% endif %}" 
+                           href="{{ url_for('admin_reportes') }}">
+                            <i class="fas fa-chart-bar"></i> <span>Reportes</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/admin/cronograma' %}active{% endif %}" 
+                           href="{{ url_for('admin_cronograma') }}">
+                            <i class="fas fa-calendar-check"></i> <span>Cronograma</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/admin/configuracion' in request.path %}active{% endif %}" 
+                           href="{{ url_for('admin_configuracion') }}">
+                            <i class="fas fa-cog"></i> <span>Configuración</span>
+                        </a>
+                    </li>
+
+                    <hr>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}">
+                            <i class="fas fa-home"></i> <span>Ir al inicio</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Contenido principal -->
+        <main class="main-content" id="mainContent">
+            <div class="main-glass">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% if messages %}
+                    {% for category, message in messages %}
+                      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                      </div>
+                    {% endfor %}
+                  {% endif %}
+                {% endwith %}
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Botón Modo Oscuro -->
+    <button class="dark-mode-toggle" id="darkModeToggle" title="Modo oscuro">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const toggleBtn = document.getElementById('toggleSidebar');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+
+        toggleBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('hidden');
+            mainContent.classList.toggle('expanded');
+        });
+
+        // Ajustar para móviles (toggle clase 'show')
+        if (window.innerWidth <= 768) {
+            sidebar.classList.add('hidden');
+            toggleBtn.addEventListener('click', function() {
+                sidebar.classList.toggle('show');
+            });
+        }
+
+        // Modo oscuro
+        const darkToggle = document.getElementById('darkModeToggle');
+        if (darkToggle) {
+            if (document.documentElement.classList.contains('dark-mode')) {
+                darkToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                darkToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            }
+
+            darkToggle.addEventListener('click', function() {
+                const html = document.documentElement;
+                const isDark = html.classList.toggle('dark-mode');
+                localStorage.setItem('darkMode', isDark);
+                darkToggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+            });
+        }
+    </script>
+</body>
+</html>

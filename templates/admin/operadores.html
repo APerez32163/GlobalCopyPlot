@@ -1,0 +1,143 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Operadores{% endblock %}
+{% block content %}
+<h2 class="mb-4">Gestión de Operadores</h2>
+
+<div class="row">
+    <!-- Columna izquierda: Buscar y agregar -->
+    <div class="col-md-5">
+        <div class="glass-card p-4">
+            <h5>Agregar nuevo operador</h5>
+            <p class="text-muted small">Busca un usuario por cédula para asignarlo como operador del sistema.</p>
+            
+            <div class="input-group mb-3">
+                <input type="text" id="cedulaBuscar" class="form-control" placeholder="Cédula de Identidad" maxlength="8">
+                <button class="btn btn-solicitar" type="button" id="btnBuscar">
+                    <i class="fas fa-search me-1"></i> Buscar
+                </button>
+            </div>
+            
+            <!-- Resultado de la búsqueda -->
+            <div id="resultadoBusqueda" style="display: none;">
+                <div class="glass-card p-3 mb-3" style="background: rgba(255,255,255,0.5);">
+                    <h6 class="fw-bold" id="nombreCompleto"></h6>
+                    <p class="mb-1"><strong>Cédula:</strong> <span id="cedulaMostrar"></span></p>
+                    <p class="mb-1"><strong>Email:</strong> <span id="emailMostrar"></span></p>
+                    <p class="mb-3"><strong>Teléfono:</strong> <span id="telefonoMostrar"></span></p>
+                    
+                    <div id="estadoOperador" class="mb-3"></div>
+                    
+                    <form method="POST" action="{{ url_for('admin_operadores_asignar') }}">
+                        <input type="hidden" name="user_id" id="userIdInput">
+                        <button type="submit" class="btn btn-solicitar w-100" id="btnAsignar">
+                            <i class="fas fa-user-check me-1"></i> <span id="textoBoton">Asignar como operador</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <div id="mensajeError" class="alert alert-danger" style="display: none;"></div>
+        </div>
+    </div>
+    
+    <!-- Columna derecha: Lista de operadores actuales -->
+    <div class="col-md-7">
+        <div class="glass-card p-4">
+            <h5>Operadores actuales ({{ operadores|length }}/6)</h5>
+            
+            {% if operadores %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Cédula</th>
+                                <th>Nombre</th>
+                                <th>Email</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for operador in operadores %}
+                            <tr>
+                                <td>{{ operador.ID_USUARIO }}</td>
+                                <td>{{ operador.NOMBRE }} {{ operador.APELLIDO }}</td>
+                                <td>{{ operador.EMAIL }}</td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('admin_operadores_asignar') }}" class="d-inline">
+                                        <input type="hidden" name="user_id" value="{{ operador.ID }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">
+                                            <i class="fas fa-user-minus me-1"></i> Remover
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">No hay operadores asignados actualmente.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('btnBuscar').addEventListener('click', function() {
+    const cedula = document.getElementById('cedulaBuscar').value.trim();
+    if (!cedula) {
+        alert('Ingrese una cédula');
+        return;
+    }
+    
+    fetch('/admin/operadores/buscar', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'cedula=' + encodeURIComponent(cedula)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            document.getElementById('resultadoBusqueda').style.display = 'none';
+            document.getElementById('mensajeError').style.display = 'block';
+            document.getElementById('mensajeError').textContent = data.error;
+        } else {
+            document.getElementById('mensajeError').style.display = 'none';
+            document.getElementById('resultadoBusqueda').style.display = 'block';
+            
+            document.getElementById('nombreCompleto').textContent = data.nombre + ' ' + data.apellido;
+            document.getElementById('cedulaMostrar').textContent = data.cedula;
+            document.getElementById('emailMostrar').textContent = data.email;
+            document.getElementById('telefonoMostrar').textContent = data.telefono;
+            document.getElementById('userIdInput').value = data.id;
+            
+            const estadoDiv = document.getElementById('estadoOperador');
+            const textoBoton = document.getElementById('textoBoton');
+            const btnAsignar = document.getElementById('btnAsignar');
+            
+            if (data.es_operador) {
+                estadoDiv.innerHTML = '<span class="badge bg-info">Actualmente es operador</span>';
+                textoBoton.textContent = 'Revocar operador';
+                btnAsignar.classList.remove('btn-solicitar');
+                btnAsignar.classList.add('btn-outline-danger');
+            } else {
+                if (data.cantidad_operadores >= 6) {
+                    estadoDiv.innerHTML = '<span class="badge bg-warning">Límite de operadores alcanzado (6/6)</span>';
+                    textoBoton.textContent = 'Asignar como operador';
+                    btnAsignar.disabled = true;
+                } else {
+                    estadoDiv.innerHTML = '<span class="badge bg-secondary">No es operador</span>';
+                    textoBoton.textContent = 'Asignar como operador';
+                    btnAsignar.disabled = false;
+                    btnAsignar.classList.remove('btn-outline-danger');
+                    btnAsignar.classList.add('btn-solicitar');
+                }
+            }
+        }
+    })
+    .catch(error => {
+        alert('Error al buscar usuario');
+    });
+});
+</script>
+{% endblock %}

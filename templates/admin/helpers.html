@@ -1,0 +1,17 @@
+{% macro badge_estado(estado) %}
+    {% if estado == 'Pendiente de pago' %}
+        <span class="badge bg-primary">{{ estado }}</span>
+    {% elif estado == 'Cancelado' %}
+        <span class="badge bg-danger">{{ estado }}</span>
+    {% elif estado == 'Esperando validación' %}
+        <span class="badge bg-warning text-dark">{{ estado }}</span>
+    {% elif estado == 'Pago confirmado' %}
+        <span class="badge bg-warning">{{ estado }}</span>
+    {% elif estado == 'Listo' %}
+        <span class="badge bg-success">{{ estado }}</span>
+    {% elif estado == 'Entregado' %}
+        <span class="badge bg-secondary">{{ estado }}</span>
+    {% else %}
+        <span class="badge bg-info">{{ estado }}</span>
+    {% endif %}
+{% endmacro %}

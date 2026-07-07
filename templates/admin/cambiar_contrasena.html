@@ -1,0 +1,23 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Cambiar Contraseña{% endblock %}
+{% block content %}
+<h2 class="mb-4">Cambiar Contraseña</h2>
+
+<div class="glass-card p-4" style="max-width: 500px;">
+    <form method="POST">
+        <div class="mb-3">
+            <label class="form-label">Contraseña actual</label>
+            <input type="password" name="actual" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Nueva contraseña</label>
+            <input type="password" name="nueva" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Repetir nueva contraseña</label>
+            <input type="password" name="repetir" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-solicitar w-100">Cambiar contraseña</button>
+    </form>
+</div>
+{% endblock %}

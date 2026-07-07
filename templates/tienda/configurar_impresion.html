@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Configurar impresión · GlobalCopyPlot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+    <style>
+        :root {
+            --azul-claro: #5B9BD5;
+            --azul-oscuro: #2F5496;
+            --beige: #F5F0E1;
+            --glass-bg: rgba(255, 255, 255, 0.45);
+            --glass-border: rgba(255, 255, 255, 0.7);
+            --glass-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+            --texto: #2c3e50;
+            --texto-secundario: #5a6c7d;
+        }
+
+        body {
+            background: url("{{ url_for('static', filename='img/fondoimprimir.png') }}") center/cover no-repeat;
+            background-attachment: fixed;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: var(--texto);
+        }
+
+        .container {
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 32px;
+            padding: 28px 24px;
+            box-shadow: var(--glass-shadow);
+        }
+
+        h2 {
+            font-weight: 700;
+            font-size: 1.9rem;
+            letter-spacing: -0.5px;
+            color: var(--azul-oscuro);
+            margin-bottom: 1.2rem;
+        }
+
+        .archivo-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 20px;
+            padding: 14px 18px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+
+        .archivo-info i {
+            font-size: 2rem;
+            color: var(--azul-claro);
+        }
+
+        .archivo-info .detalle {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .archivo-info .nombre-archivo {
+            font-weight: 600;
+            color: var(--texto);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+            max-width: 100%;
+        }
+
+        .archivo-info .paginas-badge {
+            background: var(--azul-claro);
+            color: white;
+            border-radius: 20px;
+            padding: 2px 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 4px;
+        }
+
+        .servicio-card {
+            background: rgba(255,255,255,0.55);
+            backdrop-filter: blur(12px);
+            border: 1px solid transparent; 
+            border-radius: 24px;
+            padding: 18px 16px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
+        }
+        .servicio-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 24px;
+            padding: 2px;
+            background: linear-gradient(135deg, rgba(91,155,213,0.4), rgba(47,84,150,0.4));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            transition: all 0.3s;
+        }
+
+        .servicio-card:hover::before,
+        .servicio-card.seleccionado::before {
+            background: linear-gradient(135deg, #5B9BD5, #2F5496, #5B9BD5);
+            padding: 2px;
+        }
+
+        .servicio-card:hover {
+            background: rgba(255,255,255,0.75);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+        }
+
+        .servicio-card.seleccionado {
+            background: rgba(91,155,213,0.08);
+            box-shadow: 0 0 15px rgba(91,155,213,0.3);
+        }
+
+        .servicio-card input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .servicio-titulo {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--azul-oscuro);
+        }
+
+        .servicio-descripcion {
+            font-size: 0.85rem;
+            color: var(--texto-secundario);
+            margin: 4px 0 10px;
+        }
+
+        .tamanos {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .tamano-opcion {
+            position: relative;
+        }
+
+        .tamano-opcion input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .tamano-opcion label {
+            background: rgba(255,255,255,0.7);
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 40px;
+            padding: 7px 16px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--texto);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tamano-opcion input:checked + label {
+            background: var(--azul-claro);
+            color: white;
+            border-color: var(--azul-claro);
+            box-shadow: 0 4px 10px rgba(91,155,213,0.3);
+        }
+
+        .seccion-titulo {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin: 28px 0 12px;
+            color: var(--azul-oscuro);
+        }
+
+        .extras-lista {
+            background: rgba(255,255,255,0.5);
+            border-radius: 20px;
+            padding: 10px 16px;
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+
+        .extra-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.04);
+        }
+
+        .extra-item:last-child {
+            border-bottom: none;
+        }
+
+        .extra-item label {
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        .btn-guardar {
+            background: linear-gradient(135deg, #5B9BD5, #2F5496);
+            border: none;
+            border-radius: 50px;
+            padding: 18px 20px;
+            font-weight: 700;
+            font-size: 1rem;
+            color: white;
+            width: 100%;
+            margin-top: 28px;
+            box-shadow: 0 8px 18px rgba(47,84,150,0.25);
+            transition: all 0.3s;
+        }
+
+        .btn-guardar:hover {
+            background: linear-gradient(135deg, #2F5496, #1e3c6e);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(47,84,150,0.35);
+        }
+
+        .btn-volver {
+            background: rgba(255,255,255,0.7);
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 50px;
+            padding: 18px 20px;
+            font-weight: 600;
+            color: var(--azul-oscuro);
+            transition: all 0.3s;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 28px;
+        }
+
+        .btn-volver:hover {
+            background: white;
+            border-color: var(--azul-claro);
+        }
+        .calc-fab {
+            position: fixed;
+            bottom: 100px;  /* más arriba para no pegar con el menú */
+            left: 20px;
+            width: 48px;    /* más pequeño */
+            height: 48px;
+            border-radius: 50%;
+            background: var(--azul-claro);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            cursor: pointer;
+            z-index: 2000;
+            user-select: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .calc-fab:hover {
+            transform: scale(1.08);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        .calc-panel {
+            position: fixed;
+            bottom: 160px;  /* justo encima del botón */
+            left: 20px;
+            width: 260px;   /* más estrecho */
+            max-height: 420px;
+            overflow-y: auto;
+            background: rgba(255,255,255,0.55); /* más transparente */
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.7);
+            border-radius: 24px;
+            padding: 14px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            z-index: 1999;
+            display: none;
+        }
+        .calc-panel.open {
+            display: block;
+        }
+        .calc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .calc-title {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--azul-oscuro);
+        }
+        .calc-close {
+            background: none;
+            border: none;
+            font-size: 1.4rem;
+            cursor: pointer;
+            color: #888;
+            line-height: 1;
+        }
+        .calc-display {
+            background: rgba(0,0,0,0.05);
+            border-radius: 12px;
+            padding: 8px;
+            font-size: 1.3rem;
+            text-align: right;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #1a1a2e;
+            min-height: 40px;
+            word-break: break-all;
+        }
+        .calc-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+        }
+        .calc-btn {
+            background: rgba(255,255,255,0.7);
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 10px;
+            padding: 8px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #333;
+            font-weight: 500;
+        }
+        .calc-btn:hover {
+            background: rgba(91,155,213,0.15);
+            border-color: var(--azul-claro);
+        }
+        .calc-op {
+            color: var(--azul-oscuro);
+            font-weight: 700;
+        }
+        .calc-equal {
+            background: var(--azul-claro);
+            color: white;
+            font-weight: 700;
+            border: none;
+        }
+        .calc-equal:hover {
+            background: var(--azul-oscuro);
+            color: white;
+        }
+        .calc-tabs .nav-link {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 15px;
+            margin-right: 4px;
+            color: #555;
+            background: transparent;
+            border: 1px solid transparent;
+        }
+        .calc-tabs .nav-link.active {
+            background: var(--azul-claro);
+            color: white;
+            border-color: var(--azul-claro);
+        }
+        /* Botón Actualizar personalizado */
+        .btn-actualizar {
+            background: #fff;
+            color: var(--azul-oscuro);
+            border: 2px solid var(--azul-claro);
+            border-radius: 20px;
+            padding: 5px 14px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-actualizar:hover {
+            background: var(--azul-claro);
+            color: white;
+            border-color: var(--azul-claro);
+        }
+
+        .calc-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        .calc-tab-btn {
+            flex: 1;
+            padding: 6px;
+            font-size: 0.75rem;
+            border-radius: 15px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: #555;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .calc-tab-btn.active {
+            background: var(--azul-claro);
+            color: white;
+            border-color: var(--azul-claro);
+        }
+        .tab-pane-calc {
+            display: none;
+        }
+        .tab-pane-calc.active {
+            display: block;
+        }
+        .total-estimado {
+            background: rgba(91,155,213,0.1);
+            border-radius: 16px;
+            padding: 12px;
+            text-align: center;
+            font-weight: 700;
+            color: var(--azul-oscuro);
+            margin-bottom: 16px;
+        }
+        .tamanos-container {
+            display: none;   /* oculto por defecto */
+        }
+        .tamanos-container.activo {
+            display: block;
+        }
+        .texto-limitado {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            display: block;
+        }
+        .mixto-campos {
+            transition: opacity 0.3s ease, max-height 0.3s ease;
+            max-height: 0;
+            overflow: hidden;
+        }
+        .mixto-campos[style*="display: block"] {
+            max-height: 500px; /* suficiente para el contenido */
+            opacity: 1;
+        }
+        /* Grupo de campos mixtos */
+        .mixto-input-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .mixto-icono {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            background: rgba(91, 155, 213, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #5B9BD5;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .mixto-contenido {
+            flex: 1;
+        }
+
+        /* Input de páginas a color (pequeño y centrado) */
+        .mixto-input {
+            width: 80px;
+            padding: 8px 12px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(6px);
+            font-size: 1rem;
+            font-weight: 600;
+            text-align: center;
+            color: #1e293b;
+            transition: all 0.2s;
+        }
+
+        .mixto-input:focus {
+            outline: none;
+            border-color: #5B9BD5;
+            box-shadow: 0 0 0 3px rgba(91, 155, 213, 0.2);
+        }
+
+        /* Textarea descriptivo */
+        .mixto-textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(6px);
+            font-size: 0.9rem;
+            color: #1e293b;
+            resize: none;
+            transition: all 0.2s;
+        }
+
+        .mixto-textarea:focus {
+            outline: none;
+            border-color: #5B9BD5;
+            box-shadow: 0 0 0 3px rgba(91, 155, 213, 0.2);
+        }
+        .mixto-input::-webkit-outer-spin-button,
+        .mixto-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .mixto-input {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="glass-card">
+            <h2>Configurar impresión</h2>
+
+            <!-- Información del archivo -->
+            <div class="archivo-info">
+                <i class="fas fa-file-alt"></i>
+                <div class="detalle">
+                    <span class="nombre-archivo texto-limitado" style="max-width: 260px; display: inline-block; vertical-align: middle;">{{ archivo_nombre }}</span>
+                    <span class="paginas-badge">{{ pedido.PAGINAS }} pág(s)</span>
+                </div>
+            </div>
+
+            <form method="POST" action="{{ url_for('configurar_impresion', pedido_id=pedido.ID) }}">
+                <div class="seccion-titulo">Selecciona el servicio</div>
+                {% for srv in servicios %}
+                <div class="servicio-card" onclick="seleccionarServicio(this, {{ srv.ID }})">
+                    <input type="radio" name="servicio_id" value="{{ srv.ID }}" id="serv{{ srv.ID }}" 
+                           {% if pedido.SERVICIO_ID|string == srv.ID|string %}checked{% endif %} 
+                           autocomplete="off">
+                    <div class="servicio-titulo">{{ srv.TITULO }}</div>
+                    {% if srv.DESCRIPCION %}<div class="servicio-descripcion">{{ srv.DESCRIPCION }}</div>{% endif %}
+
+                    {% if srv.ES_MIXTO %}
+                        <!-- Tamaños como botones (sin precio) -->
+                        <div class="tamanos">
+                            {% for t in srv.tamanos %}
+                            <div class="tamano-opcion">
+                                <input type="radio" name="tamano_nombre" value="{{ t.NOMBRE }}" id="tam{{ t.ID }}" 
+                                       data-precio-bn="{{ t.PRECIO_BN }}" data-precio-color="{{ t.PRECIO_COLOR }}"
+                                       {% if pedido.TAMANO == t.NOMBRE %}checked{% endif %} 
+                                       autocomplete="off">
+                                <label for="tam{{ t.ID }}">{{ t.NOMBRE }}</label>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Campos específicos de mixto (se muestran al activar la tarjeta) -->
+                        <div class="mixto-campos" style="display: none; margin-top: 14px;">
+                            <div class="mixto-input-group">
+                                <div class="mixto-icono">
+                                    <i class="fas fa-palette"></i>
+                                </div>
+                                <div class="mixto-contenido">
+                                    <label class="form-label small fw-semibold text-muted mb-1">Páginas a color</label>
+                                    <input type="number" name="paginas_color" class="mixto-input" 
+                                           placeholder="0" min="0" max="999" maxlength="3"
+                                           value="{{ pedido.PAGINAS_COLOR or '' }}">
+                                    <small class="text-muted">Máx. 3 dígitos (ej: 8)</small>
+                                </div>
+                            </div>
+
+                            <div class="mixto-input-group mt-3">
+                                <div class="mixto-icono">
+                                    <i class="fas fa-align-left"></i>
+                                </div>
+                                <div class="mixto-contenido">
+                                    <label class="form-label small fw-semibold text-muted mb-1">Especificar páginas a color</label>
+                                    <textarea name="comentarios" class="mixto-textarea" rows="2" 
+                                              placeholder="Ej: 1,3,5-8. Solo se tendrán en cuenta las páginas a color."
+                                              maxlength="100">{{ pedido.COMENTARIOS or '' }}</textarea>
+                                    <small class="text-muted">Máx. 100 caracteres</small>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <!-- Tamaños normales (con precios visibles) -->
+                        <div class="tamanos">
+                            {% for t in srv.tamanos %}
+                            <div class="tamano-opcion">
+                                <input type="radio" name="tamano_nombre" value="{{ t.NOMBRE }}" id="tam{{ t.ID }}" 
+                                       data-precio="{{ t.PRECIO_BN }}"
+                                       {% if pedido.TAMANO|string == t.NOMBRE|string %}checked{% endif %} 
+                                       autocomplete="off">
+                                <label for="tam{{ t.ID }}">{{ t.NOMBRE }} · {{ "%.2f"|format(t.PRECIO_BN) }} Bs.</label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                <div class="total-estimado">
+                    Total estimado: <span id="totalEstimado">Bs. 0.00</span>
+                </div>
+                <hr></hr>
+
+                <div class="d-flex gap-2 mt-3">
+                    <a href="/imprimir?pedido_id={{ pedido.ID }}" class="btn-volver">
+                        <i class="fas fa-arrow-left me-2"></i> Volver
+                    </a>
+                    <button type="submit" class="btn-guardar" style="flex: 1;">
+                        <i class="fas fa-credit-card me-2"></i> Continuar al pago
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Mini calculadora flotante -->
+    <div id="calc-fab" class="calc-fab">
+        <i class="fas fa-calculator"></i>
+    </div>
+
+    <div id="calc-panel" class="calc-panel glass-card">
+        <div class="calc-header">
+            <span class="calc-title">Calculadora</span>
+            <button type="button" class="calc-close" id="calc-close">&times;</button>
+        </div>
+
+        <!-- Contenido de pestañas -->
+        <div class="tab-content" id="calc-tab-content">
+            <!-- Calculadora básica -->
+            <div class="tab-pane-calc active" id="calc-basica">
+                <div class="calc-display" id="calc-display">0</div>
+                <div class="calc-buttons">
+                    <button class="calc-btn" onclick="calcInput('7')">7</button>
+                    <button class="calc-btn" onclick="calcInput('8')">8</button>
+                    <button class="calc-btn" onclick="calcInput('9')">9</button>
+                    <button class="calc-btn calc-op" onclick="calcInput('/')">÷</button>
+                    <button class="calc-btn" onclick="calcInput('4')">4</button>
+                    <button class="calc-btn" onclick="calcInput('5')">5</button>
+                    <button class="calc-btn" onclick="calcInput('6')">6</button>
+                    <button class="calc-btn calc-op" onclick="calcInput('*')">×</button>
+                    <button class="calc-btn" onclick="calcInput('1')">1</button>
+                    <button class="calc-btn" onclick="calcInput('2')">2</button>
+                    <button class="calc-btn" onclick="calcInput('3')">3</button>
+                    <button class="calc-btn calc-op" onclick="calcInput('-')">−</button>
+                    <button class="calc-btn" onclick="calcInput('0')">0</button>
+                    <button class="calc-btn" onclick="calcInput('.')">.</button>
+                    <button class="calc-btn calc-equal" onclick="calcCalculate()">=</button>
+                    <button class="calc-btn calc-op" onclick="calcInput('+')">+</button>
+                </div>
+                <button class="btn btn-sm btn-outline-secondary w-100 mt-2" onclick="calcClear()">C</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Selección visual de tarjeta de servicio
+        function seleccionarServicio(card, servicioId) {
+            document.querySelectorAll('.servicio-card').forEach(c => c.classList.remove('seleccionado'));
+            card.classList.add('seleccionado');
+            document.getElementById('serv' + servicioId).checked = true;
+            toggleMixto();
+        }
+
+        // Mostrar/ocultar campos mixtos y calcular total
+        function toggleMixto() {
+            document.querySelectorAll('.mixto-campos').forEach(el => el.style.display = 'none');
+            const radioServ = document.querySelector('input[name="servicio_id"]:checked');
+            if (radioServ) {
+                const card = radioServ.closest('.servicio-card');
+                if (card) {
+                    const mixto = card.querySelector('.mixto-campos');
+                    if (mixto) {
+                        mixto.style.display = 'block';
+                        // Asegurar que haya un tamaño seleccionado
+                        const tamanoRadio = card.querySelector('input[name="tamano_nombre"]:checked');
+                        if (!tamanoRadio) {
+                            const primerTamano = card.querySelector('input[name="tamano_nombre"]');
+                            if (primerTamano) primerTamano.checked = true;
+                        }
+                    }
+                }
+            }
+            calcularTotalUnico();
+        }
+
+        // Al cambiar cualquier radio de tamaño (incluidos los mixtos), recalcular
+        document.querySelectorAll('input[name="tamano_nombre"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                calcularTotalUnico();
+            });
+        });
+
+        function calcularTotalUnico() {
+            const radioServ = document.querySelector('input[name="servicio_id"]:checked');
+            if (!radioServ) return;
+            const card = radioServ.closest('.servicio-card');
+            const esMixto = card.querySelector('.mixto-campos') !== null;
+            const paginasElem = document.getElementById('paginasPedido');
+            const paginas = paginasElem ? parseInt(paginasElem.getAttribute('data-paginas')) || 1 : 1;
+            const totalSpan = document.getElementById('totalEstimado');
+
+            if (esMixto) {
+                // Buscar el tamaño seleccionado entre los radios
+                const tamanoRadio = card.querySelector('input[name="tamano_nombre"]:checked');
+                if (!tamanoRadio) {
+                    totalSpan.textContent = 'Bs. 0.00';
+                    return;
+                }
+                const precioBN = parseFloat(tamanoRadio.getAttribute('data-precio-bn'));
+                const precioColor = parseFloat(tamanoRadio.getAttribute('data-precio-color'));
+                const inputPagColor = card.querySelector('input[name="paginas_color"]');
+                let pagColor = inputPagColor ? parseInt(inputPagColor.value) : 0;
+                if (isNaN(pagColor) || pagColor < 0) pagColor = 0;
+                if (pagColor > paginas) pagColor = paginas;
+                const pagBN = paginas - pagColor;
+                const total = precioBN * pagBN + precioColor * pagColor;
+                totalSpan.textContent = 'Bs. ' + total.toFixed(2);
+            } else {
+                const tamanoRadio = card.querySelector('input[name="tamano_nombre"]:checked');
+                if (!tamanoRadio) {
+                    totalSpan.textContent = 'Bs. 0.00';
+                    return;
+                }
+                const precio = parseFloat(tamanoRadio.getAttribute('data-precio'));
+                totalSpan.textContent = 'Bs. ' + (precio * paginas).toFixed(2);
+            }
+        }
+
+        // Actualizar total mientras se escribe en el campo de páginas a color (mixto)
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('mixto-input')) {
+                calcularTotalUnico();
+            }
+        });
+
+        // Eventos para cambios en campos mixtos
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('mixto-tamano') || e.target.classList.contains('mixto-paginas-color')) {
+                calcularTotalUnico();
+            }
+        });
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('mixto-paginas-color')) {
+                calcularTotalUnico();
+            }
+        });
+
+        // Inicializar al cargar
+        document.addEventListener('DOMContentLoaded', function() {
+            const radioSeleccionado = document.querySelector('input[name="servicio_id"]:checked');
+            if (radioSeleccionado) {
+                const card = radioSeleccionado.closest('.servicio-card');
+                if (card) card.classList.add('seleccionado');
+            }
+            toggleMixto();
+        });
+        
+        // Forzar solo dígitos y máximo 3 caracteres en el campo de páginas a color
+        document.querySelectorAll('.mixto-input').forEach(function(input) {
+            input.addEventListener('input', function() {
+                // Eliminar cualquier cosa que no sea un dígito
+                this.value = this.value.replace(/\D/g, '');
+                // Cortar a 3 caracteres si por alguna razón se cuela algo más largo
+                if (this.value.length > 3) {
+                    this.value = this.value.slice(0, 3);
+                }
+            });
+        });
+
+        // ========== CALCULADORA FLOTANTE ==========
+        (function() {
+            const fab = document.getElementById('calc-fab');
+            const panel = document.getElementById('calc-panel');
+            const closeBtn = document.getElementById('calc-close');
+            let isOpen = false;
+
+            fab.addEventListener('click', function() {
+                isOpen = !isOpen;
+                panel.classList.toggle('open', isOpen);
+            });
+
+            closeBtn.addEventListener('click', function() {
+                isOpen = false;
+                panel.classList.remove('open');
+            });
+
+            // Calculadora básica (funciones globales)
+            window.calcExpression = '';
+            window.calcInput = function(val) {
+                window.calcExpression += val;
+                document.getElementById('calc-display').textContent = window.calcExpression.replace(/\*/g, '×').replace(/\//g, '÷');
+            };
+            window.calcClear = function() {
+                window.calcExpression = '';
+                document.getElementById('calc-display').textContent = '0';
+            };
+            window.calcCalculate = function() {
+                try {
+                    let expr = window.calcExpression.replace(/×/g, '*').replace(/÷/g, '/');
+                    let result = eval(expr);
+                    document.getElementById('calc-display').textContent = result;
+                    window.calcExpression = result.toString();
+                } catch(e) {
+                    document.getElementById('calc-display').textContent = 'Error';
+                    window.calcExpression = '';
+                }
+            };
+        })();
+
+        // ========== VALORES POR DEFECTO SI NO SE CONFIGURA ==========
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const servicioSeleccionado = document.querySelector('input[name="servicio_id"]:checked');
+            if (!servicioSeleccionado) {
+                e.preventDefault(); // detener envío para mostrar mensaje y auto-seleccionar
+                // Seleccionar automáticamente el primer servicio disponible
+                const primerServicio = document.querySelector('input[name="servicio_id"]');
+                if (primerServicio) {
+                    primerServicio.checked = true;
+                    // Seleccionar también el primer tamaño de ese servicio
+                    const primerTamano = document.querySelector('input[name="tamano_nombre"]');
+                    if (primerTamano) {
+                        primerTamano.checked = true;
+                    }
+                }
+            }
+        });
+    </script>
+    <span id="paginasPedido" data-paginas="{{ pedido.PAGINAS }}" style="display:none;"></span>
+</body>
+</html>
