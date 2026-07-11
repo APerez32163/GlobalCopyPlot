@@ -281,24 +281,34 @@ def login():
 
         user = Usuario.query.filter_by(ID_USUARIO=cedula).first()
 
-        # --- NUEVO: Verificar si el usuario está bloqueado temporalmente ---
+        # Verificar bloqueo
         if user and user.BLOQUEADO_HASTA and user.BLOQUEADO_HASTA > datetime.now():
             minutos_restantes = int((user.BLOQUEADO_HASTA - datetime.now()).total_seconds() // 60) + 1
             flash(f'Demasiados intentos fallidos. Espera {minutos_restantes} minuto(s) o restablece tu contraseña.', 'danger')
             return render_template('login.html')
 
         if user and check_password_hash(user.CONTRASEÑA, contrasena):
-            user.INTENTOS_FALLIDOS = (user.INTENTOS_FALLIDOS or 0) + 1
-            if user.INTENTOS_FALLIDOS >= 5:
-                user.BLOQUEADO_HASTA = datetime.now() + timedelta(minutes=1)
-                user.INTENTOS_FALLIDOS = 0  # reiniciar contador para cuando se desbloquee
-                db.session.commit()
-                flash('Has superado el límite de intentos. Espera 1 minuto o restablece tu contraseña.', 'danger')
-                return redirect(url_for('index', bloqueado=1))
-            else:
-                db.session.commit()
-                flash('Cédula o contraseña incorrectos.', 'danger')
+            # Éxito: reiniciar intentos y loguear
+            user.INTENTOS_FALLIDOS = 0
+            user.BLOQUEADO_HASTA = None
+            db.session.commit()
+            login_user(user)
+            if not user.ES_ADMIN and not user.ES_OPERADOR:
+                flash('¡Ahora puedes realizar peticiones en línea desde el centro de impresión!', 'info')
+            flash(f'¡Bienvenido {user.NOMBRE}!', 'success')
+            return redirect(url_for('index'))
         else:
+            # Fallo: incrementar intentos y posible bloqueo
+            if user:
+                user.INTENTOS_FALLIDOS = (user.INTENTOS_FALLIDOS or 0) + 1
+                if user.INTENTOS_FALLIDOS >= 5:
+                    user.BLOQUEADO_HASTA = datetime.now() + timedelta(minutes=1)
+                    user.INTENTOS_FALLIDOS = 0
+                    db.session.commit()
+                    flash('Has superado el límite de intentos. Espera 1 minuto o restablece tu contraseña.', 'danger')
+                    return redirect(url_for('index', bloqueado=1))
+                else:
+                    db.session.commit()
             flash('Cédula o contraseña incorrectos.', 'danger')
 
     return render_template('login.html')
@@ -407,7 +417,6 @@ def registro():
             flash('El número de teléfono ya está registrado.', 'danger')
             return render_template('registro.html', form_data=request.form, field_errors={})
 
-        # Crear usuario con nuevas columnas
         nuevo = Usuario(
             ID_USUARIO=cedula,
             NOMBRE=nombre,
@@ -415,22 +424,16 @@ def registro():
             EMAIL=email,
             TELEFONO=telefono,
             CONTRASEÑA=generate_password_hash(contrasena),
-            CONFIRMADO=True,
+            CONFIRMADO=True,   # ← confirmación directa
             PREGUNTA1=pregunta1,
-            RESPUESTA1=respuesta1.strip().upper(), 
+            RESPUESTA1=respuesta1.strip().upper(),
             PREGUNTA2=pregunta2,
             RESPUESTA2=respuesta2.strip().upper()
         )
         db.session.add(nuevo)
         db.session.commit()
-
-        token = serializer.dumps(nuevo.ID, salt='confirmar-email')
-        exito, _ = enviar_correo_confirmacion(email, token)
-        if exito:
-            flash('Cuenta creada. Te hemos enviado un enlace de confirmación a tu correo.', 'success')
-        else:
-            flash('Cuenta creada, pero no pudimos enviar el correo de confirmación. Contacta soporte.', 'warning')
-        return redirect(url_for('login'))
+        
+        return redirect(url_for('login', registered=1))
 
     return render_template('registro.html', form_data=None, field_errors={})
 
