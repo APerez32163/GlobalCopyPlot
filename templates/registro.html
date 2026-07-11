@@ -171,7 +171,7 @@
             </div>
             <div class="mb-3">
                 <input type="text" name="telefono" class="form-control {% if field_errors.telefono %}is-invalid{% endif %}" 
-                   placeholder="0412-1234567" maxlength="11" 
+                   placeholder="Ej: 04121234567" maxlength="11" 
                    value="{{ form_data.telefono if form_data else '' }}" required>
                 {% if field_errors.telefono %}<div class="invalid-feedback">{{ field_errors.telefono }}</div>{% endif %}
             </div>
