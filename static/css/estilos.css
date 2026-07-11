@@ -115,15 +115,16 @@ a:hover { color: var(--azul-oscuro); }
 .form-moderno .form-control {
     border-radius: 30px;
     padding: 12px 20px;
-    border: 1px solid #e0e0e0;
-    background-color: #f9f7f2;
+    border: 1px solid #ccc;
+    background-color: #ffffff;
+    color: #000000;
     transition: all 0.3s ease;
-    font-size: 1rem;
 }
 .form-moderno .form-control:focus {
+    background-color: #ffffff;
     border-color: var(--azul-claro);
     box-shadow: 0 0 10px rgba(91,155,213,0.3);
-    background-color: #fff;
+    color: #000000;
 }
 .form-moderno .btn-primary {
     border-radius: 30px;

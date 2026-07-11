@@ -119,6 +119,54 @@
         .cedula-input {
             padding-left: 65px !important;   /* un poco más que el ancho del prefijo */
         }
+        /* =====================================================
+           FORMULARIOS ANCHOS – CAMPOS UNIFORMES
+        ===================================================== */
+        @media (min-width: 768px) {
+            /* Tarjeta más amplia */
+            .glass-card {
+                max-width: 750px !important;
+            }
+
+            /* Activamos el grid de 2 columnas */
+            .form-moderno {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 1rem;
+            }
+
+            /* Anulamos márgenes inferiores antiguos */
+            .form-moderno .mb-3 {
+                margin-bottom: 0 !important;
+            }
+
+            /* Campos que ocupan todo el ancho (correo, contraseña, etc.) */
+            .campo-full,
+            .form-moderno hr,
+            .form-moderno .btn-primary,
+            .form-moderno p.text-muted {
+                grid-column: 1 / -1;
+            }
+
+            /* Campos normales (mitad del ancho) */
+            .campo-half {
+                grid-column: span 1;
+            }
+
+            /* Campos que van solos en su fila y deben estar centrados (teléfono, cédula) */
+            .centrar-solo {
+                grid-column: 1 / -1;
+                justify-self: center;
+                width: calc(50% - 0.5rem);  /* mismo ancho que un campo en columna */
+                min-width: 200px;
+            }
+
+            /* Aseguramos que el botón no herede anchos raros */
+            .form-moderno .btn-primary {
+                width: 100%;
+                margin-top: 0.5rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -184,6 +232,24 @@
                        placeholder="12345678" required maxlength="8" inputmode="numeric" pattern="\d+">
                 <input type="hidden" name="usuario_id" id="usuarioReg">
             </div>
+
+            <div class="mb-3">
+                <div class="position-relative">
+                    <input type="password" name="contrasena" id="regPassword" 
+                           class="form-control {% if field_errors.contrasena %}border-danger{% endif %}"
+                           placeholder="Contraseña" maxlength="20" required
+                           style="padding-right: 40px;">
+                    <span class="position-absolute top-50 end-0 translate-middle-y me-3" 
+                          onclick="togglePassword('regPassword', this)" 
+                          style="cursor:pointer; z-index: 5;">
+                        <i class="far fa-eye"></i>
+                    </span>
+                </div>
+                {% if field_errors.contrasena %}
+                    <div class="text-danger small mt-1">{{ field_errors.contrasena }}</div>
+                {% endif %}
+            </div>
+
             <hr class="my-3">
             <p class="text-muted small mb-3"><i class="fas fa-shield-alt me-1"></i> Preguntas de seguridad para recuperar tu cuenta</p>
 
@@ -229,22 +295,6 @@
                 {% if field_errors.respuesta2 %}<div class="invalid-feedback">{{ field_errors.respuesta2 }}</div>{% endif %}
             </div>
             
-            <div class="mb-3">
-                <div class="position-relative">
-                    <input type="password" name="contrasena" id="regPassword" 
-                           class="form-control {% if field_errors.contrasena %}border-danger{% endif %}"
-                           placeholder="Contraseña" maxlength="20" required
-                           style="padding-right: 40px;">
-                    <span class="position-absolute top-50 end-0 translate-middle-y me-3" 
-                          onclick="togglePassword('regPassword', this)" 
-                          style="cursor:pointer; z-index: 5;">
-                        <i class="far fa-eye"></i>
-                    </span>
-                </div>
-                {% if field_errors.contrasena %}
-                    <div class="text-danger small mt-1">{{ field_errors.contrasena }}</div>
-                {% endif %}
-            </div>
             <button type="submit" class="btn btn-primary w-100">Registrarse</button>
         </form>
 
