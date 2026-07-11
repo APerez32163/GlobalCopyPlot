@@ -1169,36 +1169,6 @@ def admin_eliminar_usuario(user_id):
     flash('Usuario eliminado correctamente.', 'success')
     return redirect(url_for('admin_usuarios'))
 
-@app.route('/admin/perfil', methods=['GET', 'POST'])
-@login_required
-@admin_required
-def admin_perfil():
-    if request.method == 'POST':
-        telefono = request.form.get('telefono', '').strip()
-        email = request.form.get('email', '').strip().lower()
-
-        # Validaciones
-        errores = []
-        if not telefono or not telefono.isdigit() or len(telefono) != 11:
-            errores.append('El teléfono debe tener exactamente 11 dígitos numéricos.')
-        if not email or '@' not in email or '.' not in email.split('@')[-1]:
-            errores.append('El formato del correo no es válido.')
-
-        if errores:
-            for error in errores:
-                flash(error, 'danger')
-        else:
-            current_user.TELEFONO = telefono
-            current_user.EMAIL = email
-            db.session.commit()
-            flash('Perfil actualizado correctamente.', 'success')
-        return redirect(url_for('admin_perfil'))
-
-    # GET: mostrar formulario con los datos actuales
-    return render_template('admin/perfil.html')
-
-from sqlalchemy import func, extract
-
 # ------------------------------------------------------------
 # ADMIN - OPERADORES
 # ------------------------------------------------------------
@@ -2578,8 +2548,9 @@ def mi_perfil():
                 field_errors['email'] = 'Este correo ya está en uso por otro usuario.'
 
         # Validar teléfono
-        if not telefono or not telefono.isdigit() or len(telefono) != 11:
-            field_errors['telefono'] = 'El teléfono debe tener exactamente 11 dígitos.'
+        err_tel = validar_telefono(telefono)
+        if err_tel:
+            field_errors['telefono'] = err_tel
         else:
             existente = Usuario.query.filter(Usuario.TELEFONO == telefono, Usuario.ID != user.ID).first()
             if existente:
