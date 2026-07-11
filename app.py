@@ -288,34 +288,18 @@ def login():
             return render_template('login.html')
 
         if user and check_password_hash(user.CONTRASEÑA, contrasena):
-            if not user.CONFIRMADO:
-                flash('Debes confirmar tu correo electrónico antes de iniciar sesión.', 'warning')
-            else:
-                # --- NUEVO: Resetear intentos fallidos y desbloquear ---
-                user.INTENTOS_FALLIDOS = 0
-                user.BLOQUEADO_HASTA = None
+            user.INTENTOS_FALLIDOS = (user.INTENTOS_FALLIDOS or 0) + 1
+            if user.INTENTOS_FALLIDOS >= 5:
+                user.BLOQUEADO_HASTA = datetime.now() + timedelta(minutes=1)
+                user.INTENTOS_FALLIDOS = 0  # reiniciar contador para cuando se desbloquee
                 db.session.commit()
-
-                login_user(user)
-                if not user.ES_ADMIN and not user.ES_OPERADOR:
-                    flash('¡Ahora puedes realizar peticiones en línea desde el centro de impresión!', 'info')
-                flash(f'¡Bienvenido {user.NOMBRE}!', 'success')
-                return redirect(url_for('index'))
-        else:
-            # --- NUEVO: Incrementar contador de intentos fallidos ---
-            if user:
-                user.INTENTOS_FALLIDOS = (user.INTENTOS_FALLIDOS or 0) + 1
-                if user.INTENTOS_FALLIDOS >= 5:
-                    user.BLOQUEADO_HASTA = datetime.now() + timedelta(minutes=1)
-                    user.INTENTOS_FALLIDOS = 0  # reiniciar contador para cuando se desbloquee
-                    db.session.commit()
-                    flash('Has superado el límite de intentos. Espera 1 minuto o restablece tu contraseña.', 'danger')
-                    return redirect(url_for('index', bloqueado=1))
-                else:
-                    db.session.commit()
-                    flash('Cédula o contraseña incorrectos.', 'danger')
+                flash('Has superado el límite de intentos. Espera 1 minuto o restablece tu contraseña.', 'danger')
+                return redirect(url_for('index', bloqueado=1))
             else:
+                db.session.commit()
                 flash('Cédula o contraseña incorrectos.', 'danger')
+        else:
+            flash('Cédula o contraseña incorrectos.', 'danger')
 
     return render_template('login.html')
 # ------------------------------------------------------------
@@ -431,7 +415,7 @@ def registro():
             EMAIL=email,
             TELEFONO=telefono,
             CONTRASEÑA=generate_password_hash(contrasena),
-            CONFIRMADO=False,
+            CONFIRMADO=True,
             PREGUNTA1=pregunta1,
             RESPUESTA1=respuesta1.strip().upper(), 
             PREGUNTA2=pregunta2,
