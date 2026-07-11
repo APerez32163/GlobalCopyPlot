@@ -1617,9 +1617,21 @@ def validar_cedula(cedula):
 def validar_telefono(telefono):
     if not telefono:
         return "El teléfono es obligatorio."
-    if not re.match(r'^\d{11}$', telefono):
-        return "El teléfono debe tener exactamente 11 dígitos numéricos."
-    return None
+    # Eliminar cualquier carácter no numérico
+    telefono = re.sub(r'\D', '', telefono)
+    
+    # Verificar longitud exacta (11 dígitos para Venezuela)
+    if len(telefono) != 11:
+        return "El teléfono debe tener exactamente 11 dígitos."
+    
+    # Lista blanca de prefijos válidos (móviles + un fijo para Caracas)
+    prefijos_validos = ['0412', '0422', '0414', '0424', '0416', '0426', '0212']
+    
+    prefijo = telefono[:4]
+    if prefijo not in prefijos_validos:
+        return "Prefijo no válido. Solo se permiten números venezolanos (0412, 0414, 0416, 0422, 0424, 0426, 0212)."
+    
+    return None  # Válido
 
 def validar_email(email):
     if not email:
