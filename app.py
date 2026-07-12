@@ -2370,7 +2370,7 @@ def programar_retiro(pedido_id):
                            pedido=pedido,
                            detalles=detalles,
                            archivos_info=archivos_info,
-                           total_paginas=total_paginas)
+                           paginas=total_paginas)
 
 @app.route('/pagar-impresion/<int:pedido_id>', methods=['GET', 'POST'])
 @login_required
