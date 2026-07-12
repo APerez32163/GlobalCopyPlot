@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
     <style>
+        /* (todos tus estilos, los mismos que ya tenías) */
         :root { --azul-claro: #5B9BD5; --azul-oscuro: #2F5496; }
         body {
             background: url("{{ url_for('static', filename='img/fondoimprimir.png') }}") center/cover no-repeat;
@@ -180,9 +181,9 @@
         }
         .calc-fab {
             position: fixed;
-            bottom: 100px;  /* más arriba para no pegar con el menú */
+            bottom: 100px;
             left: 20px;
-            width: 48px;    /* más pequeño */
+            width: 48px;
             height: 48px;
             border-radius: 50%;
             background: var(--azul-claro);
@@ -203,12 +204,12 @@
         }
         .calc-panel {
             position: fixed;
-            bottom: 160px;  /* justo encima del botón */
+            bottom: 160px;
             left: 20px;
-            width: 260px;   /* más estrecho */
+            width: 260px;
             max-height: 420px;
             overflow-y: auto;
-            background: rgba(255,255,255,0.55); /* más transparente */
+            background: rgba(255,255,255,0.55);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255,255,255,0.7);
@@ -332,7 +333,6 @@
             color: white;
         }
 
-        /* Flecha indicadora de despliegue */
         .btn-configurar .flecha {
             display: inline-block;
             transition: transform 0.3s ease;
@@ -355,10 +355,9 @@
             overflow: hidden;
         }
         .mixto-campos[style*="display: block"] {
-            max-height: 500px; /* suficiente para el contenido */
+            max-height: 500px;
             opacity: 1;
         }
-        /* Grupo de campos mixtos */
         .mixto-input-group {
             display: flex;
             align-items: flex-start;
@@ -382,7 +381,6 @@
             flex: 1;
         }
 
-        /* Input de páginas a color (pequeño y centrado) */
         .mixto-input {
             width: 80px;
             padding: 8px 12px;
@@ -403,7 +401,6 @@
             box-shadow: 0 0 0 3px rgba(91, 155, 213, 0.2);
         }
 
-        /* Textarea descriptivo */
         .mixto-textarea {
             width: 100%;
             padding: 10px 14px;
@@ -535,7 +532,7 @@
                 <div class="total-estimado">
                     Total estimado: <span id="totalEstimado">Bs. 0.00</span>
                 </div>
-                <hr></hr>
+                <hr>
 
                 <div class="d-flex gap-2 mt-3">
                     <a href="/imprimir?pedido_id={{ pedido.ID }}" class="btn-volver">
@@ -559,10 +556,7 @@
             <span class="calc-title">Calculadora</span>
             <button type="button" class="calc-close" id="calc-close">&times;</button>
         </div>
-
-        <!-- Contenido de pestañas -->
         <div class="tab-content" id="calc-tab-content">
-            <!-- Calculadora básica -->
             <div class="tab-pane-calc active" id="calc-basica">
                 <div class="calc-display" id="calc-display">0</div>
                 <div class="calc-buttons">
@@ -713,7 +707,6 @@
             });
             document.addEventListener('input', function(e) {
                 if (e.target.classList.contains('mixto-input')) {
-                    // Limitar a 3 dígitos y solo números
                     e.target.value = e.target.value.replace(/\D/g, '').slice(0, 3);
                     calcularTotal();
                 }
@@ -748,8 +741,6 @@
                         if (primerTamano) primerTamano.checked = true;
                     }
                 });
-                // Si algún archivo quedó sin configurar, la lógica anterior ya los seleccionó
-                // pero no los guarda automáticamente; el submit seguirá su curso.
             });
         })();
 
@@ -770,7 +761,6 @@
                     panel.classList.remove('open');
                 });
 
-                // Calculadora básica (funciones globales)
                 window.calcExpression = '';
                 window.calcInput = function(val) {
                     window.calcExpression += val;
@@ -791,32 +781,6 @@
                         window.calcExpression = '';
                     }
                 };
-                
-                // Si venimos con ?reset=1, desmarcar todos los radios visualmente
-                if (window.location.search.includes('reset=1')) {
-                    document.addEventListener('DOMContentLoaded', function() {
-                        document.querySelectorAll('.archivo-item').forEach(item => {
-                            const idx = item.getAttribute('data-idx');
-                            // Desmarcar servicio
-                            const radioServ = item.querySelector(`input[name="servicio_${idx}"]:checked`);
-                            if (radioServ) radioServ.checked = false;
-                            // Desmarcar tamaño
-                            const radioTam = item.querySelector(`input[name="tamano_${idx}"]:checked`);
-                            if (radioTam) radioTam.checked = false;
-                            // Quitar clase 'seleccionado' de tarjetas
-                            const panel = item.querySelector('.config-panel');
-                            if (panel) {
-                                panel.querySelectorAll('.servicio-card').forEach(c => c.classList.remove('seleccionado'));
-                            }
-                            // Quitar clase 'configurado' del botón
-                            const btn = item.querySelector('.btn-configurar');
-                            if (btn) {
-                                btn.classList.remove('configurado');
-                                btn.innerHTML = '<i class="fas fa-cog me-1"></i> Configurar';
-                            }
-                        });
-                    });
-                }
             })();
     </script>
 </body>
