@@ -511,6 +511,7 @@
         // Manejo de retorno desde configurar (archivo ya cargado)
         const urlParams = new URLSearchParams(window.location.search);
         const pedidoIdParam = urlParams.get('pedido_id');
+        const fromConfig = urlParams.get('from_config') === '1';
 
         if (pedidoIdParam && !pedidoIdActual) {
             pedidoIdActual = pedidoIdParam;
@@ -523,30 +524,46 @@
                         limpiarUI();
                         return;
                     }
-                    // Mostrar nombres según cantidad de archivos
-                    if (data.archivos && data.archivos.length > 1) {
-                        fileNameDisplay.innerHTML = data.archivos.map(a =>
-                            `<i class="fas fa-file me-2"></i> ${a.nombre}`
-                        ).join('<br>');
-                        uploadText.textContent = `${data.archivos.length} archivo(s) cargados`;
+                    const archivosList = data.archivos || [];
+                    const totalPaginas = data.total_paginas || 0;
+
+                    if (archivosList.length > 0) {
+                        // Quitar badge anterior si existe
+                        const oldBadge = fileInfo.querySelector('.badge-total');
+                        if (oldBadge) oldBadge.remove();
+
+                        if (archivosList.length > 1) {
+                            fileNameDisplay.innerHTML = archivosList.map(a =>
+                                `<i class="fas fa-file me-2"></i> ${a.nombre} (${a.paginas} pág.)`
+                            ).join('<br>');
+                            uploadText.textContent = `${archivosList.length} archivo(s) cargados`;
+                            // Añadir badge con total de páginas
+                            const badge = document.createElement('span');
+                            badge.className = 'badge-total';
+                            badge.textContent = `${totalPaginas} pág(s) totales`;
+                            fileInfo.appendChild(badge);
+                        } else {
+                            fileNameDisplay.innerHTML = `<i class="fas fa-file me-2"></i> ${archivosList[0].nombre}`;
+                            uploadText.textContent = 'Archivo ya cargado';
+                        }
+
+                        fileInfo.classList.add('show');
+                        uploadArea.style.borderColor = 'var(--azul-claro)';
+                        uploadArea.style.borderStyle = 'solid';
+                        resultadoDeteccion.style.display = 'block';
+                        txtPaginas.innerHTML = `📄 ${totalPaginas} página(s) detectadas`;
+                        removeFileBtn.style.display = '';
+                        btnSiguiente1.disabled = false;
+
+                        // Decidir ruta de configuración
+                        const rutaBase = archivosList.length > 1 ? `/configurar-multiple/${pedidoIdActual}` : `/configurar/${pedidoIdActual}`;
+                        const resetParam = fromConfig ? '' : '?reset=1';
+                        btnSiguiente1.onclick = () => {
+                            window.location.href = rutaBase + resetParam;
+                        };
                     } else {
-                        fileNameDisplay.innerHTML = `<i class="fas fa-file me-2"></i> ${data.archivo_nombre}`;
-                        uploadText.textContent = 'Archivo ya cargado';
+                        limpiarUI();
                     }
-                    fileInfo.classList.add('show');
-                    uploadArea.style.borderColor = 'var(--azul-claro)';
-                    uploadArea.style.borderStyle = 'solid';
-                    resultadoDeteccion.style.display = 'block';
-                    txtPaginas.innerHTML = `📄 ${data.paginas} página(s) detectadas`;
-                    removeFileBtn.style.display = '';
-                    btnSiguiente1.disabled = false;
-                    btnSiguiente1.onclick = () => {
-                        const baseUrl = data.detalle_archivos && data.detalle_archivos.length > 1 
-                            ? `/configurar-multiple/${pedidoIdActual}` 
-                            : `/configurar/${pedidoIdActual}`;
-                        // Si el pedido ya existía (volvemos de un retroceso), forzar reseteo de configuración
-                        window.location.href = baseUrl + '?reset=1';
-                    };
                 })
                 .catch(err => {
                     console.warn('Error al cargar el pedido:', err);

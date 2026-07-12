@@ -547,7 +547,7 @@
                 <i class="fas fa-file-alt"></i>
                 <div class="detalle">
                     <span class="nombre-archivo texto-limitado" style="max-width: 260px; display: inline-block; vertical-align: middle;">{{ archivo_nombre }}</span>
-                    <span class="paginas-badge">{{ paginas }} pág(s)</span>
+                    <span class="paginas-badge">{{ detalle.PAGINAS if detalle else 0 }} pág(s)</span>
                 </div>
             </div>
 
@@ -556,7 +556,7 @@
                 {% for srv in servicios %}
                 <div class="servicio-card" onclick="seleccionarServicio(this, {{ srv.ID }})">
                     <input type="radio" name="servicio_id" value="{{ srv.ID }}" id="serv{{ srv.ID }}" 
-                           {% if pedido.SERVICIO_ID|string == srv.ID|string %}checked{% endif %} 
+                           {% if detalle.SERVICIO_ID|string == srv.ID|string %}checked{% endif %} 
                            autocomplete="off">
                     <div class="servicio-titulo">{{ srv.TITULO }}</div>
                     {% if srv.DESCRIPCION %}<div class="servicio-descripcion">{{ srv.DESCRIPCION }}</div>{% endif %}
@@ -568,7 +568,7 @@
                             <div class="tamano-opcion">
                                 <input type="radio" name="tamano_nombre" value="{{ t.NOMBRE }}" id="tam{{ t.ID }}" 
                                        data-precio-bn="{{ t.PRECIO_BN }}" data-precio-color="{{ t.PRECIO_COLOR }}"
-                                       {% if pedido.TAMANO == t.NOMBRE %}checked{% endif %} 
+                                       {% if detalle.TAMANO == t.NOMBRE %}checked{% endif %} 
                                        autocomplete="off">
                                 <label for="tam{{ t.ID }}">{{ t.NOMBRE }}</label>
                             </div>
@@ -585,7 +585,7 @@
                                     <label class="form-label small fw-semibold text-muted mb-1">Páginas a color</label>
                                     <input type="number" name="paginas_color" class="mixto-input" 
                                            placeholder="0" min="0" max="999" maxlength="3"
-                                           value="{{ pedido.PAGINAS_COLOR or '' }}">
+                                           value="{{ detalle.PAGINAS_COLOR or '' }}"
                                     <small class="text-muted">Máx. 3 dígitos (ej: 8)</small>
                                 </div>
                             </div>
@@ -598,7 +598,7 @@
                                     <label class="form-label small fw-semibold text-muted mb-1">Especificar páginas a color</label>
                                     <textarea name="comentarios" class="mixto-textarea" rows="2" 
                                               placeholder="Ej: 1,3,5-8. Solo se tendrán en cuenta las páginas a color."
-                                              maxlength="100">{{ pedido.COMENTARIOS or '' }}</textarea>
+                                              maxlength="100">{{ detalle.COMENTARIOS or '' }}</textarea>
                                     <small class="text-muted">Máx. 100 caracteres</small>
                                 </div>
                             </div>
@@ -610,7 +610,7 @@
                             <div class="tamano-opcion">
                                 <input type="radio" name="tamano_nombre" value="{{ t.NOMBRE }}" id="tam{{ t.ID }}" 
                                        data-precio="{{ t.PRECIO_BN }}"
-                                       {% if pedido.TAMANO|string == t.NOMBRE|string %}checked{% endif %} 
+                                       {% if detalle.TAMANO|string == t.NOMBRE|string %}checked{% endif %}
                                        autocomplete="off">
                                 <label for="tam{{ t.ID }}">{{ t.NOMBRE }} · {{ "%.2f"|format(t.PRECIO_BN) }} Bs.</label>
                             </div>
@@ -850,6 +850,6 @@
             }
         });
     </script>
-    <span id="paginasPedido" data-paginas="{{ paginas }}" style="display:none;"></span>
+    <span id="paginasPedido" data-paginas="{{ detalle.PAGINAS if detalle else 0 }}" style="display:none;"></span>
 </body>
 </html>
