@@ -748,8 +748,9 @@ def panel_admin():
 @login_required
 @admin_required
 def admin_api_nuevos_pagos():
-    pendientes = Pedido.query.filter_by(ESTADO='Pendiente de pago').count()
-    return {'nuevos': pendientes}
+    # Contar pedidos en estado "Esperando validación" que no han sido vistos por el admin
+    nuevos = Pedido.query.filter_by(ESTADO='Esperando validación', VISTO_ADMIN=False).count()
+    return {'nuevos': nuevos}
 
 # ------------------------------------------------------------
 # PANEL ADMIN – SOLICITUDES
@@ -762,6 +763,14 @@ def admin_solicitudes():
     estado = request.args.get('estado')
     if estado:
         estados = [e.strip() for e in estado.split(',') if e.strip()]
+        # Si el filtro incluye estados de "proceso", marcar como vistos
+        if any(e in ['Esperando validación', 'Pago confirmado'] for e in estados):
+            Pedido.query.filter(
+                Pedido.ESTADO.in_(['Esperando validación', 'Pago confirmado']),
+                Pedido.VISTO_ADMIN == False
+            ).update({'VISTO_ADMIN': True})
+            db.session.commit()
+        
         if len(estados) > 1:
             pedidos = Pedido.query.filter(Pedido.ESTADO.in_(estados)).order_by(Pedido.FECHA.desc()).all()
         else:
