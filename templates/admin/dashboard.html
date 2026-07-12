@@ -11,8 +11,9 @@
                 <i class="fas fa-clock fa-2x mb-2 text-warning"></i>
                 <h5 id="total-pendientes">{{ pendientes }}</h5>
                 <p>Pendientes de pago</p>
-                <span id="badge-nuevos-pendientes" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none;">
-                    Nuevo
+                <span id="badge-pendientes" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger rounded-circle {% if nuevos_pendientes == 0 %}d-none{% endif %}" 
+                      style="width: 14px; height: 14px; display: {% if nuevos_pendientes > 0 %}inline-block{% else %}none{% endif %};">
+                    <span class="visually-hidden">Nuevos pendientes</span>
                 </span>
             </div>
         </a>
@@ -20,28 +21,30 @@
 
     <!-- En proceso -->
     <div class="col-md-3">
-        <a href="{{ url_for('admin_solicitudes', estado='Esperando validación,Pago confirmado') }}" class="text-decoration-none">
+        <a href="{{ url_for('admin_solicitudes', estado='Esperando validación,Pago confirmado') }}" class="text-decoration-none" id="link-proceso">
             <div class="glass-card p-3 text-center position-relative">
                 <i class="fas fa-cog fa-2x mb-2 text-info"></i>
-                <h5>{{ proceso }}</h5>
+                <h5 id="total-proceso">{{ proceso }}</h5>
                 <p>En proceso</p>
-                {% if nuevos_proceso > 0 %}
-                    <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger rounded-circle" 
-                          style="width: 14px; height: 14px; display: inline-block;">
-                        <span class="visually-hidden">Nuevos en proceso</span>
-                    </span>
-                {% endif %}
+                <span id="badge-proceso" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger rounded-circle {% if nuevos_proceso == 0 %}d-none{% endif %}" 
+                      style="width: 14px; height: 14px; display: {% if nuevos_proceso > 0 %}inline-block{% else %}none{% endif %};">
+                    <span class="visually-hidden">Nuevos en proceso</span>
+                </span>
             </div>
         </a>
     </div>
 
     <!-- Listos para retirar -->
     <div class="col-md-3">
-        <a href="{{ url_for('admin_solicitudes', estado='Listo') }}" class="text-decoration-none">
-            <div class="glass-card p-3 text-center">
+        <a href="{{ url_for('admin_solicitudes', estado='Listo') }}" class="text-decoration-none" id="link-listos">
+            <div class="glass-card p-3 text-center position-relative">
                 <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
-                <h5>{{ listos }}</h5>
+                <h5 id="total-listos">{{ listos }}</h5>
                 <p>Listos para retirar</p>
+                <span id="badge-listos" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger rounded-circle {% if nuevos_listos == 0 %}d-none{% endif %}" 
+                      style="width: 14px; height: 14px; display: {% if nuevos_listos > 0 %}inline-block{% else %}none{% endif %};">
+                    <span class="visually-hidden">Nuevos listos</span>
+                </span>
             </div>
         </a>
     </div>
@@ -94,29 +97,61 @@
         </div>
     </div>
 </div>
+
 <script>
-    function checkNuevosPagos() {
-        fetch('/admin/api/nuevos-pagos')
+    function checkNuevos() {
+        fetch('/admin/api/nuevos')
             .then(response => response.json())
             .then(data => {
-                const badge = document.getElementById('badge-nuevos-pendientes');
-                if (data.nuevos > 0) {
-                    badge.style.display = 'inline-block';
+                // Actualizar badge de pendientes
+                const badgePend = document.getElementById('badge-pendientes');
+                if (data.pendientes > 0) {
+                    badgePend.style.display = 'inline-block';
+                    badgePend.classList.remove('d-none');
                 } else {
-                    badge.style.display = 'none';
+                    badgePend.style.display = 'none';
+                    badgePend.classList.add('d-none');
+                }
+
+                // Actualizar badge de proceso
+                const badgeProc = document.getElementById('badge-proceso');
+                if (data.proceso > 0) {
+                    badgeProc.style.display = 'inline-block';
+                    badgeProc.classList.remove('d-none');
+                } else {
+                    badgeProc.style.display = 'none';
+                    badgeProc.classList.add('d-none');
+                }
+
+                // Actualizar badge de listos
+                const badgeList = document.getElementById('badge-listos');
+                if (data.listos > 0) {
+                    badgeList.style.display = 'inline-block';
+                    badgeList.classList.remove('d-none');
+                } else {
+                    badgeList.style.display = 'none';
+                    badgeList.classList.add('d-none');
                 }
             })
-            .catch(error => console.error('Error al verificar pagos:', error));
+            .catch(error => console.error('Error al verificar nuevos:', error));
     }
 
     // Ejecutar cada 10 segundos
-    setInterval(checkNuevosPagos, 10000);
+    setInterval(checkNuevos, 10000);
+    
     // Ejecutar al cargar la página
-    checkNuevosPagos();
+    document.addEventListener('DOMContentLoaded', checkNuevos);
 
-    // Ejecutar cada 10 segundos
-    setInterval(checkNuevosPagos, 10000);
-    // Ejecutar al cargar
-    checkNuevosPagos();
+    // Al hacer clic en las tarjetas, ocultar el badge inmediatamente (feedback visual)
+    document.getElementById('link-pendientes').addEventListener('click', function() {
+        document.getElementById('badge-pendientes').style.display = 'none';
+    });
+    document.getElementById('link-proceso').addEventListener('click', function() {
+        document.getElementById('badge-proceso').style.display = 'none';
+    });
+    document.getElementById('link-listos').addEventListener('click', function() {
+        document.getElementById('badge-listos').style.display = 'none';
+    });
 </script>
+
 {% endblock %}
