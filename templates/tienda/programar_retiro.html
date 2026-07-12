@@ -348,16 +348,22 @@
                         <li><strong class="texto-limitado" style="max-width: 300px; display: inline-block; vertical-align: middle;">{{ a.nombre }}</strong> ({{ a.paginas }} pág.)</li>
                         {% endfor %}
                     </ul>
-                    <span class="paginas-badge">{{ paginas }} pág(s) totales</span>
+                    <span class="paginas-badge">{{ paginas }} pág(s) totales</span>   <!-- <-- CAMBIADO: pedido.PAGINAS → paginas -->
                 </div>
             </div>
         {% else %}
-            <!-- Un solo archivo (comportamiento original) -->
+            <!-- Un solo archivo -->
             <div class="archivo-info">
                 <i class="fas fa-file-alt"></i>
                 <div class="detalle">
-                    <span class="nombre-archivo texto-limitado">{{ archivo_nombre }}</span>
-                    <span class="paginas-badge">{{ paginas }} pág(s)</span>
+                    <span class="nombre-archivo texto-limitado">
+                        {% if archivos_info and archivos_info|length == 1 %}
+                            {{ archivos_info[0].nombre }}
+                        {% else %}
+                            Sin archivo
+                        {% endif %}
+                    </span>   <!-- <-- CAMBIADO: archivo_nombre → archivos_info[0].nombre -->
+                    <span class="paginas-badge">{{ paginas }} pág(s)</span>   <!-- <-- CAMBIADO: pedido.PAGINAS → paginas -->
                 </div>
             </div>
         {% endif %}
@@ -381,10 +387,10 @@
                     </select>
                 </div>
 
-                <hr></hr>
+                <hr>
 
                 <div class="d-flex gap-2 mt-3">
-                    {% if archivos_info and archivos_info|length > 1 %}
+                    {% if archivos_info and archivos_info|length > 1 %}   <!-- <-- CAMBIADO: pedido.DETALLE_ARCHIVOS → archivos_info|length > 1 -->
                         <a href="{{ url_for('configurar_impresion_multiple', pedido_id=pedido.ID) }}?reset=1" class="btn-volver">
                             <i class="fas fa-arrow-left me-2"></i> Volver
                         </a>
