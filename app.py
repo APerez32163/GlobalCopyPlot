@@ -748,12 +748,8 @@ def panel_admin():
 @login_required
 @admin_required
 def admin_api_nuevos_pagos():
-    # Contar pedidos en estado 'Esperando validación' no vistos por admin
-    count = Pedido.query.filter(
-        Pedido.ESTADO == 'Esperando validación',
-        Pedido.VISTO_ADMIN == False
-    ).count()
-    return {'nuevos': count}
+    pendientes = Pedido.query.filter_by(ESTADO='Pendiente de pago').count()
+    return {'nuevos': pendientes}
 
 # ------------------------------------------------------------
 # PANEL ADMIN – SOLICITUDES
@@ -2104,20 +2100,20 @@ def configurar_impresion(pedido_id):
     if pedido.ESTADO not in ['borrador', 'Pendiente de pago']:
         return redirect(url_for('mis_solicitudes'))
 
-    # Obtener el detalle (único) del pedido
+    # Obtener el detalle (asumimos que solo hay uno para pedido único)
     detalle = DetallePedido.query.filter_by(PEDIDO_ID=pedido.ID).first()
     if not detalle:
-        flash('No hay archivos configurados para este pedido.', 'danger')
+        flash('No se encontró el archivo.', 'danger')
         return redirect(url_for('imprimir'))
 
-    # Obtener archivo asociado al detalle
+    # Obtener el archivo asociado
     archivo = ArchivoPedido.query.get(detalle.ARCHIVO_ID) if detalle.ARCHIVO_ID else None
     archivo_nombre = archivo.NOMBRE_ARCHIVO if archivo else 'Sin archivo'
-    paginas = detalle.PAGINAS or 0
+    paginas = detalle.PAGINAS or 1
 
     servicios = ServicioImpresion.query.filter_by(ACTIVO=True).order_by(ServicioImpresion.TITULO).all()
 
-    # Resetear configuración
+    # Si se solicita reset, limpiar selección en el detalle
     if request.args.get('reset') == '1':
         detalle.SERVICIO_ID = None
         detalle.TAMANO = None
@@ -2130,6 +2126,7 @@ def configurar_impresion(pedido_id):
         servicio_id = request.form.get('servicio_id', type=int)
         tamano_nombre = request.form.get('tamano_nombre', '').strip()
         comentarios = request.form.get('comentarios', '').strip()
+        paginas_color = request.form.get('paginas_color', '').strip() or None
 
         if not servicio_id or not tamano_nombre:
             flash('Selecciona un servicio y un tamaño.', 'warning')
@@ -2137,23 +2134,18 @@ def configurar_impresion(pedido_id):
 
         detalle.SERVICIO_ID = servicio_id
         detalle.TAMANO = tamano_nombre
-
-        servicio = ServicioImpresion.query.get(servicio_id)
-        if servicio and servicio.ES_MIXTO:
-            detalle.PAGINAS_COLOR = request.form.get('paginas_color', '').strip() or None
-        else:
-            detalle.PAGINAS_COLOR = None
-
         detalle.COMENTARIOS = comentarios
+        detalle.PAGINAS_COLOR = paginas_color
+
         db.session.commit()
         return redirect(url_for('programar_retiro', pedido_id=pedido.ID))
 
     return render_template('tienda/configurar_impresion.html',
                            pedido=pedido,
+                           detalle=detalle,
                            servicios=servicios,
                            archivo_nombre=archivo_nombre,
-                           paginas=paginas,
-                           detalle=detalle)
+                           paginas=paginas)
 
 @app.route('/configurar-multiple/<int:pedido_id>', methods=['GET', 'POST'])
 @login_required

@@ -9,14 +9,11 @@
         <a href="{{ url_for('admin_solicitudes', estado='Pendiente de pago') }}" class="text-decoration-none">
             <div class="glass-card p-3 text-center position-relative">
                 <i class="fas fa-clock fa-2x mb-2 text-warning"></i>
-                <h5>{{ pendientes }}</h5>
+                <h5 id="total-pendientes">{{ pendientes }}</h5>
                 <p>Pendientes de pago</p>
-                {% if nuevos_pendientes > 0 %}
-                    <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger rounded-circle" 
-                          style="width: 14px; height: 14px; display: inline-block;">
-                        <span class="visually-hidden">Nuevos pendientes</span>
-                    </span>
-                {% endif %}
+                <span id="badge-pagos-pendientes" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                    {{ nuevos_pendientes }}
+                </span>
             </div>
         </a>
     </div>
@@ -102,13 +99,9 @@
         fetch('/admin/api/nuevos-pagos')
             .then(response => response.json())
             .then(data => {
-                if (data.nuevos > 0) {
-                    // Actualizar un badge o indicador visual
+                if (data.nuevos !== undefined) {
+                    document.getElementById('total-pendientes').textContent = data.nuevos;
                     document.getElementById('badge-pagos-pendientes').textContent = data.nuevos;
-                    // Opcional: mostrar notificación emergente
-                    if (data.nuevos > 0) {
-                        // Reproducir sonido o mostrar alerta
-                    }
                 }
             })
             .catch(error => console.error('Error al verificar pagos:', error));
