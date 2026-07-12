@@ -348,7 +348,7 @@
                         <li><strong class="texto-limitado" style="max-width: 300px; display: inline-block; vertical-align: middle;">{{ a.nombre }}</strong> ({{ a.paginas }} pág.)</li>
                         {% endfor %}
                     </ul>
-                    <span class="paginas-badge">{{ pedido.PAGINAS }} pág(s) totales</span>
+                    <span class="paginas-badge">{{ paginas }} pág(s) totales</span>
                 </div>
             </div>
         {% else %}
@@ -357,7 +357,7 @@
                 <i class="fas fa-file-alt"></i>
                 <div class="detalle">
                     <span class="nombre-archivo texto-limitado">{{ archivo_nombre }}</span>
-                    <span class="paginas-badge">{{ pedido.PAGINAS }} pág(s)</span>
+                    <span class="paginas-badge">{{ paginas }} pág(s)</span>
                 </div>
             </div>
         {% endif %}
