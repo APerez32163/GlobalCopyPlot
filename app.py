@@ -2255,11 +2255,27 @@ def programar_retiro(pedido_id):
     if pedido.ESTADO not in ['borrador', 'Pendiente de pago']:
         return redirect(url_for('mis_solicitudes'))
 
-    # Obtener detalles del pedido
+    # Obtener detalles
     detalles = DetallePedido.query.filter_by(PEDIDO_ID=pedido.ID).all()
     if not detalles:
         flash('No hay archivos configurados para este pedido.', 'danger')
         return redirect(url_for('imprimir'))
+
+    # Calcular total de páginas
+    total_paginas = sum(d.PAGINAS for d in detalles)
+
+    # Preparar información de archivos para la plantilla
+    archivos_info = []
+    for detalle in detalles:
+        archivo = ArchivoPedido.query.get(detalle.ARCHIVO_ID) if detalle.ARCHIVO_ID else None
+        archivos_info.append({
+            'nombre': archivo.NOMBRE_ARCHIVO if archivo else 'Sin archivo',
+            'paginas': detalle.PAGINAS,
+            'servicio_id': detalle.SERVICIO_ID,
+            'tamano': detalle.TAMANO,
+            'paginas_color': detalle.PAGINAS_COLOR,
+            'comentarios': detalle.COMENTARIOS
+        })
 
     if request.method == 'POST':
         fecha_retiro = request.form.get('fecha_retiro')
@@ -2276,7 +2292,7 @@ def programar_retiro(pedido_id):
             flash('Formato de fecha u hora no válido.', 'danger')
             return redirect(url_for('programar_retiro', pedido_id=pedido.ID))
 
-        # Validaciones de horario (sin cambios)
+        # Validaciones de horario (igual que antes)
         if fecha_elegida.weekday() == 6:
             flash('No se pueden programar retiros los domingos.', 'warning')
             return redirect(url_for('programar_retiro', pedido_id=pedido.ID))
@@ -2335,14 +2351,12 @@ def programar_retiro(pedido_id):
             else:
                 subtotal = precio_bn * paginas
 
-            # Guardar en el detalle para consistencia
             detalle.PRECIO_UNITARIO = precio_bn if not servicio.ES_MIXTO else precio_color
             detalle.SUBTOTAL = subtotal
             total += subtotal
 
         total = round(total, 2)
 
-        # Guardar en el pedido
         pedido.FECHA_RETIRO = fecha_elegida
         pedido.HORA_RETIRO = hora_elegida
         pedido.TOTAL = total
@@ -2351,23 +2365,12 @@ def programar_retiro(pedido_id):
         db.session.commit()
         return redirect(url_for('pagar_impresion', pedido_id=pedido.ID))
 
-    # GET: mostrar formulario
-    archivos_info = []
-    for detalle in detalles:
-        archivo = ArchivoPedido.query.get(detalle.ARCHIVO_ID) if detalle.ARCHIVO_ID else None
-        archivos_info.append({
-            'nombre': archivo.NOMBRE_ARCHIVO if archivo else 'Sin archivo',
-            'paginas': detalle.PAGINAS,
-            'servicio_id': detalle.SERVICIO_ID,
-            'tamano': detalle.TAMANO,
-            'paginas_color': detalle.PAGINAS_COLOR,
-            'comentarios': detalle.COMENTARIOS
-        })
-
+    # GET
     return render_template('tienda/programar_retiro.html',
                            pedido=pedido,
+                           detalles=detalles,
                            archivos_info=archivos_info,
-                           detalles=detalles)
+                           total_paginas=total_paginas)
 
 @app.route('/pagar-impresion/<int:pedido_id>', methods=['GET', 'POST'])
 @login_required

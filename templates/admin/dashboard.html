@@ -6,17 +6,14 @@
 <div class="row g-4">
     <!-- Pendientes de pago -->
     <div class="col-md-3">
-        <a href="{{ url_for('admin_solicitudes', estado='Pendiente de pago') }}" class="text-decoration-none">
+        <a href="{{ url_for('admin_solicitudes', estado='Pendiente de pago') }}" class="text-decoration-none" id="link-pendientes">
             <div class="glass-card p-3 text-center position-relative">
                 <i class="fas fa-clock fa-2x mb-2 text-warning"></i>
                 <h5 id="total-pendientes">{{ pendientes }}</h5>
                 <p>Pendientes de pago</p>
-                {% if nuevos_proceso > 0 %}
-                    <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger rounded-circle" 
-                          style="width: 14px; height: 14px; display: inline-block;">
-                        <span class="visually-hidden">Nuevos en proceso</span>
-                    </span>
-                {% endif %}
+                <span id="badge-nuevos-pendientes" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none;">
+                    Nuevo
+                </span>
             </div>
         </a>
     </div>
@@ -102,19 +99,20 @@
         fetch('/admin/api/nuevos-pagos')
             .then(response => response.json())
             .then(data => {
-                const nuevos = data.nuevos || 0;
-                // Buscar el punto rojo (puedes darle un id para identificarlo)
-                const badge = document.getElementById('badge-nuevos-proceso');
-                if (badge) {
-                    if (nuevos > 0) {
-                        badge.style.display = 'inline-block';
-                    } else {
-                        badge.style.display = 'none';
-                    }
+                const badge = document.getElementById('badge-nuevos-pendientes');
+                if (data.nuevos > 0) {
+                    badge.style.display = 'inline-block';
+                } else {
+                    badge.style.display = 'none';
                 }
             })
             .catch(error => console.error('Error al verificar pagos:', error));
     }
+
+    // Ejecutar cada 10 segundos
+    setInterval(checkNuevosPagos, 10000);
+    // Ejecutar al cargar la página
+    checkNuevosPagos();
 
     // Ejecutar cada 10 segundos
     setInterval(checkNuevosPagos, 10000);

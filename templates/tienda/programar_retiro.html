@@ -384,7 +384,7 @@
                 <hr></hr>
 
                 <div class="d-flex gap-2 mt-3">
-                    {% if pedido.DETALLE_ARCHIVOS %}
+                    {% if archivos_info and archivos_info|length > 1 %}
                         <a href="{{ url_for('configurar_impresion_multiple', pedido_id=pedido.ID) }}?reset=1" class="btn-volver">
                             <i class="fas fa-arrow-left me-2"></i> Volver
                         </a>
