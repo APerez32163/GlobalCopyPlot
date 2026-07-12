@@ -11,9 +11,11 @@
                 <i class="fas fa-clock fa-2x mb-2 text-warning"></i>
                 <h5 id="total-pendientes">{{ pendientes }}</h5>
                 <p>Pendientes de pago</p>
-                <span id="badge-pagos-pendientes" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                    {{ nuevos_pendientes }}
-                </span>
+                {% if nuevos_pendientes > 0 %}
+                    <span id="badge-pagos-pendientes" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                        {{ nuevos_pendientes }}
+                    </span>
+                {% endif %}
             </div>
         </a>
     </div>
