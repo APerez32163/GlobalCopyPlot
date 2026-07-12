@@ -1896,6 +1896,10 @@ def detectar_paginas_ajax():
 @app.route('/detectar-paginas-multiples', methods=['POST'])
 @login_required
 def detectar_paginas_multiples():
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
+    logger = logging.getLogger(__name__)
+
     archivos = request.files.getlist('archivos[]')
     if not archivos or len(archivos) == 0:
         return {'error': 'No se recibieron archivos'}, 400
@@ -1932,9 +1936,11 @@ def detectar_paginas_multiples():
         for f in archivos:
             filename = secure_filename(f.filename)
             ruta_destino = os.path.join(UPLOAD_FOLDER_IMPRESION, filename)
+            logger.debug(f"Guardando archivo: {filename} en {ruta_destino}")
             f.save(ruta_destino)
 
             ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
+            logger.debug(f"Extensión: {ext}")
 
             # 1. Validación MIME
             if ext in ('pdf', 'png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'tif', 'pptx'):
@@ -1944,6 +1950,7 @@ def detectar_paginas_multiples():
             else:
                 valido, error = False, f"Formato no soportado: .{ext}"
             if not valido:
+                logger.error(f"MIME inválido: {error}")
                 os.remove(ruta_destino)
                 raise Exception(error)
 
@@ -1951,6 +1958,7 @@ def detectar_paginas_multiples():
             if ext != 'pdf':
                 integro, error_integridad = verificar_integridad(ruta_destino, ext)
                 if not integro:
+                    logger.error(f"Integridad fallida: {error_integridad}")
                     os.remove(ruta_destino)
                     raise Exception(error_integridad)
 
@@ -1969,10 +1977,12 @@ def detectar_paginas_multiples():
             # 4. Detección de páginas
             paginas, mensaje = detectar_paginas(ruta_destino, filename)
             if paginas is None:
+                logger.error(f"Detección de páginas falló para {filename}: {mensaje}")
                 os.remove(ruta_destino)
                 raise Exception(f'Error en {filename}: {mensaje}')
 
             total_paginas += paginas
+            logger.debug(f"Páginas detectadas: {paginas} para {filename}")
 
             # 5. Guardar archivo en BD
             archivo_bd = ArchivoPedido(
@@ -2005,6 +2015,7 @@ def detectar_paginas_multiples():
             })
 
         db.session.commit()
+        logger.info(f"Pedido {nuevo_pedido.ID} creado con {len(detalles_creados)} archivos")
 
         # Limpiar borradores viejos (con detalles)
         limite = datetime.now() - timedelta(minutes=5)
@@ -2030,10 +2041,22 @@ def detectar_paginas_multiples():
         }
 
     except Exception as e:
+        # Si ocurrió algún error, hacer rollback y limpiar archivos
+        db.session.rollback()
+        # Eliminar archivos que pudieron haberse guardado
         if 'ruta_destino' in locals() and os.path.exists(ruta_destino):
             os.remove(ruta_destino)
-        db.session.rollback()
-        print(f"Error en detectar_paginas_multiples: {e}")
+        # También eliminar archivos de este pedido que ya se hayan guardado en BD
+        if 'nuevo_pedido' in locals():
+            archivos_guardados = ArchivoPedido.query.filter_by(PEDIDO_ID=nuevo_pedido.ID).all()
+            for a in archivos_guardados:
+                if os.path.exists(a.RUTA):
+                    os.remove(a.RUTA)
+                db.session.delete(a)
+            DetallePedido.query.filter_by(PEDIDO_ID=nuevo_pedido.ID).delete()
+            db.session.delete(nuevo_pedido)
+            db.session.commit()
+        logger.error(f"Error en detectar_paginas_multiples: {e}", exc_info=True)
         return {'error': f'Error al procesar los archivos. ({str(e)[:80]})'}, 500
 
 @app.route('/cancelar-pedido/<int:pedido_id>', methods=['POST'])
