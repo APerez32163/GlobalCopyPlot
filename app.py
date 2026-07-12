@@ -1785,11 +1785,34 @@ def imprimir():
     pedido_id = request.args.get('pedido_id', type=int)
     configurado = request.args.get('configurado') == '1'
     pedido = None
+    detalles = []
+    archivos_info = []
+    total_paginas = 0
+
     if pedido_id:
         pedido = Pedido.query.get(pedido_id)
-        if pedido and pedido.ID_USUARIO != current_user.ID:
-            pedido = None  # no autorizado
-    return render_template('tienda/imprimir.html', pedido=pedido, configurado=configurado, active_page='imprimir')
+        if pedido and pedido.ID_USUARIO == current_user.ID:
+            detalles = DetallePedido.query.filter_by(PEDIDO_ID=pedido.ID).all()
+            # Preparar archivos_info
+            for detalle in detalles:
+                archivo = ArchivoPedido.query.get(detalle.ARCHIVO_ID) if detalle.ARCHIVO_ID else None
+                archivos_info.append({
+                    'nombre': archivo.NOMBRE_ARCHIVO if archivo else 'Sin archivo',
+                    'paginas': detalle.PAGINAS,
+                    'servicio_id': detalle.SERVICIO_ID,
+                    'tamano': detalle.TAMANO,
+                })
+            total_paginas = sum(d.PAGINAS for d in detalles)
+        else:
+            pedido = None
+
+    return render_template('tienda/imprimir.html', 
+                           pedido=pedido, 
+                           configurado=configurado, 
+                           active_page='imprimir',
+                           detalles=detalles,
+                           archivos_info=archivos_info,
+                           total_paginas=total_paginas)
 
 @app.route('/detectar-paginas', methods=['POST'])
 @login_required
