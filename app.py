@@ -2246,10 +2246,10 @@ def programar_retiro(pedido_id):
     if pedido.ESTADO not in ['borrador', 'Pendiente de pago']:
         return redirect(url_for('mis_solicitudes'))
 
-    # Obtener todos los detalles de este pedido
-    detalles = DetallePedido.query.filter_by(PEDIDO_ID=pedido_id).all()
+    # Obtener detalles del pedido
+    detalles = DetallePedido.query.filter_by(PEDIDO_ID=pedido.ID).all()
     if not detalles:
-        flash('No se encontraron detalles para este pedido.', 'danger')
+        flash('No hay archivos configurados para este pedido.', 'danger')
         return redirect(url_for('imprimir'))
 
     if request.method == 'POST':
@@ -2267,7 +2267,7 @@ def programar_retiro(pedido_id):
             flash('Formato de fecha u hora no válido.', 'danger')
             return redirect(url_for('programar_retiro', pedido_id=pedido.ID))
 
-        # Validaciones de horario (igual que antes)
+        # Validaciones de horario (sin cambios)
         if fecha_elegida.weekday() == 6:
             flash('No se pueden programar retiros los domingos.', 'warning')
             return redirect(url_for('programar_retiro', pedido_id=pedido.ID))
@@ -2292,26 +2292,29 @@ def programar_retiro(pedido_id):
             flash('La fecha de retiro debe ser entre mañana y los próximos 7 días.', 'warning')
             return redirect(url_for('programar_retiro', pedido_id=pedido.ID))
 
-        # --- Calcular total desde los detalles ---
-        total_general = 0.0
+        # ======= CALCULAR TOTAL DESDE DETALLES =======
+        total = 0
         for detalle in detalles:
-            # Saltar si no tiene servicio o tamaño
             if not detalle.SERVICIO_ID or not detalle.TAMANO:
+                flash('Todos los archivos deben tener un servicio y tamaño seleccionados.', 'danger')
+                return redirect(url_for('configurar_impresion_multiple', pedido_id=pedido.ID))
+
+            servicio = ServicioImpresion.query.get(detalle.SERVICIO_ID)
+            if not servicio:
                 continue
 
-            # Buscar el tamaño en la tabla de precios
             tamano_obj = ServicioImpresionTamano.query.filter_by(
-                SERVICIO_ID=detalle.SERVICIO_ID,
-                NOMBRE=detalle.TAMANO
+                SERVICIO_ID=detalle.SERVICIO_ID, NOMBRE=detalle.TAMANO
             ).first()
             if not tamano_obj:
                 continue
 
-            servicio = ServicioImpresion.query.get(detalle.SERVICIO_ID)
-            precio_unitario = 0
             paginas = detalle.PAGINAS or 0
+            precio_bn = float(tamano_obj.PRECIO_BN)
+            precio_color = float(tamano_obj.PRECIO_COLOR) if servicio.ES_MIXTO else precio_bn
+            subtotal = 0
 
-            if servicio and servicio.ES_MIXTO and detalle.PAGINAS_COLOR:
+            if servicio.ES_MIXTO and detalle.PAGINAS_COLOR:
                 try:
                     paginas_color = int(detalle.PAGINAS_COLOR)
                 except ValueError:
@@ -2319,69 +2322,43 @@ def programar_retiro(pedido_id):
                 if paginas_color > paginas:
                     paginas_color = paginas
                 paginas_bn = paginas - paginas_color
-                precio_unitario = float(tamano_obj.PRECIO_BN) * paginas_bn + float(tamano_obj.PRECIO_COLOR) * paginas_color
+                subtotal = (precio_bn * paginas_bn) + (precio_color * paginas_color)
             else:
-                precio_unitario = float(tamano_obj.PRECIO_BN) * paginas
+                subtotal = precio_bn * paginas
 
-            subtotal = round(precio_unitario, 2)
-            detalle.PRECIO_UNITARIO = precio_unitario
+            # Guardar en el detalle para consistencia
+            detalle.PRECIO_UNITARIO = precio_bn if not servicio.ES_MIXTO else precio_color
             detalle.SUBTOTAL = subtotal
-            total_general += subtotal
+            total += subtotal
 
-        total_general = round(total_general, 2)
+        total = round(total, 2)
 
-        # Actualizar pedido
+        # Guardar en el pedido
         pedido.FECHA_RETIRO = fecha_elegida
         pedido.HORA_RETIRO = hora_elegida
-        pedido.TOTAL = total_general
+        pedido.TOTAL = total
         pedido.ESTADO = 'Pendiente de pago'
 
         db.session.commit()
         return redirect(url_for('pagar_impresion', pedido_id=pedido.ID))
 
-    # GET: mostrar formulario con datos actuales
-    # Obtener nombres de archivos para mostrar (opcional)
+    # GET: mostrar formulario
     archivos_info = []
     for detalle in detalles:
         archivo = ArchivoPedido.query.get(detalle.ARCHIVO_ID) if detalle.ARCHIVO_ID else None
         archivos_info.append({
-            'nombre': archivo.NOMBRE_ARCHIVO if archivo else 'Archivo sin nombre',
-            'paginas': detalle.PAGINAS
+            'nombre': archivo.NOMBRE_ARCHIVO if archivo else 'Sin archivo',
+            'paginas': detalle.PAGINAS,
+            'servicio_id': detalle.SERVICIO_ID,
+            'tamano': detalle.TAMANO,
+            'paginas_color': detalle.PAGINAS_COLOR,
+            'comentarios': detalle.COMENTARIOS
         })
 
     return render_template('tienda/programar_retiro.html',
                            pedido=pedido,
-                           archivos_info=archivos_info)
-
-@app.route('/pagar-impresion/<int:pedido_id>', methods=['GET', 'POST'])
-@login_required
-def pagar_impresion(pedido_id):
-    pedido = Pedido.query.get_or_404(pedido_id)
-    if request.method == 'POST':
-        referencia = request.form.get('referencia')
-        comprobante = request.files.get('comprobante')
-        if comprobante:
-            filename = secure_filename(comprobante.filename)
-            filepath = os.path.join(UPLOAD_FOLDER_COMPROBANTES, filename)  # antes UPLOAD_FOLDER_IMPRESION
-            comprobante.save(filepath)
-            archivo = ArchivoPedido(
-                PEDIDO_ID=pedido.ID,
-                NOMBRE_ARCHIVO=filename,
-                RUTA=filepath
-            )
-            db.session.add(archivo)
-        pedido.REFERENCIA_PAGO = referencia
-        pedido.ESTADO = 'Esperando validación'
-        db.session.commit()
-        return redirect(url_for('espera_validacion', pedido_id=pedido.ID))
-
-    # Obtener datos de PagoMóvil desde la tabla configuracion
-    config_pago = {}
-    configs = Configuracion.query.filter(Configuracion.CLAVE.startswith('pago_movil')).all()
-    for c in configs:
-        config_pago[c.CLAVE] = c.VALOR
-
-    return render_template('tienda/pagar_impresion.html', pedido=pedido, config_pago=config_pago)
+                           archivos_info=archivos_info,
+                           detalles=detalles)
 
 @app.route('/cancelar-impresion/<int:pedido_id>', methods=['POST'])
 @login_required
