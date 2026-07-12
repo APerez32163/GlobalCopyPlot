@@ -1776,6 +1776,25 @@ def panel_operador():
                            mensaje=mensaje,
                            cronograma=cronograma)
 
+@app.route('/operador/api/nuevos')
+@login_required
+@operador_required
+def operador_api_nuevos():
+    # Total de pedidos en estado "Pago confirmado" o "En proceso"
+    total_pendientes = Pedido.query.filter(
+        Pedido.ESTADO.in_(['Pago confirmado', 'En proceso'])
+    ).count()
+    
+    # Nuevos no vistos por el operador (que aún no ha abierto)
+    nuevos = Pedido.query.filter_by(VISTO_OPERADOR=False).filter(
+        Pedido.ESTADO.in_(['Pago confirmado', 'En proceso'])
+    ).count()
+    
+    return {
+        'total_pendientes': total_pendientes,
+        'nuevos': nuevos
+    }
+
 @app.route('/operador/solicitud/<int:pedido_id>')
 @login_required
 @operador_required
