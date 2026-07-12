@@ -37,18 +37,14 @@ class Pedido(db.Model):
     FECHA = db.Column(db.DateTime, default=datetime.utcnow)
     ESTADO = db.Column(db.String(20), default='Pendiente')
     TOTAL = db.Column(db.Numeric(10,2), default=0.00)
-    COMENTARIOS = db.Column(db.Text, nullable=True)       
-    TAMANO = db.Column(db.String(20), nullable=True)         
     FECHA_RETIRO = db.Column(db.Date, nullable=True)
     HORA_RETIRO = db.Column(db.Time, nullable=True)
     CODIGO_TICKET = db.Column(db.String(20), unique=True, nullable=True)
     VISTO_ADMIN = db.Column(db.Boolean, default=False)
     VISTO_OPERADOR = db.Column(db.Boolean, default=False)
-    PAGINAS = db.Column(db.Integer, nullable=True)   # páginas detectadas
-    SERVICIO_ID = db.Column(db.Integer, db.ForeignKey('servicio_impresion.ID'),nullable=True)
-    DETALLE_ARCHIVOS = db.Column(db.JSON, nullable=True)
     REFERENCIA_PAGO = db.Column(db.String(100), nullable=True)
-    PAGINAS_COLOR = db.Column(db.String(255), nullable=True)
+    
+    # Relación con detalles (líneas)
     detalles = db.relationship('DetallePedido', backref='pedido', lazy='select', cascade='all, delete-orphan')
     
 class DetallePedido(db.Model):
