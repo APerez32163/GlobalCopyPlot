@@ -97,4 +97,26 @@
         </div>
     </div>
 </div>
+<script>
+    function checkNuevosPagos() {
+        fetch('/admin/api/nuevos-pagos')
+            .then(response => response.json())
+            .then(data => {
+                if (data.nuevos > 0) {
+                    // Actualizar un badge o indicador visual
+                    document.getElementById('badge-pagos-pendientes').textContent = data.nuevos;
+                    // Opcional: mostrar notificación emergente
+                    if (data.nuevos > 0) {
+                        // Reproducir sonido o mostrar alerta
+                    }
+                }
+            })
+            .catch(error => console.error('Error al verificar pagos:', error));
+    }
+
+    // Ejecutar cada 10 segundos
+    setInterval(checkNuevosPagos, 10000);
+    // Ejecutar al cargar la página
+    checkNuevosPagos();
+</script>
 {% endblock %}

@@ -744,6 +744,17 @@ def panel_admin():
                          nuevos_pendientes=nuevos_pendientes,
                          nuevos_proceso=nuevos_proceso)
 
+@app.route('/admin/api/nuevos-pagos')
+@login_required
+@admin_required
+def admin_api_nuevos_pagos():
+    # Contar pedidos en estado 'Esperando validación' no vistos por admin
+    count = Pedido.query.filter(
+        Pedido.ESTADO == 'Esperando validación',
+        Pedido.VISTO_ADMIN == False
+    ).count()
+    return {'nuevos': count}
+
 # ------------------------------------------------------------
 # PANEL ADMIN – SOLICITUDES
 # ------------------------------------------------------------
@@ -2093,29 +2104,27 @@ def configurar_impresion(pedido_id):
     if pedido.ESTADO not in ['borrador', 'Pendiente de pago']:
         return redirect(url_for('mis_solicitudes'))
 
-    # Si el pedido tiene múltiples detalles (más de 1), redirigir a la versión múltiple
-    detalles_count = DetallePedido.query.filter_by(PEDIDO_ID=pedido_id).count()
-    if detalles_count > 1:
-        return redirect(url_for('configurar_impresion_multiple', pedido_id=pedido_id))
-
-    # Obtener el primer (y único) detalle
-    detalle = DetallePedido.query.filter_by(PEDIDO_ID=pedido_id).first()
+    # Obtener el detalle (único) del pedido
+    detalle = DetallePedido.query.filter_by(PEDIDO_ID=pedido.ID).first()
     if not detalle:
-        flash('No se encontró detalle para este pedido.', 'danger')
+        flash('No hay archivos configurados para este pedido.', 'danger')
         return redirect(url_for('imprimir'))
 
+    # Obtener archivo asociado al detalle
     archivo = ArchivoPedido.query.get(detalle.ARCHIVO_ID) if detalle.ARCHIVO_ID else None
     archivo_nombre = archivo.NOMBRE_ARCHIVO if archivo else 'Sin archivo'
+    paginas = detalle.PAGINAS or 0
 
     servicios = ServicioImpresion.query.filter_by(ACTIVO=True).order_by(ServicioImpresion.TITULO).all()
 
-    # Si se solicita reiniciar, limpiar configuración del detalle
+    # Resetear configuración
     if request.args.get('reset') == '1':
         detalle.SERVICIO_ID = None
         detalle.TAMANO = None
         detalle.PAGINAS_COLOR = None
         detalle.COMENTARIOS = None
         db.session.commit()
+        return redirect(url_for('configurar_impresion', pedido_id=pedido.ID))
 
     if request.method == 'POST':
         servicio_id = request.form.get('servicio_id', type=int)
@@ -2123,29 +2132,28 @@ def configurar_impresion(pedido_id):
         comentarios = request.form.get('comentarios', '').strip()
 
         if not servicio_id or not tamano_nombre:
-            flash('Debe seleccionar un servicio y un tamaño.', 'warning')
+            flash('Selecciona un servicio y un tamaño.', 'warning')
             return redirect(url_for('configurar_impresion', pedido_id=pedido.ID))
 
         detalle.SERVICIO_ID = servicio_id
         detalle.TAMANO = tamano_nombre
-        detalle.COMENTARIOS = comentarios
 
         servicio = ServicioImpresion.query.get(servicio_id)
         if servicio and servicio.ES_MIXTO:
-            paginas_color = request.form.get('paginas_color', '').strip()
-            detalle.PAGINAS_COLOR = paginas_color if paginas_color else None
+            detalle.PAGINAS_COLOR = request.form.get('paginas_color', '').strip() or None
         else:
             detalle.PAGINAS_COLOR = None
 
+        detalle.COMENTARIOS = comentarios
         db.session.commit()
         return redirect(url_for('programar_retiro', pedido_id=pedido.ID))
 
-    # Pre-cargar valores actuales para mostrar en el formulario
     return render_template('tienda/configurar_impresion.html',
                            pedido=pedido,
                            servicios=servicios,
                            archivo_nombre=archivo_nombre,
-                           detalle=detalle)  # pasamos el detalle a la plantilla
+                           paginas=paginas,
+                           detalle=detalle)
 
 @app.route('/configurar-multiple/<int:pedido_id>', methods=['GET', 'POST'])
 @login_required
