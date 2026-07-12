@@ -373,9 +373,20 @@
                 return r.json();
             })
             .then(data => {
-                const p = data.pedido;
-                const u = data.usuario;
-                const archivos_detalle = data.archivos_detalle || [];
+                // El formato ahora es directo (sin data.pedido)
+                const p = {
+                    id: data.pedido_id,
+                    fecha: data.fecha_retiro ? data.fecha_retiro : '—',
+                    total: data.total || 0,
+                    estado: data.estado || '—',
+                    codigo_ticket: data.codigo_ticket || null,
+                    fecha_retiro: data.fecha_retiro || '—',
+                    hora_retiro: data.hora_retiro || '—',
+                    referencia_pago: data.referencia_pago || null,
+                    comentarios: data.comentarios || null
+                };
+                const u = data.usuario || {};
+                const archivos_detalle = data.archivos || [];
                 const detalles = data.detalles || [];
 
                 let archivosHTML = '';
@@ -414,10 +425,10 @@
                 contenedor.innerHTML = `
                     <div class="row">
                         <div class="col-md-6">
-                            <p><strong>Cliente:</strong> ${u.nombre} ${u.apellido}</p>
-                            <p><strong>Cédula:</strong> ${u.cedula}</p>
-                            <p><strong>Email:</strong> ${u.email}</p>
-                            <p><strong>Teléfono:</strong> ${u.telefono}</p>
+                            <p><strong>Cliente:</strong> ${u.nombre || '—'} ${u.apellido || ''}</p>
+                            <p><strong>Cédula:</strong> ${u.cedula || '—'}</p>
+                            <p><strong>Email:</strong> ${u.email || '—'}</p>
+                            <p><strong>Teléfono:</strong> ${u.telefono || '—'}</p>
                         </div>
                         <div class="col-md-6">
                             <p><strong>Fecha solicitud:</strong> ${p.fecha}</p>
@@ -441,9 +452,7 @@
 
         // Limpiar el modal completamente al cerrarse
         modalEl.addEventListener('hidden.bs.modal', function() {
-            // Eliminar el elemento del DOM
             modalEl.remove();
-            // Forzar la eliminación de cualquier backdrop residual
             document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
             document.body.classList.remove('modal-open');
             document.body.style.overflow = '';
