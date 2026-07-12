@@ -82,29 +82,50 @@ def detectar_paginas(filepath, filename):
         print(f"Error al detectar páginas de {filename}: {e}")
         return None, f"No se pudo leer el archivo. Error: {str(e)[:100]}"
 
-def validar_mime(filepath, categorias_permitidas):
+def validar_mime(filepath, categorias_permitidas, filename=None):
     """
     Verifica que el archivo tenga un MIME válido según la lista de categorías.
+    Si falla, intenta validar por extensión.
     Retorna (True, None) si es válido, o (False, mensaje) si no lo es.
     """
     mime = magic.from_file(filepath, mime=True)
     
+    # Definir MIME permitidos (más variantes)
     mime_permitidos = {
-        'pdf': ['application/pdf'],
-        'imagen': ['image/png', 'image/jpeg', 'image/gif', 'image/bmp', 'image/tiff'],
-        'pptx': ['application/vnd.openxmlformats-officedocument.presentationml.presentation'],
-        'zip': ['application/zip']
+        'pdf': ['application/pdf', 'application/x-pdf', 'application/octet-stream', 'application/vnd.pdf'],
+        'imagen': ['image/png', 'image/jpeg', 'image/pjpeg', 'image/gif', 'image/bmp', 'image/tiff', 'image/x-tiff'],
+        'pptx': ['application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/zip'],
+        'zip': ['application/zip', 'application/x-zip-compressed', 'multipart/x-zip']
     }
     
-    permitidos = []
+    # Construir lista de MIME permitidos según categorías
+    permitidos_mime = []
     for cat in categorias_permitidas:
         if cat in mime_permitidos:
-            permitidos.extend(mime_permitidos[cat])
+            permitidos_mime.extend(mime_permitidos[cat])
     
-    if mime in permitidos:
+    # Verificar por MIME
+    if mime in permitidos_mime:
         return True, None
-    else:
-        return False, f"Tipo de archivo no permitido. MIME detectado: {mime}"
+    
+    # Fallback: validar por extensión (si se proporciona el nombre)
+    if filename:
+        ext = filename.rsplit('.', 1)[-1].lower()
+        extensiones_validas = {
+            'pdf': ['pdf'],
+            'imagen': ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'tif'],
+            'pptx': ['pptx'],
+            'zip': ['zip']
+        }
+        permitidas_ext = []
+        for cat in categorias_permitidas:
+            permitidas_ext.extend(extensiones_validas.get(cat, []))
+        if ext in permitidas_ext:
+            # Log de advertencia (opcional)
+            print(f"⚠️ Validación MIME falló ({mime}), pero extensión {ext} es válida. Archivo: {filename}")
+            return True, None
+    
+    return False, f"Tipo de archivo no permitido. MIME detectado: {mime}"
 
 def verificar_integridad(filepath, ext):
     """
@@ -112,13 +133,9 @@ def verificar_integridad(filepath, ext):
     Retorna (True, None) si es íntegro, o (False, mensaje) si está corrupto.
     """
     try:
-        # PDF
+        # PDF - ya validado en validar_pdf, pero intentamos abrir
         if ext == 'pdf':
-            # Validación rápida sin cargar todo el archivo
-            ok, msg = validar_pdf(filepath)
-            if not ok:
-                return False, msg
-            # Si pasa, intentar abrir con PyPDF2 para verificar páginas
+            # Intentar abrir con PyPDF2 (ya lo hicimos en validar_pdf)
             reader = PdfReader(filepath)
             _ = len(reader.pages)
         
@@ -126,33 +143,38 @@ def verificar_integridad(filepath, ext):
         elif ext in ('png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'tif'):
             from PIL import Image
             with Image.open(filepath) as img:
-                img.load()   # fuerza la carga de datos, más tolerante que verify()
+                img.verify()  # verificar integridad
+                # Volver a abrir para asegurar que se puede leer
+                with Image.open(filepath) as img2:
+                    img2.load()
         
         # PowerPoint
         elif ext == 'pptx':
             from pptx import Presentation
-            _ = Presentation(filepath)  # abre la presentación
+            _ = Presentation(filepath)
         
         # ZIP
         elif ext == 'zip':
             import zipfile
             with zipfile.ZipFile(filepath, 'r') as zf:
-                _ = zf.namelist()       # lista el contenido; si es corrupto lanza excepción
+                _ = zf.namelist()
+                # Verificar que el ZIP no está corrupto
+                badfile = zf.testzip()
+                if badfile:
+                    return False, f"El ZIP contiene archivos corruptos: {badfile}"
         
-        # Si no hay excepción, el archivo es íntegro
         return True, None
 
     except Exception as e:
-        # Capturamos cualquier error que indique corrupción
         return False, f"El archivo está corrupto o no se puede leer. ({str(e)[:80]})"
 
 def validar_pdf(filepath):
     """
-    Validación segura de PDF sin abrir completamente el archivo con PdfReader.
+    Validación de PDF más permisiva: solo verifica firma y tamaño.
     Retorna (True, None) o (False, mensaje).
     """
     try:
-        # Leer solo los primeros 1024 bytes para comprobar el header
+        # Leer primeros 1024 bytes para verificar firma
         with open(filepath, 'rb') as f:
             header = f.read(1024)
         
@@ -160,25 +182,27 @@ def validar_pdf(filepath):
         if not header.startswith(b'%PDF-'):
             return False, "El archivo no es un PDF válido (firma incorrecta)."
         
-        # 2. Verificar que no empiece con basura binaria (bytes no imprimibles)
-        # Un PDF real empieza con %PDF- seguido de la versión (ej: 1.4)
-        # Si el header contiene muchos bytes nulos o basura, es sospechoso
-        non_printable = sum(1 for b in header[:20] if b < 32 and b not in (10, 13, 9))
-        if non_printable > 5:  # más de 5 bytes no imprimibles en el header es sospechoso
-            return False, "El archivo PDF parece corrupto o contiene datos binarios anómalos."
-        
-        # 3. Leer últimos 1024 bytes para verificar el trailer
-        f.seek(0, 2)  # final del archivo
+        # 2. Verificar tamaño máximo (10 MB) - opcional, ya se verifica antes
+        f.seek(0, 2)
         size = f.tell()
-        if size > 10 * 1024 * 1024:  # 10 MB máximo para PDF
-            return False, "El archivo PDF es demasiado grande (máx. 10 MB)."
+        if size > 15 * 1024 * 1024:  # 15 MB (más permisivo)
+            return False, "El archivo PDF es demasiado grande (máx. 15 MB)."
         
-        f.seek(max(0, size - 1024))
-        trailer = f.read(1024)
-        if b'%%EOF' not in trailer:
-            return False, "El archivo PDF está incompleto (falta marca de fin)."
+        # 3. Intentar leer con PyPDF2 (más fiable que buscar %%EOF)
+        try:
+            reader = PdfReader(filepath)
+            _ = len(reader.pages)  # Si falla aquí, lanzará excepción
+        except Exception as e:
+            # Si falla, verificar si al menos tiene %%EOF (como último recurso)
+            f.seek(max(0, size - 1024))
+            trailer = f.read(1024)
+            if b'%%EOF' not in trailer:
+                return False, "El archivo PDF no se puede leer correctamente (posible corrupción)."
+            # Si tiene EOF, pero PyPDF2 falla, permitirlo (puede ser un PDF con metadatos no estándar)
+            return True, None
         
         return True, None
+        
     except Exception as e:
         return False, f"No se pudo validar el PDF: {str(e)[:80]}"
 
