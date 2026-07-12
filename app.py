@@ -1401,28 +1401,25 @@ def admin_api_pedido(pedido_id):
 
     detalles = DetallePedido.query.filter_by(PEDIDO_ID=pedido_id).all()
     archivos_info = []
-    for detalle in detalles:
-        archivo = ArchivoPedido.query.get(detalle.ARCHIVO_ID) if detalle.ARCHIVO_ID else None
-        archivos_info.append({
-            'nombre': archivo.NOMBRE_ARCHIVO if archivo else 'Sin archivo',
-            'paginas': detalle.PAGINAS,
-            'servicio_id': detalle.SERVICIO_ID,
-            'tamano': detalle.TAMANO,
-            'paginas_color': detalle.PAGINAS_COLOR,
-            'comentarios': detalle.COMENTARIOS
-        })
+    total_paginas = 0
 
-    # Para compatibilidad con frontend, devolvemos también el primer archivo como 'archivo_nombre'
-    archivo_nombre = archivos_info[0]['nombre'] if archivos_info else 'Sin archivo'
-
-    # Obtener nombre del servicio (si existe)
-    servicio_nombre = None
-    if detalles and detalles[0].SERVICIO_ID:
-        srv = ServicioImpresion.query.get(detalles[0].SERVICIO_ID)
-        servicio_nombre = srv.TITULO if srv else None
+    if detalles:
+        for detalle in detalles:
+            archivo = ArchivoPedido.query.get(detalle.ARCHIVO_ID) if detalle.ARCHIVO_ID else None
+            archivos_info.append({
+                'nombre': archivo.NOMBRE_ARCHIVO if archivo else 'Sin archivo',
+                'paginas': detalle.PAGINAS or 0
+            })
+            total_paginas += detalle.PAGINAS or 0
+    else:
+        # Fallback para pedidos antiguos (sin detalles)
+        archivos = ArchivoPedido.query.filter_by(PEDIDO_ID=pedido_id).all()
+        if archivos:
+            archivos_info = [{'nombre': archivos[0].NOMBRE_ARCHIVO, 'paginas': pedido.PAGINAS or 0}]
+            total_paginas = pedido.PAGINAS or 0
 
     return {
-        'paginas': pedido.PAGINAS,  # Podríamos sumar todas las páginas, pero mantenemos por compatibilidad
+        'total_paginas': total_paginas,
         'servicio': servicio_nombre,
         'tamano': detalles[0].TAMANO if detalles else None,
         'fecha_retiro': pedido.FECHA_RETIRO.strftime('%Y-%m-%d') if pedido.FECHA_RETIRO else '',

@@ -779,7 +779,7 @@
 
                     // Decidir ruta de configuración
                     const rutaBase = archivosList.length > 1 ? `/configurar-multiple/${pedidoIdActual}` : `/configurar/${pedidoIdActual}`;
-                    const resetParam = fromConfig ? '' : '?reset=1';
+                    const fromConfig = new URLSearchParams(window.location.search).get('from_config') === '1';
                     btnSiguiente1.onclick = () => {
                         window.location.href = rutaBase + resetParam;
                     };

@@ -535,7 +535,7 @@
                 <hr>
 
                 <div class="d-flex gap-2 mt-3">
-                    <a href="/imprimir?pedido_id={{ pedido.ID }}" class="btn-volver">
+                    <a href="{{ url_for('imprimir', pedido_id=pedido.ID, from_config=1) }}" class="btn-volver">
                         <i class="fas fa-arrow-left me-2"></i> Volver
                     </a>
                     <button type="submit" class="btn-guardar" style="flex: 1;">
