@@ -280,6 +280,39 @@
         });
     }
 </script>
+
+<script>
+    function checkNuevosOperador() {
+        fetch('/operador/api/nuevos')
+            .then(response => response.json())
+            .then(data => {
+                // Actualizar el contador de nuevos (si existe)
+                const contadorNuevos = document.querySelector('.contador-nuevos');
+                const totalPendientes = document.querySelector('#pendientes .glass-card'); // Opcional
+
+                // Si hay nuevos, actualizar el contador
+                if (contadorNuevos) {
+                    if (data.nuevos > 0) {
+                        contadorNuevos.innerHTML = `<i class="fas fa-bell"></i> Tienes <strong>${data.nuevos}</strong> pedidos nuevos por revisar`;
+                        contadorNuevos.style.display = 'flex';
+                    } else {
+                        contadorNuevos.style.display = 'none';
+                    }
+                }
+
+                // También podrías actualizar el badge "Nuevo" en las tarjetas,
+                // pero para eso necesitarías saber qué pedidos son nuevos.
+                // Lo dejamos como está, el contador general es suficiente.
+            })
+            .catch(error => console.error('Error al verificar nuevos pedidos:', error));
+    }
+
+    // Ejecutar cada 10 segundos
+    setInterval(checkNuevosOperador, 10000);
+    
+    // Ejecutar al cargar la página
+    document.addEventListener('DOMContentLoaded', checkNuevosOperador);
+</script>
     
 </body>
 </html>
