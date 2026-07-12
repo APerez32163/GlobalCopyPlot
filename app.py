@@ -2360,6 +2360,36 @@ def programar_retiro(pedido_id):
                            archivos_info=archivos_info,
                            detalles=detalles)
 
+@app.route('/pagar-impresion/<int:pedido_id>', methods=['GET', 'POST'])
+@login_required
+def pagar_impresion(pedido_id):
+    pedido = Pedido.query.get_or_404(pedido_id)
+    if request.method == 'POST':
+        referencia = request.form.get('referencia')
+        comprobante = request.files.get('comprobante')
+        if comprobante:
+            filename = secure_filename(comprobante.filename)
+            filepath = os.path.join(UPLOAD_FOLDER_COMPROBANTES, filename)  # antes UPLOAD_FOLDER_IMPRESION
+            comprobante.save(filepath)
+            archivo = ArchivoPedido(
+                PEDIDO_ID=pedido.ID,
+                NOMBRE_ARCHIVO=filename,
+                RUTA=filepath
+            )
+            db.session.add(archivo)
+        pedido.REFERENCIA_PAGO = referencia
+        pedido.ESTADO = 'Esperando validación'
+        db.session.commit()
+        return redirect(url_for('espera_validacion', pedido_id=pedido.ID))
+
+    # Obtener datos de PagoMóvil desde la tabla configuracion
+    config_pago = {}
+    configs = Configuracion.query.filter(Configuracion.CLAVE.startswith('pago_movil')).all()
+    for c in configs:
+        config_pago[c.CLAVE] = c.VALOR
+
+    return render_template('tienda/pagar_impresion.html', pedido=pedido, config_pago=config_pago)
+
 @app.route('/cancelar-impresion/<int:pedido_id>', methods=['POST'])
 @login_required
 def cancelar_impresion(pedido_id):
