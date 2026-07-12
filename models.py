@@ -49,11 +49,18 @@ class Pedido(db.Model):
     DETALLE_ARCHIVOS = db.Column(db.JSON, nullable=True)
     REFERENCIA_PAGO = db.Column(db.String(100), nullable=True)
     PAGINAS_COLOR = db.Column(db.String(255), nullable=True)
+    detalles = db.relationship('DetallePedido', backref='pedido', lazy='select', cascade='all, delete-orphan')
     
 class DetallePedido(db.Model):
     __tablename__ = 'detalle'
     ID = db.Column(db.Integer, primary_key=True)
     PEDIDO_ID = db.Column(db.Integer, db.ForeignKey('pedido.ID'), nullable=False)
+    SERVICIO_ID = db.Column(db.Integer, db.ForeignKey('servicio_impresion.ID'), nullable=True)
+    TAMANO = db.Column(db.String(20), nullable=True)
+    PAGINAS = db.Column(db.Integer, nullable=True)          # páginas de este detalle
+    PAGINAS_COLOR = db.Column(db.String(255), nullable=True)  # rango de páginas a color
+    COMENTARIOS = db.Column(db.Text, nullable=True)
+    ARCHIVO_ID = db.Column(db.Integer, db.ForeignKey('archivo_pedido.ID'), nullable=True)
     CANTIDAD = db.Column(db.Integer, nullable=False)
     PRECIO_UNITARIO = db.Column(db.Numeric(10,2), nullable=True)
     SUBTOTAL = db.Column(db.Numeric(10,2), nullable=False)
@@ -64,6 +71,7 @@ class ArchivoPedido(db.Model):
     PEDIDO_ID = db.Column(db.Integer, db.ForeignKey('pedido.ID'), nullable=False)
     NOMBRE_ARCHIVO = db.Column(db.String(255), nullable=False)
     RUTA = db.Column(db.String(255), nullable=False)
+    detalle = db.relationship('DetallePedido', backref='archivo', uselist=False)
 
 class Configuracion(db.Model):
     __tablename__ = 'configuracion'
