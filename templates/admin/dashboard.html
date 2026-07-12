@@ -103,9 +103,15 @@
         fetch('/admin/api/nuevos')
             .then(response => response.json())
             .then(data => {
-                // Actualizar badge de pendientes
+                // 1. Actualizar los números de las tarjetas (totales)
+                document.getElementById('total-pendientes').textContent = data.total_pendientes;
+                document.getElementById('total-proceso').textContent = data.total_proceso;
+                document.getElementById('total-listos').textContent = data.total_listos;
+
+                // 2. Actualizar los badges (nuevos no vistos)
+                // Pendientes
                 const badgePend = document.getElementById('badge-pendientes');
-                if (data.pendientes > 0) {
+                if (data.nuevos_pendientes > 0) {
                     badgePend.style.display = 'inline-block';
                     badgePend.classList.remove('d-none');
                 } else {
@@ -113,9 +119,9 @@
                     badgePend.classList.add('d-none');
                 }
 
-                // Actualizar badge de proceso
+                // Proceso
                 const badgeProc = document.getElementById('badge-proceso');
-                if (data.proceso > 0) {
+                if (data.nuevos_proceso > 0) {
                     badgeProc.style.display = 'inline-block';
                     badgeProc.classList.remove('d-none');
                 } else {
@@ -123,9 +129,9 @@
                     badgeProc.classList.add('d-none');
                 }
 
-                // Actualizar badge de listos
+                // Listos
                 const badgeList = document.getElementById('badge-listos');
-                if (data.listos > 0) {
+                if (data.nuevos_listos > 0) {
                     badgeList.style.display = 'inline-block';
                     badgeList.classList.remove('d-none');
                 } else {

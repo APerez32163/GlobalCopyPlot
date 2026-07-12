@@ -750,7 +750,14 @@ def panel_admin():
 @login_required
 @admin_required
 def admin_api_nuevos():
-    # Contar pedidos no vistos por estado
+    # Total de cada estado (para actualizar el número de la tarjeta)
+    total_pendientes = Pedido.query.filter_by(ESTADO='Pendiente de pago').count()
+    total_proceso = Pedido.query.filter(
+        Pedido.ESTADO.in_(['Esperando validación', 'Pago confirmado'])
+    ).count()
+    total_listos = Pedido.query.filter_by(ESTADO='Listo').count()
+    
+    # Nuevos (no vistos) para los badges
     nuevos_pendientes = Pedido.query.filter_by(ESTADO='Pendiente de pago', VISTO_ADMIN=False).count()
     nuevos_proceso = Pedido.query.filter(
         Pedido.ESTADO.in_(['Esperando validación', 'Pago confirmado']),
@@ -759,9 +766,12 @@ def admin_api_nuevos():
     nuevos_listos = Pedido.query.filter_by(ESTADO='Listo', VISTO_ADMIN=False).count()
     
     return {
-        'pendientes': nuevos_pendientes,
-        'proceso': nuevos_proceso,
-        'listos': nuevos_listos
+        'total_pendientes': total_pendientes,
+        'total_proceso': total_proceso,
+        'total_listos': total_listos,
+        'nuevos_pendientes': nuevos_pendientes,
+        'nuevos_proceso': nuevos_proceso,
+        'nuevos_listos': nuevos_listos
     }
 
 # ------------------------------------------------------------
