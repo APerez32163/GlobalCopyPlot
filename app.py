@@ -1781,6 +1781,7 @@ def operador_marcar_entregado(pedido_id):
 def imprimir():
     pedido_id = request.args.get('pedido_id', type=int)
     configurado = request.args.get('configurado') == '1'
+    from_config = request.args.get('from_config') == '1'  # ← nuevo
     pedido = None
     archivos_info = []
     cantidad_archivos = 0
@@ -1805,14 +1806,14 @@ def imprimir():
                 cantidad_archivos = len(detalles)
                 total_paginas = sum(d.PAGINAS for d in detalles)
             else:
-                # Si no tiene detalles (pedido antiguo o sin configurar), usar columnas viejas
+                # Fallback para pedidos antiguos sin detalles
                 archivos = ArchivoPedido.query.filter_by(PEDIDO_ID=pedido.ID).all()
                 if archivos:
                     archivos_info = [{'nombre': archivos[0].NOMBRE_ARCHIVO, 'paginas': pedido.PAGINAS or 0}]
                     cantidad_archivos = 1
                     total_paginas = pedido.PAGINAS or 0
         else:
-            pedido = None  # no autorizado
+            pedido = None
 
     return render_template('tienda/imprimir.html',
                            pedido=pedido,
@@ -1820,6 +1821,7 @@ def imprimir():
                            cantidad_archivos=cantidad_archivos,
                            total_paginas=total_paginas,
                            configurado=configurado,
+                           from_config=from_config,   # ← pasamos al frontend
                            active_page='imprimir')
 
 @app.route('/detectar-paginas', methods=['POST'])
@@ -2245,19 +2247,34 @@ def api_pedido(pedido_id):
     if pedido.ID_USUARIO != current_user.ID:
         return {'error': 'No autorizado'}, 403
 
-    archivos_reg = ArchivoPedido.query.filter_by(PEDIDO_ID=pedido_id).all()
+    # Obtener detalles del pedido (líneas)
+    detalles = DetallePedido.query.filter_by(PEDIDO_ID=pedido_id).all()
+    archivos_info = []
+    total_paginas = 0
 
-    # Construir lista de archivos con sus páginas
-    if pedido.DETALLE_ARCHIVOS:
-        archivos_info = pedido.DETALLE_ARCHIVOS
+    if detalles:
+        for detalle in detalles:
+            archivo = ArchivoPedido.query.get(detalle.ARCHIVO_ID) if detalle.ARCHIVO_ID else None
+            archivos_info.append({
+                'nombre': archivo.NOMBRE_ARCHIVO if archivo else 'Sin archivo',
+                'paginas': detalle.PAGINAS,
+                'servicio_id': detalle.SERVICIO_ID,
+                'tamano': detalle.TAMANO,
+                'paginas_color': detalle.PAGINAS_COLOR,
+                'comentarios': detalle.COMENTARIOS
+            })
+            total_paginas += detalle.PAGINAS or 0
     else:
-        archivos_info = [{
-            'nombre': archivos_reg[0].NOMBRE_ARCHIVO if archivos_reg else 'Sin archivo',
-            'paginas': pedido.PAGINAS
-        }]
+        # Fallback para pedidos antiguos sin detalles
+        archivos = ArchivoPedido.query.filter_by(PEDIDO_ID=pedido_id).all()
+        if archivos:
+            archivos_info = [{
+                'nombre': archivos[0].NOMBRE_ARCHIVO,
+                'paginas': pedido.PAGINAS or 0
+            }]
+            total_paginas = pedido.PAGINAS or 0
 
-    archivo_nombre = archivos_info[0]['nombre'] if archivos_info else 'Sin archivo'
-
+    # Obtener servicio si existe (para compatibilidad)
     servicio_nombre = None
     if pedido.SERVICIO_ID:
         srv = ServicioImpresion.query.get(pedido.SERVICIO_ID)
@@ -2265,15 +2282,18 @@ def api_pedido(pedido_id):
             servicio_nombre = srv.TITULO
 
     return {
-        'paginas': pedido.PAGINAS,
-        'servicio': servicio_nombre,
-        'tamano': pedido.TAMANO,
+        'pedido_id': pedido.ID,
+        'estado': pedido.ESTADO,
+        'total': float(pedido.TOTAL),
+        'archivos': archivos_info,          # ← lista completa de archivos
+        'total_paginas': total_paginas,     # ← suma de todas las páginas
         'fecha_retiro': pedido.FECHA_RETIRO.strftime('%Y-%m-%d') if pedido.FECHA_RETIRO else '',
         'hora_retiro': pedido.HORA_RETIRO.strftime('%H:%M') if pedido.HORA_RETIRO else '',
-        'total': float(pedido.TOTAL),
-        'archivo_nombre': archivo_nombre,
-        'archivos': archivos_info,           # ← lista de {nombre, paginas}
-        'detalle_archivos': pedido.DETALLE_ARCHIVOS  # ← array completo o None
+        'servicio': servicio_nombre,
+        'tamano': pedido.TAMANO,
+        'archivo_nombre': archivos_info[0]['nombre'] if archivos_info else 'Sin archivo',
+        'paginas': total_paginas,           # ← para compatibilidad con el frontend
+        'detalle_archivos': None            # ya no usamos JSON
     }
 
 @app.route('/programar-retiro/<int:pedido_id>', methods=['GET', 'POST'])
