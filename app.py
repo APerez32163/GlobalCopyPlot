@@ -1785,34 +1785,45 @@ def imprimir():
     pedido_id = request.args.get('pedido_id', type=int)
     configurado = request.args.get('configurado') == '1'
     pedido = None
-    detalles = []
     archivos_info = []
+    cantidad_archivos = 0
     total_paginas = 0
 
     if pedido_id:
         pedido = Pedido.query.get(pedido_id)
         if pedido and pedido.ID_USUARIO == current_user.ID:
+            # Obtener detalles del pedido
             detalles = DetallePedido.query.filter_by(PEDIDO_ID=pedido.ID).all()
-            # Preparar archivos_info
-            for detalle in detalles:
-                archivo = ArchivoPedido.query.get(detalle.ARCHIVO_ID) if detalle.ARCHIVO_ID else None
-                archivos_info.append({
-                    'nombre': archivo.NOMBRE_ARCHIVO if archivo else 'Sin archivo',
-                    'paginas': detalle.PAGINAS,
-                    'servicio_id': detalle.SERVICIO_ID,
-                    'tamano': detalle.TAMANO,
-                })
-            total_paginas = sum(d.PAGINAS for d in detalles)
+            if detalles:
+                for detalle in detalles:
+                    archivo = ArchivoPedido.query.get(detalle.ARCHIVO_ID) if detalle.ARCHIVO_ID else None
+                    archivos_info.append({
+                        'nombre': archivo.NOMBRE_ARCHIVO if archivo else 'Sin archivo',
+                        'paginas': detalle.PAGINAS,
+                        'servicio_id': detalle.SERVICIO_ID,
+                        'tamano': detalle.TAMANO,
+                        'paginas_color': detalle.PAGINAS_COLOR,
+                        'comentarios': detalle.COMENTARIOS
+                    })
+                cantidad_archivos = len(detalles)
+                total_paginas = sum(d.PAGINAS for d in detalles)
+            else:
+                # Si no tiene detalles (pedido antiguo o sin configurar), usar columnas viejas
+                archivos = ArchivoPedido.query.filter_by(PEDIDO_ID=pedido.ID).all()
+                if archivos:
+                    archivos_info = [{'nombre': archivos[0].NOMBRE_ARCHIVO, 'paginas': pedido.PAGINAS or 0}]
+                    cantidad_archivos = 1
+                    total_paginas = pedido.PAGINAS or 0
         else:
-            pedido = None
+            pedido = None  # no autorizado
 
-    return render_template('tienda/imprimir.html', 
-                           pedido=pedido, 
-                           configurado=configurado, 
-                           active_page='imprimir',
-                           detalles=detalles,
+    return render_template('tienda/imprimir.html',
+                           pedido=pedido,
                            archivos_info=archivos_info,
-                           total_paginas=total_paginas)
+                           cantidad_archivos=cantidad_archivos,
+                           total_paginas=total_paginas,
+                           configurado=configurado,
+                           active_page='imprimir')
 
 @app.route('/detectar-paginas', methods=['POST'])
 @login_required
