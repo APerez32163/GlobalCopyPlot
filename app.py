@@ -2157,15 +2157,13 @@ def configurar_impresion_multiple(pedido_id):
     if pedido.ESTADO not in ['borrador', 'Pendiente de pago']:
         return redirect(url_for('mis_solicitudes'))
 
-    # Obtener todos los detalles de este pedido
-    detalles = DetallePedido.query.filter_by(PEDIDO_ID=pedido_id).order_by(DetallePedido.ID).all()
+    # Obtener los detalles (líneas) de este pedido, ordenados por ID
+    detalles = DetallePedido.query.filter_by(PEDIDO_ID=pedido.ID).order_by(DetallePedido.ID).all()
     if not detalles:
-        flash('No se encontraron detalles para este pedido.', 'danger')
-        return redirect(url_for('imprimir'))
+        # Si no hay detalles, redirigir a configuración única (por si acaso)
+        return redirect(url_for('configurar_impresion', pedido_id=pedido.ID))
 
-    servicios = ServicioImpresion.query.filter_by(ACTIVO=True).order_by(ServicioImpresion.TITULO).all()
-
-    # Si se solicita reiniciar, limpiar configuración de todos los detalles
+    # Si se solicita reiniciar la configuración, limpiar SERVICIO_ID y TAMANO en cada detalle
     if request.args.get('reset') == '1':
         for det in detalles:
             det.SERVICIO_ID = None
@@ -2173,40 +2171,41 @@ def configurar_impresion_multiple(pedido_id):
             det.PAGINAS_COLOR = None
             det.COMENTARIOS = None
         db.session.commit()
+        return redirect(url_for('configurar_impresion_multiple', pedido_id=pedido.ID))
+
+    servicios = ServicioImpresion.query.filter_by(ACTIVO=True).order_by(ServicioImpresion.TITULO).all()
 
     if request.method == 'POST':
-        # Iterar sobre los detalles (usando índices)
-        for i, detalle in enumerate(detalles):
+        # Procesar cada detalle
+        for i, det in enumerate(detalles):
             serv_id = request.form.get(f'servicio_{i}')
             tam = request.form.get(f'tamano_{i}')
             pag_color = request.form.get(f'paginas_color_{i}')
             com = request.form.get(f'comentarios_{i}')
-
             if serv_id:
-                detalle.SERVICIO_ID = int(serv_id)
+                det.SERVICIO_ID = int(serv_id)
             if tam:
-                detalle.TAMANO = tam
+                det.TAMANO = tam
             if pag_color:
-                detalle.PAGINAS_COLOR = pag_color
+                det.PAGINAS_COLOR = pag_color
             if com:
-                detalle.COMENTARIOS = com
-
+                det.COMENTARIOS = com
         db.session.commit()
         return redirect(url_for('programar_retiro', pedido_id=pedido.ID))
 
-    # Preparar datos para la plantilla: necesitamos el nombre del archivo para cada detalle
+    # GET: armar lista de detalles con los archivos asociados
     detalles_con_archivo = []
     for det in detalles:
-        archivo = ArchivoPedido.query.get(det.ARCHIVO_ID) if det.ARCHIVO_ID else None
+        archivo = ArchivoPedido.query.get(det.ARCHIVO_ID)
         detalles_con_archivo.append({
             'detalle': det,
-            'archivo_nombre': archivo.NOMBRE_ARCHIVO if archivo else 'Archivo sin nombre'
+            'archivo': archivo
         })
 
     return render_template('tienda/configurar_impresion_multiple.html',
                            pedido=pedido,
                            servicios=servicios,
-                           detalles=detalles_con_archivo)
+                           detalles_con_archivo=detalles_con_archivo)
 
 @app.route('/api/pedido/<int:pedido_id>')
 @login_required

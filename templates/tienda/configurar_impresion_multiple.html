@@ -436,17 +436,19 @@
     <div class="container">
         <div class="glass-card">
             <h2>Configurar archivos</h2>
-            <p class="text-muted mb-3 texto-limitado">{{ pedido.DETALLE_ARCHIVOS|length }} archivo(s) · {{ pedido.PAGINAS }} página(s) totales</p>
+            <p class="text-muted mb-3 texto-limitado">{{ detalles_con_archivo|length }} archivo(s) · {{ pedido.PAGINAS or 0 }} página(s) totales</p>
 
             <form method="POST" action="{{ url_for('configurar_impresion_multiple', pedido_id=pedido.ID) }}" id="formMulti">
-                {% for item in pedido.DETALLE_ARCHIVOS %}
+                {% for detalle in detalles %}
                 {% set idx = loop.index0 %}
-                <div class="archivo-item" data-idx="{{ idx }}" data-tamano-guardado="{{ item.tamano or '' }}">
+                <div class="archivo-item" data-idx="{{ idx }}" data-tamano-guardado="{{ detalle.TAMANO or '' }}">
                     <div class="archivo-header">
                         <i class="fas fa-file-alt"></i>
                         <div class="detalle">
-                            <div class="nombre texto-limitado" style="max-width: 300px;">{{ item.nombre }}</div>
-                            <div class="paginas">{{ item.paginas }} página(s)</div>
+                            <div class="nombre texto-limitado" style="max-width: 300px;">
+                                {{ detalle.archivo.NOMBRE_ARCHIVO if detalle.archivo else 'Archivo sin nombre' }}
+                            </div>
+                            <div class="paginas">{{ detalle.PAGINAS }} página(s)</div>
                         </div>
                         <button type="button" class="btn-configurar" data-idx="{{ idx }}">
                             <i class="fas fa-cog me-1"></i> Configurar <span class="flecha ms-1">▾</span>
@@ -463,7 +465,7 @@
                                      onclick="seleccionarServicio(this)">
                                     <input type="radio" name="servicio_{{ idx }}" value="{{ srv.ID }}"
                                            id="srv_{{ idx }}_{{ srv.ID }}"
-                                           {% if item.servicio_id == srv.ID %}checked{% endif %}
+                                           {% if detalle.SERVICIO_ID == srv.ID %}checked{% endif %}
                                            autocomplete="off">
                                     <div class="servicio-titulo">{{ srv.TITULO }}</div>
                                     {% if srv.DESCRIPCION %}<div class="servicio-descripcion">{{ srv.DESCRIPCION }}</div>{% endif %}
@@ -476,7 +478,7 @@
                                                 <input type="radio" name="tamano_{{ idx }}" value="{{ t.NOMBRE }}" 
                                                        id="tam_{{ idx }}_{{ t.ID }}" 
                                                        data-precio-bn="{{ t.PRECIO_BN }}" data-precio-color="{{ t.PRECIO_COLOR }}"
-                                                       {% if item.tamano == t.NOMBRE %}checked{% endif %} 
+                                                       {% if detalle.TAMANO == t.NOMBRE %}checked{% endif %} 
                                                        autocomplete="off">
                                                 <label for="tam_{{ idx }}_{{ t.ID }}">{{ t.NOMBRE }}</label>
                                             </div>
@@ -493,7 +495,7 @@
                                                     <label class="form-label small fw-semibold text-muted mb-1">Páginas a color</label>
                                                     <input type="number" name="paginas_color_{{ idx }}" class="mixto-input" 
                                                            placeholder="0" min="0" max="999" maxlength="3"
-                                                           value="{{ item.paginas_color or '' }}">
+                                                           value="{{ detalle.PAGINAS_COLOR or '' }}">
                                                     <small class="text-muted">Máx. 3 dígitos (ej: 8)</small>
                                                 </div>
                                             </div>
@@ -506,7 +508,7 @@
                                                     <label class="form-label small fw-semibold text-muted mb-1">Especificar páginas a color</label>
                                                     <textarea name="comentarios_{{ idx }}" class="mixto-textarea" rows="2" 
                                                               placeholder="Ej: 1,3,5-8. Solo se tendrán en cuenta las páginas a color."
-                                                              maxlength="100">{{ item.comentarios or '' }}</textarea>
+                                                              maxlength="100">{{ detalle.COMENTARIOS or '' }}</textarea>
                                                     <small class="text-muted">Máx. 100 caracteres</small>
                                                 </div>
                                             </div>
@@ -518,7 +520,7 @@
                                             <div class="tamano-opcion">
                                                 <input type="radio" name="tamano_{{ idx }}" value="{{ t.NOMBRE }}" 
                                                        id="tam_{{ idx }}_{{ t.ID }}" data-precio="{{ t.PRECIO_BN }}"
-                                                       {% if item.tamano == t.NOMBRE %}checked{% endif %}
+                                                       {% if detalle.TAMANO == t.NOMBRE %}checked{% endif %}
                                                        autocomplete="off">
                                                 <label for="tam_{{ idx }}_{{ t.ID }}">{{ t.NOMBRE }} · {{ "%.2f"|format(t.PRECIO_BN) }} Bs.</label>
                                             </div>
@@ -531,19 +533,17 @@
                         </div>
                     </div>
                 </div>
-            {% endfor %}
-                <div class="total-estimado">
-                    Total estimado: <span id="totalEstimado">Bs. 0.00</span>
-                </div>
-                <hr></hr>
+                {% endfor %}
 
-                <div class="d-flex gap-2 mt-3">
-                    <a href="/imprimir?pedido_id={{ pedido.ID }}" class="btn-volver">
-                        <i class="fas fa-arrow-left me-2"></i> Volver
-                    </a>
-                    <button type="submit" class="btn-guardar" style="flex: 1;">
-                        <i class="fas fa-save me-2"></i> Guardar configuración
-                    </button>
+                <!-- Comentarios generales (opcionales) -->
+                <div class="mt-4">
+                    <label for="comentarios_generales" class="form-label fw-bold">Comentarios adicionales</label>
+                    <textarea name="comentarios" id="comentarios_generales" class="form-control" rows="3" placeholder="Algún comentario sobre el pedido en general...">{{ pedido.COMENTARIOS or '' }}</textarea>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{{ url_for('imprimir') }}" class="btn btn-outline-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary px-5">Continuar</button>
                 </div>
             </form>
         </div>
