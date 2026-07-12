@@ -1375,9 +1375,10 @@ def admin_reportes():
                            hoy=datetime.now(),
                            ranking=ranking)
 
-@app.route('/api/pedido/<int:pedido_id>')
+@app.route('/admin/api/pedido/<int:pedido_id>')
 @login_required
-def api_pedido(pedido_id):
+@admin_required
+def admin_api_pedido(pedido_id):
     pedido = Pedido.query.get_or_404(pedido_id)
     if pedido.ID_USUARIO != current_user.ID:
         return {'error': 'No autorizado'}, 403
