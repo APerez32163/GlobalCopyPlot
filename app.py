@@ -793,40 +793,36 @@ def admin_solicitudes():
 def admin_solicitud_detalle(pedido_id):
     pedido = db.session.get(Pedido, pedido_id) or abort(404)
     usuario = db.session.get(Usuario, pedido.ID_USUARIO)
+    
+    # Obtener detalles (líneas) del pedido
     detalles = DetallePedido.query.filter_by(PEDIDO_ID=pedido.ID).all()
     archivos = ArchivoPedido.query.filter_by(PEDIDO_ID=pedido.ID).all()
 
-    # Obtener la lista de archivos con sus configuraciones
-    if pedido.DETALLE_ARCHIVOS:
-        # Caso múltiple
-        archivos_info = pedido.DETALLE_ARCHIVOS
-    else:
-        # Caso único: creamos una lista de un solo elemento con los datos del pedido
-        archivos_info = [{
-            'nombre': archivos[0].NOMBRE_ARCHIVO if archivos else 'Sin archivo',
-            'paginas': pedido.PAGINAS,
-            'servicio_id': pedido.SERVICIO_ID,
-            'tamano': pedido.TAMANO,
-            'paginas_color': pedido.PAGINAS_COLOR,    
-            'comentarios': pedido.COMENTARIOS
-        }]
-
-    # Enriquecer archivos_info con los nombres de servicio y precio
-    for item in archivos_info:
-        servicio_id = item.get('servicio_id')
-        if servicio_id:
-            servicio = ServicioImpresion.query.get(servicio_id)
+    # Construir archivos_info desde los detalles (NUEVO)
+    archivos_info = []
+    for detalle in detalles:
+        archivo = ArchivoPedido.query.get(detalle.ARCHIVO_ID) if detalle.ARCHIVO_ID else None
+        item = {
+            'nombre': archivo.NOMBRE_ARCHIVO if archivo else 'Sin archivo',
+            'paginas': detalle.PAGINAS,
+            'servicio_id': detalle.SERVICIO_ID,
+            'tamano': detalle.TAMANO,
+            'paginas_color': detalle.PAGINAS_COLOR,
+            'comentarios': detalle.COMENTARIOS
+        }
+        # Enriquecer con nombre de servicio y precio
+        if detalle.SERVICIO_ID:
+            servicio = ServicioImpresion.query.get(detalle.SERVICIO_ID)
             item['servicio_nombre'] = servicio.TITULO if servicio else 'Desconocido'
-            # Obtener precio del tamaño
-            tamano_nombre = item.get('tamano')
-            if tamano_nombre and servicio:
+            if detalle.TAMANO and servicio:
                 tamano_obj = ServicioImpresionTamano.query.filter_by(
-                    SERVICIO_ID=servicio_id, NOMBRE=tamano_nombre
+                    SERVICIO_ID=detalle.SERVICIO_ID, NOMBRE=detalle.TAMANO
                 ).first()
                 item['precio'] = float(tamano_obj.PRECIO_BN) if tamano_obj else None
         else:
             item['servicio_nombre'] = None
             item['precio'] = None
+        archivos_info.append(item)
 
     # Marcar como visto por el admin
     if not pedido.VISTO_ADMIN:
@@ -844,7 +840,7 @@ def admin_solicitud_detalle(pedido_id):
                            detalles=detalles,
                            archivos=archivos,
                            historial=historial,
-                           archivos_info=archivos_info) 
+                           archivos_info=archivos_info)
 
 @app.route('/admin/solicitud/<int:pedido_id>/confirmar-pago', methods=['POST'])
 @login_required
@@ -1311,11 +1307,12 @@ def admin_reportes():
         ServicioImpresion.ID,
         ServicioImpresion.TITULO,
         ServicioImpresion.DESCRIPCION,
-        func.count(Pedido.ID).label('total_pedidos')
-    ).join(Pedido, Pedido.SERVICIO_ID == ServicioImpresion.ID)\
+        func.count(DetallePedido.ID).label('total_pedidos')
+    ).join(DetallePedido, DetallePedido.SERVICIO_ID == ServicioImpresion.ID)\
+     .join(Pedido, Pedido.ID == DetallePedido.PEDIDO_ID)\
      .filter(Pedido.ESTADO.in_(['Pago confirmado', 'En proceso', 'Listo', 'Entregado']))\
      .group_by(ServicioImpresion.ID)\
-     .order_by(func.count(Pedido.ID).desc())\
+     .order_by(func.count(DetallePedido.ID).desc())\
      .all()
 
     ranking = []
@@ -1396,9 +1393,9 @@ def admin_reportes():
 @admin_required
 def admin_api_pedido(pedido_id):
     pedido = Pedido.query.get_or_404(pedido_id)
-    if pedido.ID_USUARIO != current_user.ID:
-        return {'error': 'No autorizado'}, 403
-
+    usuario = Usuario.query.get(pedido.ID_USUARIO)
+    
+    # Obtener detalles
     detalles = DetallePedido.query.filter_by(PEDIDO_ID=pedido_id).all()
     archivos_info = []
     total_paginas = 0
@@ -1408,26 +1405,52 @@ def admin_api_pedido(pedido_id):
             archivo = ArchivoPedido.query.get(detalle.ARCHIVO_ID) if detalle.ARCHIVO_ID else None
             archivos_info.append({
                 'nombre': archivo.NOMBRE_ARCHIVO if archivo else 'Sin archivo',
-                'paginas': detalle.PAGINAS or 0
+                'paginas': detalle.PAGINAS,
+                'servicio_id': detalle.SERVICIO_ID,
+                'tamano': detalle.TAMANO,
+                'paginas_color': detalle.PAGINAS_COLOR,
+                'comentarios': detalle.COMENTARIOS
             })
             total_paginas += detalle.PAGINAS or 0
     else:
         # Fallback para pedidos antiguos (sin detalles)
         archivos = ArchivoPedido.query.filter_by(PEDIDO_ID=pedido_id).all()
         if archivos:
-            archivos_info = [{'nombre': archivos[0].NOMBRE_ARCHIVO, 'paginas': pedido.PAGINAS or 0}]
+            archivos_info = [{
+                'nombre': archivos[0].NOMBRE_ARCHIVO,
+                'paginas': pedido.PAGINAS or 0,
+                'servicio_id': pedido.SERVICIO_ID,
+                'tamano': pedido.TAMANO,
+                'paginas_color': pedido.PAGINAS_COLOR,
+                'comentarios': pedido.COMENTARIOS
+            }]
             total_paginas = pedido.PAGINAS or 0
 
+    # Obtener servicio (para compatibilidad)
+    servicio_nombre = None
+    if detalles and detalles[0].SERVICIO_ID:
+        srv = ServicioImpresion.query.get(detalles[0].SERVICIO_ID)
+        servicio_nombre = srv.TITULO if srv else None
+
     return {
+        'pedido_id': pedido.ID,
+        'estado': pedido.ESTADO,
+        'total': float(pedido.TOTAL),
         'total_paginas': total_paginas,
+        'archivos': archivos_info,
+        'archivo_nombre': archivos_info[0]['nombre'] if archivos_info else 'Sin archivo',
+        'paginas': total_paginas,
         'servicio': servicio_nombre,
         'tamano': detalles[0].TAMANO if detalles else None,
         'fecha_retiro': pedido.FECHA_RETIRO.strftime('%Y-%m-%d') if pedido.FECHA_RETIRO else '',
         'hora_retiro': pedido.HORA_RETIRO.strftime('%H:%M') if pedido.HORA_RETIRO else '',
-        'total': float(pedido.TOTAL),
-        'archivo_nombre': archivo_nombre,
-        'archivos': archivos_info,           # lista con todos los archivos
-        'detalle_archivos': archivos_info    # para mantener consistencia con el frontend
+        'usuario': {
+            'nombre': usuario.NOMBRE,
+            'apellido': usuario.APELLIDO,
+            'cedula': usuario.ID_USUARIO,
+            'email': usuario.EMAIL,
+            'telefono': usuario.TELEFONO
+        }
     }
 
 # ------------------------------------------------------------
@@ -1624,23 +1647,38 @@ def panel_operador():
     pedidos_data = []
     for pedido in pedidos:
         usuario = Usuario.query.get(pedido.ID_USUARIO)
+        
+        # Obtener todos los archivos del pedido
         archivos = ArchivoPedido.query.filter_by(PEDIDO_ID=pedido.ID).all()
-        # Solo archivos de impresión
         archivos_impresion = [a for a in archivos if 'comprobantes' not in a.RUTA.lower()]
+        
+        # Obtener detalles (líneas) con su configuración
         detalles = DetallePedido.query.filter_by(PEDIDO_ID=pedido.ID).all()
-
-        # Obtener servicio de impresión
-        servicio = None
-        if pedido.SERVICIO_ID:
-            servicio = ServicioImpresion.query.get(pedido.SERVICIO_ID)
-
+        
+        # Calcular total de páginas sumando las de cada detalle
+        total_paginas = sum(d.PAGINAS for d in detalles) if detalles else (pedido.PAGINAS or 0)
+        
+        # Obtener lista de servicios (uno por detalle)
+        servicios_nombres = []
+        for detalle in detalles:
+            if detalle.SERVICIO_ID:
+                srv = ServicioImpresion.query.get(detalle.SERVICIO_ID)
+                if srv:
+                    servicios_nombres.append(f"{srv.TITULO} ({detalle.TAMANO})")
+        # Si no hay detalles, usar el servicio de la cabecera (fallback)
+        if not servicios_nombres and pedido.SERVICIO_ID:
+            srv = ServicioImpresion.query.get(pedido.SERVICIO_ID)
+            if srv:
+                servicios_nombres.append(f"{srv.TITULO} ({pedido.TAMANO})")
+        
         pedidos_data.append({
             'pedido': pedido,
             'usuario': usuario,
             'archivos': archivos_impresion,
             'detalles': detalles,
-            'servicio': servicio,          # ← nuevo
-            'referencia_pago': pedido.REFERENCIA_PAGO   # ← nuevo
+            'total_paginas': total_paginas,
+            'servicios': ', '.join(servicios_nombres) if servicios_nombres else 'Sin servicio',
+            'referencia_pago': pedido.REFERENCIA_PAGO
         })
 
     # --- Cronograma (misma lógica que en admin) ---
@@ -1699,7 +1737,44 @@ def operador_detalle(pedido_id):
     # Solo archivos de impresión
     archivos_impresion = [a for a in archivos if 'comprobantes' not in a.RUTA.lower()]
 
-    # Servicio de impresión
+    # Construir archivos_info desde los detalles (NUEVO)
+    archivos_info = []
+    for detalle in detalles:
+        archivo = ArchivoPedido.query.get(detalle.ARCHIVO_ID) if detalle.ARCHIVO_ID else None
+        item = {
+            'nombre': archivo.NOMBRE_ARCHIVO if archivo else 'Sin archivo',
+            'paginas': detalle.PAGINAS,
+            'servicio_id': detalle.SERVICIO_ID,
+            'tamano': detalle.TAMANO,
+            'paginas_color': detalle.PAGINAS_COLOR,
+            'comentarios': detalle.COMENTARIOS
+        }
+        # Enriquecer con nombre de servicio y precio
+        if detalle.SERVICIO_ID:
+            servicio = ServicioImpresion.query.get(detalle.SERVICIO_ID)
+            item['servicio_nombre'] = servicio.TITULO if servicio else 'Desconocido'
+            if detalle.TAMANO and servicio:
+                tamano_obj = ServicioImpresionTamano.query.filter_by(
+                    SERVICIO_ID=detalle.SERVICIO_ID, NOMBRE=detalle.TAMANO
+                ).first()
+                item['precio'] = float(tamano_obj.PRECIO_BN) if tamano_obj else None
+        else:
+            item['servicio_nombre'] = None
+            item['precio'] = None
+        archivos_info.append(item)
+
+    # Si no hay detalles (fallback), usar datos de cabecera
+    if not archivos_info and archivos_impresion:
+        archivos_info = [{
+            'nombre': archivos_impresion[0].NOMBRE_ARCHIVO if archivos_impresion else 'Sin archivo',
+            'paginas': pedido.PAGINAS,
+            'servicio_id': pedido.SERVICIO_ID,
+            'tamano': pedido.TAMANO,
+            'paginas_color': pedido.PAGINAS_COLOR,
+            'comentarios': pedido.COMENTARIOS
+        }]
+
+    # Servicio de impresión (para compatibilidad, si se usa en la plantilla)
     servicio = None
     if pedido.SERVICIO_ID:
         servicio = ServicioImpresion.query.get(pedido.SERVICIO_ID)
@@ -1711,18 +1786,6 @@ def operador_detalle(pedido_id):
     if not pedido.VISTO_OPERADOR:
         pedido.VISTO_OPERADOR = True
         db.session.commit()
-
-    if pedido.DETALLE_ARCHIVOS:
-        archivos_info = pedido.DETALLE_ARCHIVOS
-    else:
-        archivos_info = [{
-            'nombre': archivos[0].NOMBRE_ARCHIVO if archivos else 'Sin archivo',
-            'paginas': pedido.PAGINAS,
-            'servicio_id': pedido.SERVICIO_ID,
-            'tamano': pedido.TAMANO,
-            'paginas_color': pedido.PAGINAS_COLOR,
-            'comentarios': pedido.COMENTARIOS
-        }]
 
     # Obtener nombre real de cada servicio de impresión
     todos_servicios = {srv.ID: srv.TITULO for srv in ServicioImpresion.query.all()}
