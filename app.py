@@ -1785,10 +1785,13 @@ def operador_api_nuevos():
         Pedido.ESTADO.in_(['Pago confirmado', 'En proceso'])
     ).count()
     
-    # Nuevos no vistos por el operador (que aún no ha abierto)
+    # Nuevos no vistos por el operador
     nuevos = Pedido.query.filter_by(VISTO_OPERADOR=False).filter(
         Pedido.ESTADO.in_(['Pago confirmado', 'En proceso'])
     ).count()
+    
+    # Para depuración (opcional)
+    print(f"API operador: total={total_pendientes}, nuevos={nuevos}")
     
     return {
         'total_pendientes': total_pendientes,
@@ -1807,7 +1810,7 @@ def operador_detalle(pedido_id):
     # Solo archivos de impresión
     archivos_impresion = [a for a in archivos if 'comprobantes' not in a.RUTA.lower()]
 
-    # Construir archivos_info desde los detalles (NUEVO)
+    # Construir archivos_info desde los detalles
     archivos_info = []
     for detalle in detalles:
         archivo = ArchivoPedido.query.get(detalle.ARCHIVO_ID) if detalle.ARCHIVO_ID else None
@@ -1833,21 +1836,16 @@ def operador_detalle(pedido_id):
             item['precio'] = None
         archivos_info.append(item)
 
-    # Si no hay detalles (fallback), usar datos de cabecera
-    if not archivos_info and archivos_impresion:
-        archivos_info = [{
-            'nombre': archivos_impresion[0].NOMBRE_ARCHIVO if archivos_impresion else 'Sin archivo',
-            'paginas': pedido.PAGINAS,
-            'servicio_id': pedido.SERVICIO_ID,
-            'tamano': pedido.TAMANO,
-            'paginas_color': pedido.PAGINAS_COLOR,
-            'comentarios': pedido.COMENTARIOS
-        }]
+    # Calcular total de páginas sumando las de cada detalle
+    total_paginas = sum(d.PAGINAS or 0 for d in detalles)
+
+    # Si no hay detalles, no mostrar nada (ya no usamos fallback con columnas obsoletas)
+    # Pero si no hay detalles y hay archivos, podemos mostrar un mensaje en la plantilla.
 
     # Servicio de impresión (para compatibilidad, si se usa en la plantilla)
     servicio = None
-    if pedido.SERVICIO_ID:
-        servicio = ServicioImpresion.query.get(pedido.SERVICIO_ID)
+    if detalles and detalles[0].SERVICIO_ID:
+        servicio = ServicioImpresion.query.get(detalles[0].SERVICIO_ID)
 
     # Referencia de pago
     referencia_pago = pedido.REFERENCIA_PAGO
@@ -1868,7 +1866,8 @@ def operador_detalle(pedido_id):
                            servicio=servicio,
                            referencia_pago=referencia_pago,
                            todos_servicios=todos_servicios,
-                           archivos_info=archivos_info)
+                           archivos_info=archivos_info,
+                           total_paginas=total_paginas)
 
 @app.route('/operador/solicitud/<int:pedido_id>/marcar-listo', methods=['POST'])
 @login_required

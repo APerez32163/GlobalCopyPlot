@@ -452,6 +452,25 @@
             });
         }
     </script>
+    <script>
+        let totalAnterior = {{ pedidos|length }};
+        let nuevosAnterior = {{ nuevos_operador }};
+
+        function checkCambios() {
+            fetch('/operador/api/nuevos')
+                .then(response => response.json())
+                .then(data => {
+                    // Si cambió el total de pendientes o el número de nuevos, recargar
+                    if (data.total_pendientes !== totalAnterior || data.nuevos !== nuevosAnterior) {
+                        location.reload();
+                    }
+                })
+                .catch(error => console.error('Error al verificar cambios:', error));
+        }
+
+        // Verificar cada 15 segundos
+        setInterval(checkCambios, 10000);
+    </script>
     <script src="{{ url_for('static', filename='js/operador-dashboard.js') }}"></script>
 </body>
 </html>
