@@ -2650,28 +2650,46 @@ def mis_solicitudes():
         archivos = ArchivoPedido.query.filter_by(PEDIDO_ID=pedido.ID).all()
         detalles = DetallePedido.query.filter_by(PEDIDO_ID=pedido.ID).all()
         
-        # Obtener nombre del servicio de impresión (funciona para único y múltiple)
+        # Calcular total de páginas sumando las de cada detalle
+        total_paginas = sum(d.PAGINAS or 0 for d in detalles)
+        
+        # Construir información de servicios desde los detalles
         servicio_nombre = None
-        tamano = pedido.TAMANO
+        tamano = None
+        paginas_color = None
+        comentarios_generales = None
         
-        if pedido.DETALLE_ARCHIVOS:
-            # Pedido múltiple: obtener los nombres de servicio de cada archivo
+        if detalles:
             servicios_nombres = []
-            for item in pedido.DETALLE_ARCHIVOS:
-                if item.get('servicio_id'):
-                    srv = ServicioImpresion.query.get(item['servicio_id'])
+            tamanos = []
+            colores = []
+            comentarios_list = []
+            for detalle in detalles:
+                if detalle.SERVICIO_ID:
+                    srv = ServicioImpresion.query.get(detalle.SERVICIO_ID)
                     if srv:
-                        servicios_nombres.append(f"{srv.TITULO} · {item.get('tamano', 'Sin tamaño')}")
+                        servicios_nombres.append(f"{srv.TITULO} · {detalle.TAMANO or 'Sin tamaño'}")
+                if detalle.TAMANO:
+                    tamanos.append(detalle.TAMANO)
+                if detalle.PAGINAS_COLOR:
+                    colores.append(detalle.PAGINAS_COLOR)
+                if detalle.COMENTARIOS:
+                    comentarios_list.append(detalle.COMENTARIOS)
             servicio_nombre = ', '.join(servicios_nombres) if servicios_nombres else None
-        elif pedido.SERVICIO_ID:
-            # Pedido único
-            srv = ServicioImpresion.query.get(pedido.SERVICIO_ID)
-            if srv:
-                servicio_nombre = srv.TITULO
-        
-        # Información adicional para servicios mixtos
-        paginas_color = pedido.PAGINAS_COLOR if pedido.PAGINAS_COLOR else None
-        comentarios = pedido.COMENTARIOS if pedido.COMENTARIOS else None
+            tamano = ', '.join(tamanos) if tamanos else None
+            paginas_color = ', '.join(colores) if colores else None
+            comentarios_generales = ', '.join(comentarios_list) if comentarios_list else None
+        else:
+            # Fallback para pedidos antiguos sin detalles (por si acaso)
+            if pedido.SERVICIO_ID:
+                srv = ServicioImpresion.query.get(pedido.SERVICIO_ID)
+                if srv:
+                    servicio_nombre = srv.TITULO
+            tamano = pedido.TAMANO
+            paginas_color = pedido.PAGINAS_COLOR
+            comentarios_generales = pedido.COMENTARIOS
+            if not total_paginas:
+                total_paginas = pedido.PAGINAS or 0
         
         pedidos_data.append({
             'pedido': pedido,
@@ -2680,7 +2698,8 @@ def mis_solicitudes():
             'servicio_nombre': servicio_nombre,
             'tamano': tamano,
             'paginas_color': paginas_color,
-            'comentarios': comentarios
+            'comentarios': comentarios_generales,
+            'total_paginas': total_paginas
         })
     
     return render_template('tienda/mis_solicitudes.html', pedidos=pedidos_data, active_page='solicitudes')

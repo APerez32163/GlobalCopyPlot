@@ -277,7 +277,7 @@
                 </div>
                 <div class="solicitud-body">
                     <p><strong>Total:</strong> Bs. {{ "%.2f"|format(pedido.TOTAL) }}</p>
-                    <p><strong>Páginas:</strong> {{ item.detalles[0].CANTIDAD if item.detalles else 'N/A' }}</p>
+                    <p><strong>Páginas totales:</strong> {{ item.total_paginas }}</p>
                     <p><strong>Servicio:</strong> 
                         {% if item.servicio_nombre %}
                             {{ item.servicio_nombre }}
