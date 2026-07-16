@@ -25,14 +25,17 @@ La aplicación está desplegada en **Render** (plan gratuito) y la base de datos
 
 ## 🛠️ Roles
 
-**Admin** :     v- 11111111
-contraseña:     Aa111111.
+**Admin** :
+- V-11111111
+- contraseña: Aa111111.
 
-**Operador**:   v- 22222222
-contraseña:     Aa111111.
+**Operador**:
+- V-22222222
+- contraseña: Aa111111.
 
-**Cliente**:    v- 33333333
-contraseña:     Aa111111.
+**Cliente**:
+- V-33333333
+- contraseña: Aa111111.
 
 - **Backend**: Python + Flask
 - **Base de datos**: MySQL/MariaDB
