@@ -1446,42 +1446,83 @@ def admin_api_pedido(pedido_id):
     pedido = Pedido.query.get_or_404(pedido_id)
     usuario = Usuario.query.get(pedido.ID_USUARIO)
     
-    # Obtener detalles
+    # Obtener detalles (líneas)
     detalles = DetallePedido.query.filter_by(PEDIDO_ID=pedido_id).all()
     archivos_info = []
     total_paginas = 0
+    detalles_facturacion = []  # para la facturación
 
     if detalles:
         for detalle in detalles:
             archivo = ArchivoPedido.query.get(detalle.ARCHIVO_ID) if detalle.ARCHIVO_ID else None
+            # Obtener servicio y precio para cada detalle
+            servicio_nombre = None
+            precio = None
+            if detalle.SERVICIO_ID:
+                srv = ServicioImpresion.query.get(detalle.SERVICIO_ID)
+                if srv:
+                    servicio_nombre = srv.TITULO
+                    if detalle.TAMANO:
+                        tamano_obj = ServicioImpresionTamano.query.filter_by(
+                            SERVICIO_ID=detalle.SERVICIO_ID, NOMBRE=detalle.TAMANO
+                        ).first()
+                        if tamano_obj:
+                            precio = float(tamano_obj.PRECIO_BN)
+            
             archivos_info.append({
                 'nombre': archivo.NOMBRE_ARCHIVO if archivo else 'Sin archivo',
                 'paginas': detalle.PAGINAS,
                 'servicio_id': detalle.SERVICIO_ID,
+                'servicio_nombre': servicio_nombre,
                 'tamano': detalle.TAMANO,
+                'precio': precio,
                 'paginas_color': detalle.PAGINAS_COLOR,
                 'comentarios': detalle.COMENTARIOS
             })
             total_paginas += detalle.PAGINAS or 0
+            
+            # Recopilar datos de facturación (si existen)
+            if detalle.CANTIDAD and detalle.PRECIO_UNITARIO and detalle.SUBTOTAL:
+                detalles_facturacion.append({
+                    'cantidad': detalle.CANTIDAD,
+                    'precio_unitario': float(detalle.PRECIO_UNITARIO) if detalle.PRECIO_UNITARIO else None,
+                    'subtotal': float(detalle.SUBTOTAL)
+                })
     else:
         # Fallback para pedidos antiguos (sin detalles)
         archivos = ArchivoPedido.query.filter_by(PEDIDO_ID=pedido_id).all()
         if archivos:
+            # Intentar obtener servicio de la cabecera (si existe)
+            servicio_nombre = None
+            precio = None
+            if pedido.SERVICIO_ID:
+                srv = ServicioImpresion.query.get(pedido.SERVICIO_ID)
+                if srv:
+                    servicio_nombre = srv.TITULO
+                    if pedido.TAMANO:
+                        tamano_obj = ServicioImpresionTamano.query.filter_by(
+                            SERVICIO_ID=pedido.SERVICIO_ID, NOMBRE=pedido.TAMANO
+                        ).first()
+                        if tamano_obj:
+                            precio = float(tamano_obj.PRECIO_BN)
+            
             archivos_info = [{
                 'nombre': archivos[0].NOMBRE_ARCHIVO,
                 'paginas': pedido.PAGINAS or 0,
                 'servicio_id': pedido.SERVICIO_ID,
+                'servicio_nombre': servicio_nombre,
                 'tamano': pedido.TAMANO,
+                'precio': precio,
                 'paginas_color': pedido.PAGINAS_COLOR,
                 'comentarios': pedido.COMENTARIOS
             }]
             total_paginas = pedido.PAGINAS or 0
 
-    # Obtener servicio (para compatibilidad)
-    servicio_nombre = None
+    # Obtener servicio global (por compatibilidad con frontend antiguo)
+    servicio_global = None
     if detalles and detalles[0].SERVICIO_ID:
         srv = ServicioImpresion.query.get(detalles[0].SERVICIO_ID)
-        servicio_nombre = srv.TITULO if srv else None
+        servicio_global = srv.TITULO if srv else None
 
     return {
         'pedido_id': pedido.ID,
@@ -1491,17 +1532,21 @@ def admin_api_pedido(pedido_id):
         'archivos': archivos_info,
         'archivo_nombre': archivos_info[0]['nombre'] if archivos_info else 'Sin archivo',
         'paginas': total_paginas,
-        'servicio': servicio_nombre,
+        'servicio': servicio_global,
         'tamano': detalles[0].TAMANO if detalles else None,
-        'fecha_retiro': pedido.FECHA_RETIRO.strftime('%Y-%m-%d') if pedido.FECHA_RETIRO else '',
-        'hora_retiro': pedido.HORA_RETIRO.strftime('%H:%M') if pedido.HORA_RETIRO else '',
+        'fecha_retiro': pedido.FECHA_RETIRO.strftime('%d/%m/%Y') if pedido.FECHA_RETIRO else None,
+        'hora_retiro': pedido.HORA_RETIRO.strftime('%I:%M %p') if pedido.HORA_RETIRO else None,
+        'codigo_ticket': pedido.CODIGO_TICKET,
+        'referencia_pago': pedido.REFERENCIA_PAGO,
+        'comentarios': pedido.COMENTARIOS,  # comentarios generales del pedido
         'usuario': {
-            'nombre': usuario.NOMBRE,
-            'apellido': usuario.APELLIDO,
-            'cedula': usuario.ID_USUARIO,
-            'email': usuario.EMAIL,
-            'telefono': usuario.TELEFONO
-        }
+            'nombre': usuario.NOMBRE if usuario else None,
+            'apellido': usuario.APELLIDO if usuario else None,
+            'cedula': usuario.ID_USUARIO if usuario else None,
+            'email': usuario.EMAIL if usuario else None,
+            'telefono': usuario.TELEFONO if usuario else None
+        },
+        'detalles': detalles_facturacion  # lista de facturación
     }
 
 # ------------------------------------------------------------
