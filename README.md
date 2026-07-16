@@ -37,6 +37,8 @@ La aplicación está desplegada en **Render** (plan gratuito) y la base de datos
 - V-33333333
 - contraseña: Aa111111.
 
+---
+
 - **Backend**: Python + Flask
 - **Base de datos**: MySQL/MariaDB
 - **Frontend**: HTML, CSS, Bootstrap 5, JavaScript
