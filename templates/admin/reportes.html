@@ -373,8 +373,8 @@
                 return r.json();
             })
             .then(data => {
-                // El formato ahora es directo (sin data.pedido)
-                const p = {
+                // ---- DATOS DEL PEDIDO (directos desde la raíz) ----
+                const pedido = {
                     id: data.pedido_id,
                     fecha: data.fecha_retiro ? data.fecha_retiro : '—',
                     total: data.total || 0,
@@ -385,12 +385,14 @@
                     referencia_pago: data.referencia_pago || null,
                     comentarios: data.comentarios || null
                 };
-                const u = data.usuario || {};
-                const archivos_detalle = data.archivos || [];
+                const usuario = data.usuario || {};
+                // Ahora data.archivos es la lista de archivos (cada uno con nombre, paginas, servicio_nombre, precio, etc.)
+                const archivos = data.archivos || [];
                 const detalles = data.detalles || [];
 
+                // ---- GENERAR HTML DE ARCHIVOS ----
                 let archivosHTML = '';
-                archivos_detalle.forEach(item => {
+                archivos.forEach(item => {
                     const mixtoInfo = item.paginas_color ? `<span><i class="fas fa-palette"></i> ${item.paginas_color} pág. color</span>` : '';
                     const comentario = item.comentarios ? `<span><i class="fas fa-comment"></i> ${item.comentarios}</span>` : '';
                     archivosHTML += `
@@ -409,40 +411,47 @@
                                     ${comentario}
                                 </div>
                             </div>
-                            ${item.ruta_descarga ? `<a href="${item.ruta_descarga}" class="btn btn-sm btn-solicitar" target="_blank"><i class="fas fa-download"></i></a>` : ''}
-                        </div>`;
+                            <!-- No se usa ruta_descarga porque no está en la API; si quieres descarga, puedes generar el enlace con el nombre del archivo -->
+                        </div>
+                    `;
                 });
 
-                let detallesHTML = detalles.length > 0 ? `
-                    <h6 class="mt-3">Detalles de facturación</h6>
-                    <ul>
-                        ${detalles.map(d => `
-                            <li>${d.cantidad} página(s) 
-                                ${d.precio_unitario ? `a Bs. ${d.precio_unitario.toFixed(2)} c/u` : ''} 
-                                = Bs. ${d.subtotal.toFixed(2)}</li>`).join('')}
-                    </ul>` : '';
+                // ---- DETALLES DE FACTURACIÓN (si existen) ----
+                let detallesHTML = '';
+                if (detalles.length > 0) {
+                    detallesHTML = `
+                        <h6 class="mt-3">Detalles de facturación</h6>
+                        <ul>
+                            ${detalles.map(d => `
+                                <li>${d.cantidad} página(s) 
+                                    ${d.precio_unitario ? `a Bs. ${d.precio_unitario.toFixed(2)} c/u` : ''} 
+                                    = Bs. ${d.subtotal.toFixed(2)}</li>`).join('')}
+                        </ul>
+                    `;
+                }
 
+                // ---- PINTAR EL CONTENIDO DEL MODAL ----
                 contenedor.innerHTML = `
                     <div class="row">
                         <div class="col-md-6">
-                            <p><strong>Cliente:</strong> ${u.nombre || '—'} ${u.apellido || ''}</p>
-                            <p><strong>Cédula:</strong> ${u.cedula || '—'}</p>
-                            <p><strong>Email:</strong> ${u.email || '—'}</p>
-                            <p><strong>Teléfono:</strong> ${u.telefono || '—'}</p>
+                            <p><strong>Cliente:</strong> ${usuario.nombre || '—'} ${usuario.apellido || ''}</p>
+                            <p><strong>Cédula:</strong> ${usuario.cedula || '—'}</p>
+                            <p><strong>Email:</strong> ${usuario.email || '—'}</p>
+                            <p><strong>Teléfono:</strong> ${usuario.telefono || '—'}</p>
                         </div>
                         <div class="col-md-6">
-                            <p><strong>Fecha solicitud:</strong> ${p.fecha}</p>
-                            <p><strong>Total:</strong> Bs. ${p.total.toFixed(2)}</p>
-                            <p><strong>Estado:</strong> ${p.estado}</p>
-                            ${p.codigo_ticket ? `<p><strong>Ticket:</strong> <span class="badge bg-light text-dark">${p.codigo_ticket}</span></p>` : ''}
-                            <p><strong>Retiro:</strong> ${p.fecha_retiro || '—'} a las ${p.hora_retiro || '—'}</p>
-                            ${p.referencia_pago ? `<p><strong>Referencia:</strong> <code>${p.referencia_pago}</code></p>` : ''}
+                            <p><strong>Fecha solicitud:</strong> ${pedido.fecha}</p>
+                            <p><strong>Total:</strong> Bs. ${pedido.total.toFixed(2)}</p>
+                            <p><strong>Estado:</strong> ${pedido.estado}</p>
+                            ${pedido.codigo_ticket ? `<p><strong>Ticket:</strong> <span class="badge bg-light text-dark">${pedido.codigo_ticket}</span></p>` : ''}
+                            <p><strong>Retiro:</strong> ${pedido.fecha_retiro || '—'} a las ${pedido.hora_retiro || '—'}</p>
+                            ${pedido.referencia_pago ? `<p><strong>Referencia:</strong> <code>${pedido.referencia_pago}</code></p>` : ''}
                         </div>
                     </div>
                     <hr>
                     ${archivosHTML ? '<h5>Servicio de impresión</h5>' + archivosHTML : '<p class="text-muted">Sin información de servicio.</p>'}
                     ${detallesHTML}
-                    ${p.comentarios ? `<p><strong>Comentarios:</strong> ${p.comentarios}</p>` : ''}
+                    ${pedido.comentarios ? `<p><strong>Comentarios:</strong> ${pedido.comentarios}</p>` : ''}
                 `;
             })
             .catch(err => {
