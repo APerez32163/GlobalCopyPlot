@@ -1474,12 +1474,12 @@ def admin_api_pedido(pedido_id):
                 'nombre': archivo.NOMBRE_ARCHIVO if archivo else 'Sin archivo',
                 'paginas': detalle.PAGINAS,
                 'servicio_id': detalle.SERVICIO_ID,
-                'servicio_nombre': servicio_nombre,   # ← NUEVO
+                'servicio_nombre': servicio_nombre,
                 'tamano': detalle.TAMANO,
-                'precio': precio,                     # ← NUEVO
+                'precio': precio,
                 'paginas_color': detalle.PAGINAS_COLOR,
                 'comentarios': detalle.COMENTARIOS,
-                'ruta_descarga': None                 # ← opcional, para compatibilidad
+                'ruta_descarga': None
             })
             total_paginas += detalle.PAGINAS or 0
             
@@ -1490,35 +1490,21 @@ def admin_api_pedido(pedido_id):
                     'precio_unitario': float(detalle.PRECIO_UNITARIO) if detalle.PRECIO_UNITARIO else None,
                     'subtotal': float(detalle.SUBTOTAL)
                 })
-    else:
-        # Fallback para pedidos antiguos (sin detalles)
-        archivos = ArchivoPedido.query.filter_by(PEDIDO_ID=pedido_id).all()
-        if archivos:
-            archivos_info = [{
-                'nombre': archivos[0].NOMBRE_ARCHIVO,
-                'paginas': pedido.PAGINAS or 0,
-                'servicio_id': pedido.SERVICIO_ID,
-                'servicio_nombre': None,
-                'tamano': pedido.TAMANO,
-                'precio': None,
-                'paginas_color': pedido.PAGINAS_COLOR,
-                'comentarios': pedido.COMENTARIOS,
-                'ruta_descarga': None
-            }]
-            total_paginas = pedido.PAGINAS or 0
+    # Si no hay detalles, devolvemos arrays vacíos (sin fallback a columnas obsoletas)
+    # porque la nueva estructura siempre debe tener detalles.
 
     return {
         'pedido_id': pedido.ID,
         'estado': pedido.ESTADO,
         'total': float(pedido.TOTAL) if pedido.TOTAL else 0.0,
         'total_paginas': total_paginas,
-        'codigo_ticket': pedido.CODIGO_TICKET,          # ← NUEVO
-        'referencia_pago': pedido.REFERENCIA_PAGO,      # ← NUEVO
-        'comentarios': pedido.COMENTARIOS,              # ← NUEVO (generales)
+        'codigo_ticket': pedido.CODIGO_TICKET,
+        'referencia_pago': pedido.REFERENCIA_PAGO,
+        'comentarios': None,  # ya no existe en pedido; se usa solo para compatibilidad
         'fecha_retiro': pedido.FECHA_RETIRO.strftime('%d/%m/%Y') if pedido.FECHA_RETIRO else None,
         'hora_retiro': pedido.HORA_RETIRO.strftime('%I:%M %p') if pedido.HORA_RETIRO else None,
         'archivos': archivos_info,
-        'detalles': detalles_facturacion,               # ← NUEVO (facturación)
+        'detalles': detalles_facturacion,
         'usuario': {
             'nombre': usuario.NOMBRE if usuario else None,
             'apellido': usuario.APELLIDO if usuario else None,
