@@ -827,7 +827,10 @@ def admin_solicitudes():
         else:
             pedidos = Pedido.query.filter_by(ESTADO=estados[0]).order_by(Pedido.FECHA.desc()).all()
     else:
-        pedidos = Pedido.query.order_by(Pedido.FECHA.desc()).all()
+        # Sin filtro: excluir "Entregado" y "borrador"
+        pedidos = Pedido.query.filter(
+            ~Pedido.ESTADO.in_(['Entregado', 'borrador'])
+        ).order_by(Pedido.FECHA.desc()).all()
 
     pedidos_con_usuarios = []
     for pedido in pedidos:
