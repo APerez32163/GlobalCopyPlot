@@ -1315,8 +1315,6 @@ def admin_reportes():
     periodo = request.args.get('periodo', session.get('periodo_ingresos', 'mensual'))
     session['periodo_ingresos'] = periodo
     tab_activa = request.args.get('tab', 'ventas')
-    # Solicitudes por fecha (con validación)
-        # Solicitudes por fecha (con validación)
     desde_fecha = request.args.get('desde', '')
     hasta_fecha = request.args.get('hasta', '')
 
@@ -1327,7 +1325,8 @@ def admin_reportes():
     if hasta_fecha:
         query = query.filter(Pedido.FECHA <= datetime.strptime(hasta_fecha, '%Y-%m-%d') + timedelta(days=1))
 
-    solicitudes_fecha = query.order_by(Pedido.FECHA.desc()).all()
+    # EXCLUIR BORRADORES en solicitudes por fecha
+    solicitudes_fecha = query.filter(~Pedido.ESTADO.in_(['borrador'])).order_by(Pedido.FECHA.desc()).all()
     buscar = request.args.get('buscar', '').strip()
 
     hoy = datetime.now()
@@ -1357,6 +1356,7 @@ def admin_reportes():
             hasta = hoy.replace(month=hoy.month+1, day=1) - timedelta(seconds=1)
 
     # --- Servicios más solicitados (ranking) ---
+    # EXCLUIR BORRADORES en el ranking
     servicios_ranking = db.session.query(
         ServicioImpresion.ID,
         ServicioImpresion.TITULO,
@@ -1365,6 +1365,7 @@ def admin_reportes():
     ).join(DetallePedido, DetallePedido.SERVICIO_ID == ServicioImpresion.ID)\
      .join(Pedido, Pedido.ID == DetallePedido.PEDIDO_ID)\
      .filter(Pedido.ESTADO.in_(['Pago confirmado', 'En proceso', 'Listo', 'Entregado']))\
+     .filter(Pedido.ESTADO != 'borrador')\
      .group_by(ServicioImpresion.ID)\
      .order_by(func.count(DetallePedido.ID).desc())\
      .all()
@@ -1381,17 +1382,17 @@ def admin_reportes():
     # Ingresos del período
     ingresos_periodo = db.session.query(func.sum(Pedido.TOTAL)).filter(
         Pedido.ESTADO.in_(['Pago confirmado', 'En proceso', 'Listo', 'Entregado']),
+        Pedido.ESTADO != 'borrador',
         Pedido.FECHA >= desde,
         Pedido.FECHA <= hasta
     ).scalar() or 0
 
     # --- Ventas con búsqueda y datos de usuario ---
     # Consulta base
-    ventas_query = Pedido.query
+    ventas_query = Pedido.query.filter(Pedido.ESTADO != 'borrador')  # EXCLUIR BORRADORES
 
     # Si hay búsqueda, filtrar por datos del usuario
     if buscar:
-        # Buscar IDs de usuarios que coincidan con la búsqueda
         usuarios_ids = Usuario.query.filter(
             (Usuario.ID_USUARIO.contains(buscar)) |
             (Usuario.NOMBRE.contains(buscar)) |
@@ -1399,7 +1400,10 @@ def admin_reportes():
             (Usuario.EMAIL.contains(buscar))
         ).with_entities(Usuario.ID).all()
         ids = [u[0] for u in usuarios_ids]
-        ventas_query = ventas_query.filter(Pedido.ID_USUARIO.in_(ids) if ids else Pedido.ID_USUARIO == None)
+        if ids:
+            ventas_query = ventas_query.filter(Pedido.ID_USUARIO.in_(ids))
+        else:
+            ventas_query = ventas_query.filter(False)  # sin resultados
 
     ventas = ventas_query.order_by(Pedido.FECHA.desc()).all()
 
@@ -1409,13 +1413,13 @@ def admin_reportes():
         usuario = Usuario.query.get(pedido.ID_USUARIO)
         ventas_con_usuarios.append({'pedido': pedido, 'usuario': usuario})
 
-    # Solicitudes por fecha (con filtro de fechas)
-    query = Pedido.query
+    # Solicitudes por fecha (con filtro de fechas) - ya excluye borradores
+    query_fechas = Pedido.query.filter(Pedido.ESTADO != 'borrador')
     if desde_fecha:
-        query = query.filter(Pedido.FECHA >= datetime.strptime(desde_fecha, '%Y-%m-%d'))
+        query_fechas = query_fechas.filter(Pedido.FECHA >= datetime.strptime(desde_fecha, '%Y-%m-%d'))
     if hasta_fecha:
-        query = query.filter(Pedido.FECHA <= datetime.strptime(hasta_fecha, '%Y-%m-%d') + timedelta(days=1))
-    solicitudes_fecha = query.order_by(Pedido.FECHA.desc()).all()
+        query_fechas = query_fechas.filter(Pedido.FECHA <= datetime.strptime(hasta_fecha, '%Y-%m-%d') + timedelta(days=1))
+    solicitudes_fecha = query_fechas.order_by(Pedido.FECHA.desc()).all()
 
     # Ingresos mensuales (histórico)
     ingresos_mensuales = db.session.query(
@@ -1423,6 +1427,7 @@ def admin_reportes():
         extract('month', Pedido.FECHA).label('mes'),
         func.sum(Pedido.TOTAL).label('total')
     ).filter(Pedido.ESTADO.in_(['Pago confirmado', 'En proceso', 'Listo', 'Entregado']))\
+     .filter(Pedido.ESTADO != 'borrador')\
      .group_by('anio', 'mes')\
      .order_by('anio', 'mes').all()
 
