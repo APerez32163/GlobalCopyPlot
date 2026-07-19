@@ -9,6 +9,12 @@
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
 </div>
 {% endif %}
+{% if request.args.get('limpieza') == '1' %}
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="fas fa-check-circle me-2"></i> Archivos viejos limpiados correctamente.
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
 
 <form method="POST">
     <ul class="nav nav-pills mb-4" id="configTabs" role="tablist">
@@ -98,8 +104,8 @@
                 </div>
             </div>
         </div>
-        
-        <!-- Pestaña Historial -->
+
+        <!-- Vaciar historial -->
         <div class="tab-pane fade" id="historial">
             <div class="glass-card p-4">
                 <h5>Administración del historial</h5>
@@ -109,6 +115,18 @@
                     <i class="fas fa-trash-alt me-2"></i> Vaciar historial completo
                 </button>
             </div>
+
+            <!-- Limpiar archivos viejos -->
+            <div class="glass-card p-4 mt-4">
+                <h5>Limpiar archivos viejos</h5>
+                <p class="text-muted">Elimina automáticamente los archivos de pedidos que llevan más de 15 días en estado <strong>Entregado</strong> o <strong>Cancelado</strong>. Libera espacio en el servidor.</p>
+                
+                <button type="button" class="btn btn-warning rounded-pill" onclick="limpiarArchivosViejos()">
+                    <i class="fas fa-broom me-2"></i> Limpiar archivos viejos (15 días)
+                </button>
+            </div>
+        </div>
+    </div>
         </div>
 
         <!-- Manual de usuario -->
@@ -174,6 +192,56 @@
                     }).catch(function(error) {
                         console.error(error);
                         alert('Error de conexión al vaciar el historial.');
+                    });
+                });
+
+                modalEl.addEventListener('hidden.bs.modal', function() {
+                    modalEl.remove();
+                });
+            }
+        </script>
+        <script>
+            function limpiarArchivosViejos() {
+                var modalHTML = `
+                    <div class="modal fade" id="modalLimpiarViejos" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-sm">
+                            <div class="modal-content glass-card" style="text-align: center; padding: 20px; border-radius: 20px;">
+                                <i class="fas fa-broom fa-3x mb-3" style="color: #f39c12;"></i>
+                                <h6 class="fw-bold mb-2">¿Limpiar archivos viejos?</h6>
+                                <p class="text-muted small">Se eliminarán todos los archivos de pedidos <strong>Entregados</strong> o <strong>Cancelados</strong> con más de 15 días de antigüedad.</p>
+                                <div class="d-flex gap-2 justify-content-center mt-3">
+                                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="button" class="btn btn-warning rounded-pill px-4" id="btnConfirmarLimpiarViejos">
+                                        <i class="fas fa-broom me-1"></i> Sí, limpiar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                var oldModal = document.getElementById('modalLimpiarViejos');
+                if (oldModal) oldModal.remove();
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+                var modalEl = document.getElementById('modalLimpiarViejos');
+                var modal = new bootstrap.Modal(modalEl);
+                modal.show();
+
+                document.getElementById('btnConfirmarLimpiarViejos').addEventListener('click', function() {
+                    fetch("{{ url_for('admin_limpiar_archivos') }}", {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    }).then(function(response) {
+                        if (response.ok) {
+                            // Recargar la página para actualizar el mensaje
+                            window.location.href = "{{ url_for('admin_configuracion') }}?limpieza=1";
+                        } else {
+                            alert('Error al limpiar archivos.');
+                        }
+                    }).catch(function(error) {
+                        console.error(error);
+                        alert('Error de conexión al limpiar archivos.');
                     });
                 });
 

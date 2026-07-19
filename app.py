@@ -206,6 +206,60 @@ def validar_pdf(filepath):
     except Exception as e:
         return False, f"No se pudo validar el PDF: {str(e)[:80]}"
 
+def limpiar_archivos_viejos():
+    """
+    Elimina archivos de uploads con más de 15 días de antigüedad
+    cuyo pedido esté en estado 'Entregado' o 'Cancelado'.
+    Se ejecuta automáticamente al entrar al panel de admin (una vez al día).
+    """
+    carpetas = [
+        os.path.join('static', 'uploads', 'impresion'),
+        os.path.join('static', 'uploads', 'comprobantes')
+    ]
+    
+    limite = datetime.now() - timedelta(days=15)
+    eliminados = 0
+    
+    for carpeta in carpetas:
+        ruta_completa = os.path.join(app.root_path, carpeta)
+        if not os.path.exists(ruta_completa):
+            continue
+            
+        for archivo in os.listdir(ruta_completa):
+            ruta_archivo = os.path.join(ruta_completa, archivo)
+            
+            if os.path.isdir(ruta_archivo):
+                continue
+            
+            # Verificar antigüedad
+            fecha_mod = datetime.fromtimestamp(os.path.getmtime(ruta_archivo))
+            if fecha_mod > limite:
+                continue
+            
+            # Buscar en la base de datos
+            archivo_bd = ArchivoPedido.query.filter_by(RUTA=ruta_archivo).first()
+            if not archivo_bd:
+                # Archivo huérfano: eliminar
+                try:
+                    os.remove(ruta_archivo)
+                    eliminados += 1
+                except:
+                    pass
+                continue
+            
+            # Verificar estado del pedido
+            pedido = Pedido.query.get(archivo_bd.PEDIDO_ID)
+            if pedido and pedido.ESTADO in ['Entregado', 'Cancelado']:
+                try:
+                    os.remove(ruta_archivo)
+                    db.session.delete(archivo_bd)
+                    eliminados += 1
+                except:
+                    pass
+    
+    db.session.commit()
+    return eliminados
+
 app = Flask(__name__)
 
 UPLOAD_FOLDER = 'static/uploads'
@@ -713,6 +767,18 @@ def panel_admin():
     # Leer el período guardado en sesión desde Reportes/Ingresos (por defecto mensual)
     periodo = session.get('periodo_ingresos', 'mensual')
     hoy = datetime.now()
+
+    ultima_limpieza = session.get('ultima_limpieza')
+    hoy = datetime.now().date()
+    
+    if not ultima_limpieza or ultima_limpieza != hoy.isoformat():
+        try:
+            eliminados = limpiar_archivos_viejos()
+            if eliminados > 0:
+                print(f"[Limpieza automática] {eliminados} archivos eliminados.")
+            session['ultima_limpieza'] = hoy.isoformat()
+        except Exception as e:
+            print(f"[Error en limpieza] {e}")
     
     # Calcular rango de fechas según el período
     if periodo == 'diario':
@@ -1696,6 +1762,17 @@ def admin_vaciar_historial():
         db.session.rollback()
         flash(f'Error al vaciar el historial: {str(e)}', 'danger')
     
+    return redirect(url_for('admin_configuracion'))
+
+@app.route('/admin/limpiar-archivos', methods=['POST'])
+@login_required
+@admin_required
+def admin_limpiar_archivos():
+    try:
+        eliminados = limpiar_archivos_viejos()
+        flash(f'✅ {eliminados} archivos eliminados correctamente.', 'success')
+    except Exception as e:
+        flash(f'❌ Error: {str(e)}', 'danger')
     return redirect(url_for('admin_configuracion'))
 
 # ------------------------------------------------------------
