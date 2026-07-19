@@ -109,7 +109,7 @@
         <div class="tab-pane fade" id="historial">
             <div class="glass-card p-4">
                 <h5>Administración del historial</h5>
-                <p class="text-muted">Puedes eliminar todos los pedidos, detalles y archivos subidos del sistema. Esta acción no se puede deshacer.</p>
+                <p class="text-muted">Puedes eliminar todos los pedidos, detalles y archivos subidos del sistema. <strong>Esta acción no se puede deshacer.</strong></p>
                 
                 <button type="button" class="btn btn-danger rounded-pill" onclick="vaciarHistorial()">
                     <i class="fas fa-trash-alt me-2"></i> Vaciar historial completo
@@ -119,10 +119,10 @@
             <!-- Limpiar archivos viejos -->
             <div class="glass-card p-4 mt-4">
                 <h5>Limpiar archivos viejos</h5>
-                <p class="text-muted">Elimina automáticamente los archivos de pedidos que llevan más de 15 días en estado <strong>Entregado</strong> o <strong>Cancelado</strong>. Libera espacio en el servidor.</p>
+                <p class="text-muted">Elimina automáticamente solo los archivos de <strong>pedidos</strong> que llevan más de 15 días. Libera espacio en el servidor. <strong>Esta acción no se puede deshacer</strong>.</p>
                 
                 <button type="button" class="btn btn-warning rounded-pill" onclick="limpiarArchivosViejos()">
-                    <i class="fas fa-broom me-2"></i> Limpiar archivos viejos (15 días)
+                    <i class="fas fa-broom me-2"></i> Limpiar archivos viejos
                 </button>
             </div>
         </div>
@@ -208,11 +208,11 @@
                             <div class="modal-content glass-card" style="text-align: center; padding: 20px; border-radius: 20px;">
                                 <i class="fas fa-broom fa-3x mb-3" style="color: #f39c12;"></i>
                                 <h6 class="fw-bold mb-2">¿Limpiar archivos viejos?</h6>
-                                <p class="text-muted small">Se eliminarán todos los archivos de pedidos <strong>Entregados</strong> o <strong>Cancelados</strong> con más de 15 días de antigüedad.</p>
+                                <p class="text-muted small">Se <strong>eliminarán</strong> todos los archivos de <strong>pedidos</strong> con más de 15 días de antigüedad.</p>
                                 <div class="d-flex gap-2 justify-content-center mt-3">
                                     <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
                                     <button type="button" class="btn btn-warning rounded-pill px-4" id="btnConfirmarLimpiarViejos">
-                                        <i class="fas fa-broom me-1"></i> Sí, limpiar
+                                        <i class="fas fa-broom me-1"></i> Sí
                                     </button>
                                 </div>
                             </div>
