@@ -919,17 +919,26 @@ def admin_confirmar_pago(pedido_id):
 @admin_required
 def admin_actualizar_estado(pedido_id):
     pedido = Pedido.query.get_or_404(pedido_id)
-    nuevo_estado = request.form.get('estado')
-    estados_validos = ['Pendiente de pago', 'Esperando validación', 'Pago confirmado', 'Listo', 'Entregado', 'Cancelado']
     
-    if nuevo_estado not in estados_validos:
-        flash('Estado no válido.', 'danger')
+    # 1. Validar que el pedido esté en un estado que permita actualización
+    # Solo se puede cambiar si ya fue confirmado (Pago confirmado, En proceso, Listo o Entregado)
+    if pedido.ESTADO in ['Esperando validación', 'Pendiente de pago', 'borrador']:
+        flash('No se puede cambiar el estado de un pedido que no ha sido confirmado.', 'danger')
         return redirect(url_for('admin_solicitud_detalle', pedido_id=pedido.ID))
-
+    
+    # 2. Obtener el nuevo estado del formulario
+    nuevo_estado = request.form.get('estado')
+    
+    # 3. Solo se permiten "Listo" o "Entregado" (el frontend ya los muestra, pero validamos en backend)
+    if nuevo_estado not in ['Listo', 'Entregado']:
+        flash('Estado no válido. Solo se permiten "Listo" o "Entregado".', 'danger')
+        return redirect(url_for('admin_solicitud_detalle', pedido_id=pedido.ID))
+    
+    # 4. Actualizar el estado
     pedido.ESTADO = nuevo_estado
     db.session.commit()
-
-    # Si el estado es "Listo", enviar correo al cliente
+    
+    # 5. Si el estado es "Listo", enviar correo al cliente
     if nuevo_estado == 'Listo':
         usuario = Usuario.query.get(pedido.ID_USUARIO)
         if usuario:
@@ -949,7 +958,7 @@ def admin_actualizar_estado(pedido_id):
             flash('Estado actualizado.', 'success')
     else:
         flash('Estado actualizado.', 'success')
-
+    
     return redirect(url_for('admin_solicitud_detalle', pedido_id=pedido.ID))
 
 @app.route('/admin/solicitud/<int:pedido_id>/eliminar', methods=['POST'])
