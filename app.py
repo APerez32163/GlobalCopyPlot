@@ -208,8 +208,8 @@ def validar_pdf(filepath):
 
 def limpiar_archivos_viejos():
     """
-    Elimina archivos de uploads con más de 15 días de antigüedad
-    cuyo pedido esté en estado 'Entregado' o 'Cancelado'.
+    Elimina archivos de uploads con más de 15 días de antigüedad.
+    SIN IMPORTAR el estado del pedido.
     Se ejecuta automáticamente al entrar al panel de admin (una vez al día).
     """
     carpetas = [
@@ -238,24 +238,20 @@ def limpiar_archivos_viejos():
             
             # Buscar en la base de datos
             archivo_bd = ArchivoPedido.query.filter_by(RUTA=ruta_archivo).first()
-            if not archivo_bd:
-                # Archivo huérfano: eliminar
+            if archivo_bd:
                 try:
-                    os.remove(ruta_archivo)
-                    eliminados += 1
-                except:
-                    pass
-                continue
-            
-            # Verificar estado del pedido
-            pedido = Pedido.query.get(archivo_bd.PEDIDO_ID)
-            if pedido and pedido.ESTADO in ['Entregado', 'Cancelado']:
-                try:
-                    os.remove(ruta_archivo)
                     db.session.delete(archivo_bd)
+                except Exception as e:
+                    print(f"Error al eliminar registro BD: {e}")
+                    continue
+            
+            # Eliminar el archivo físico
+            try:
+                if os.path.exists(ruta_archivo):
+                    os.remove(ruta_archivo)
                     eliminados += 1
-                except:
-                    pass
+            except Exception as e:
+                print(f"Error al eliminar archivo {ruta_archivo}: {e}")
     
     db.session.commit()
     return eliminados
@@ -771,6 +767,8 @@ def panel_admin():
     
     # === LIMPIEZA AUTOMÁTICA (una vez al día) ===
     ultima_limpieza = session.get('ultima_limpieza')
+    hoy = datetime.now().date()
+    
     if not ultima_limpieza or ultima_limpieza != hoy.isoformat():
         try:
             eliminados = limpiar_archivos_viejos()
@@ -1773,7 +1771,7 @@ def admin_limpiar_archivos():
         eliminados = limpiar_archivos_viejos()
         flash(f'✅ {eliminados} archivos eliminados correctamente.', 'success')
     except Exception as e:
-        flash(f'❌ Error: {str(e)}', 'danger')
+        flash(f'❌ Error al limpiar archivos: {str(e)}', 'danger')
     return redirect(url_for('admin_configuracion'))
 
 # ------------------------------------------------------------
