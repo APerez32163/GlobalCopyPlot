@@ -119,12 +119,11 @@
             <!-- Limpiar archivos viejos -->
             <div class="glass-card p-4 mt-4">
                 <h5>Limpiar archivos viejos</h5>
-                <p class="text-muted">Elimina archivos de uploads con más de 15 días de antigüedad (todos los pedidos).</p>
-                <form method="POST" action="{{ url_for('admin_limpiar_archivos') }}">
-                    <button type="submit" class="btn btn-warning rounded-pill">
-                        <i class="fas fa-broom me-2"></i> Limpiar archivos viejos (15 días)
-                    </button>
-                </form>
+                <p class="text-muted">Elimina automáticamente los archivos de pedidos que llevan más de 15 días en estado <strong>Entregado</strong> o <strong>Cancelado</strong>. Libera espacio en el servidor.</p>
+                
+                <button type="button" class="btn btn-warning rounded-pill" onclick="limpiarArchivosViejos()">
+                    <i class="fas fa-broom me-2"></i> Limpiar archivos viejos (15 días)
+                </button>
             </div>
         </div>
     </div>
