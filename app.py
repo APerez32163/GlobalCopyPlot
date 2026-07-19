@@ -919,31 +919,31 @@ def admin_confirmar_pago(pedido_id):
 @admin_required
 def admin_actualizar_estado(pedido_id):
     pedido = Pedido.query.get_or_404(pedido_id)
-    
-    # 1. Validar que el pedido esté en un estado que permita actualización
-    # Solo se puede cambiar si ya fue confirmado (Pago confirmado, En proceso, Listo o Entregado)
-    if pedido.ESTADO in ['Esperando validación', 'Pendiente de pago', 'borrador']:
-        flash('No se puede cambiar el estado de un pedido que no ha sido confirmado.', 'danger')
-        return redirect(url_for('admin_solicitud_detalle', pedido_id=pedido.ID))
-    
-    # 2. Obtener el nuevo estado del formulario
     nuevo_estado = request.form.get('estado')
     
-    # 3. Solo se permiten "Listo" o "Entregado" (el frontend ya los muestra, pero validamos en backend)
+    # Validar que el nuevo estado sea permitido
     if nuevo_estado not in ['Listo', 'Entregado']:
         flash('Estado no válido. Solo se permiten "Listo" o "Entregado".', 'danger')
         return redirect(url_for('admin_solicitud_detalle', pedido_id=pedido.ID))
     
-    # 4. Actualizar el estado
+    # Validar transición permitida según estado actual
+    if nuevo_estado == 'Listo' and pedido.ESTADO not in ['Pago confirmado', 'En proceso']:
+        flash('Solo se puede marcar como "Listo" si el pedido está en "Pago confirmado" o "En proceso".', 'danger')
+        return redirect(url_for('admin_solicitud_detalle', pedido_id=pedido.ID))
+    
+    if nuevo_estado == 'Entregado' and pedido.ESTADO != 'Listo':
+        flash('Solo se puede marcar como "Entregado" si el pedido está en "Listo".', 'danger')
+        return redirect(url_for('admin_solicitud_detalle', pedido_id=pedido.ID))
+    
+    # Actualizar estado
     pedido.ESTADO = nuevo_estado
     db.session.commit()
     
-    # 5. Si el estado es "Listo", enviar correo al cliente
+    # Si el nuevo estado es Listo, enviar correo al cliente
     if nuevo_estado == 'Listo':
         usuario = Usuario.query.get(pedido.ID_USUARIO)
         if usuario:
             ticket_url = url_for('ticket_impresion', pedido_id=pedido.ID, _external=True)
-            # Generar código de ticket si no existe
             if not pedido.CODIGO_TICKET:
                 import random, string
                 codigo = f"TICK-{pedido.ID}-{''.join(random.choices(string.ascii_uppercase + string.digits, k=4))}"
@@ -957,7 +957,7 @@ def admin_actualizar_estado(pedido_id):
         else:
             flash('Estado actualizado.', 'success')
     else:
-        flash('Estado actualizado.', 'success')
+        flash('Estado actualizado correctamente.', 'success')
     
     return redirect(url_for('admin_solicitud_detalle', pedido_id=pedido.ID))
 
