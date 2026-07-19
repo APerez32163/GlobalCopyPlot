@@ -766,11 +766,11 @@ def cambiar_contrasena():
 def panel_admin():
     # Leer el período guardado en sesión desde Reportes/Ingresos (por defecto mensual)
     periodo = session.get('periodo_ingresos', 'mensual')
-    hoy = datetime.now()
-
-    ultima_limpieza = session.get('ultima_limpieza')
-    hoy = datetime.now().date()
+    ahora = datetime.now()  # ← fecha y hora completa (para cálculos)
+    hoy = ahora.date()      # ← solo fecha (para la limpieza)
     
+    # === LIMPIEZA AUTOMÁTICA (una vez al día) ===
+    ultima_limpieza = session.get('ultima_limpieza')
     if not ultima_limpieza or ultima_limpieza != hoy.isoformat():
         try:
             eliminados = limpiar_archivos_viejos()
@@ -779,31 +779,32 @@ def panel_admin():
             session['ultima_limpieza'] = hoy.isoformat()
         except Exception as e:
             print(f"[Error en limpieza] {e}")
+    # === FIN LIMPIEZA ===
     
-    # Calcular rango de fechas según el período
+    # Calcular rango de fechas según el período (usando 'ahora' que es datetime)
     if periodo == 'diario':
-        desde = hoy.replace(hour=0, minute=0, second=0, microsecond=0)
-        hasta = hoy.replace(hour=23, minute=59, second=59, microsecond=999999)
+        desde = ahora.replace(hour=0, minute=0, second=0, microsecond=0)
+        hasta = ahora.replace(hour=23, minute=59, second=59, microsecond=999999)
     elif periodo == 'semanal':
-        desde = hoy - timedelta(days=hoy.weekday())
+        desde = ahora - timedelta(days=ahora.weekday())
         desde = desde.replace(hour=0, minute=0, second=0, microsecond=0)
         hasta = desde + timedelta(days=6, hours=23, minutes=59, seconds=59)
     elif periodo == 'mensual':
-        desde = hoy.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        if hoy.month == 12:
-            hasta = hoy.replace(year=hoy.year+1, month=1, day=1) - timedelta(seconds=1)
+        desde = ahora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        if ahora.month == 12:
+            hasta = ahora.replace(year=ahora.year+1, month=1, day=1) - timedelta(seconds=1)
         else:
-            hasta = hoy.replace(month=hoy.month+1, day=1) - timedelta(seconds=1)
+            hasta = ahora.replace(month=ahora.month+1, day=1) - timedelta(seconds=1)
     elif periodo == 'anual':
-        desde = hoy.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
-        hasta = hoy.replace(month=12, day=31, hour=23, minute=59, second=59, microsecond=999999)
+        desde = ahora.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+        hasta = ahora.replace(month=12, day=31, hour=23, minute=59, second=59, microsecond=999999)
     else:
         # Por defecto mensual
-        desde = hoy.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        if hoy.month == 12:
-            hasta = hoy.replace(year=hoy.year+1, month=1, day=1) - timedelta(seconds=1)
+        desde = ahora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        if ahora.month == 12:
+            hasta = ahora.replace(year=ahora.year+1, month=1, day=1) - timedelta(seconds=1)
         else:
-            hasta = hoy.replace(month=hoy.month+1, day=1) - timedelta(seconds=1)
+            hasta = ahora.replace(month=ahora.month+1, day=1) - timedelta(seconds=1)
     
     # Calcular ingresos SOLO de pagos confirmados y posteriores
     ingresos = db.session.query(func.sum(Pedido.TOTAL)).filter(
@@ -824,7 +825,7 @@ def panel_admin():
     ).count()
     
     listos = Pedido.query.filter_by(ESTADO='Listo').count()
-    nuevos_listos = Pedido.query.filter_by(ESTADO='Listo', VISTO_ADMIN=False).count()  # ← NUEVO
+    nuevos_listos = Pedido.query.filter_by(ESTADO='Listo', VISTO_ADMIN=False).count()
     
     return render_template('admin/dashboard.html',
                          pendientes=pendientes,
