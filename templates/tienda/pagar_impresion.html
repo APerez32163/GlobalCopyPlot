@@ -380,6 +380,31 @@
                 copiarTexto(texto, this);
             });
         });
+        // ============================================================
+        // REFERENCIA DE PAGO: solo dígitos numéricos (máx. 15)
+        // ============================================================
+        const refInput = document.getElementById('referenciaInput');
+        if (refInput) {
+            // Filtro al escribir/pegar: elimina todo lo que no sea dígito
+            refInput.addEventListener('input', function () {
+                this.value = this.value.replace(/\D/g, '').slice(0, 15);
+            });
+
+            // Bloqueo de teclas no numéricas (ni siquiera se escriben)
+            refInput.addEventListener('keypress', function (e) {
+                if (!/[0-9]/.test(e.key)) e.preventDefault();
+            });
+
+            // Pegado controlado: solo inserta los dígitos del portapapeles
+            refInput.addEventListener('paste', function (e) {
+                e.preventDefault();
+                const max = parseInt(this.maxLength, 10) || 15;
+                const pegado = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
+                const inicio = this.selectionStart;
+                const fin    = this.selectionEnd;
+                this.value = (this.value.slice(0, inicio) + pegado + this.value.slice(fin)).slice(0, max);
+            });
+        }
     </script>
 </body>
 </html>
