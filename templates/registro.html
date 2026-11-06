@@ -223,14 +223,18 @@
                    value="{{ form_data.telefono if form_data else '' }}" required>
                 {% if field_errors.telefono %}<div class="invalid-feedback">{{ field_errors.telefono }}</div>{% endif %}
             </div>
-            <div class="mb-3 position-relative">
-                <select class="form-select cedula-prefijo" id="tipoCedulaReg">
-                    <option value="V" selected>V</option>
-                    <option value="E">E</option>
-                </select>
-                <input type="text" id="cedulaDigitsReg" class="form-control cedula-input" 
-                       placeholder="12345678" required maxlength="8" inputmode="numeric" pattern="\d+">
-                <input type="hidden" name="usuario_id" id="usuarioReg">
+            <div class="mb-3">
+                <div class="cedula-group">
+                    <select class="form-select cedula-prefijo" id="tipoCedulaReg">
+                        <option value="V" {% if not form_data or form_data.get('tipo_cedula', 'V') != 'E' %}selected{% endif %}>V</option>
+                        <option value="E" {% if form_data and form_data.get('tipo_cedula') == 'E' %}selected{% endif %}>E</option>
+                    </select>
+                    <input type="text" id="cedulaDigitsReg" class="form-control cedula-input"
+                           placeholder="12345678" required maxlength="8" inputmode="numeric" pattern="\d+"
+                           value="{{ form_data.get('cedula_digits', '') if form_data else '' }}">
+                </div>
+                <input type="hidden" name="usuario_id" id="usuarioReg"
+                       value="{{ form_data.get('usuario_id', '') if form_data else '' }}">
             </div>
 
             <div class="mb-3">
