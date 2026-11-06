@@ -161,6 +161,7 @@
                     <p><i class="far fa-clock me-2"></i> Lun–Vie: 6:40am–5:30pm <br> Sáb: 8:00am–1:00pm</p>
                 </div>
             </div>
+
             <!-- Lado derecho: formulario con efecto vidrio -->
             <div class="col-md-7 login-right">
                 <div class="text-center mb-4">
@@ -255,20 +256,49 @@
             }
         }
     </script>
+
     <script>
-        const tipoLogin = document.getElementById('tipoCedulaLogin');
-        const digitLogin = document.getElementById('cedulaDigitsLogin');
+    document.addEventListener('DOMContentLoaded', function () {
+        const tipoLogin   = document.getElementById('tipoCedulaLogin');
+        const digitLogin  = document.getElementById('cedulaDigitsLogin');
         const hiddenLogin = document.getElementById('usuarioLogin');
 
-        tipoLogin.addEventListener('change', function() {
+        // 1) Cambio de tipo V/E: ajusta longitud y placeholder (TU LÓGICA ORIGINAL)
+        tipoLogin.addEventListener('change', function () {
             digitLogin.value = '';
             digitLogin.maxLength = this.value === 'V' ? 8 : 12;
             digitLogin.placeholder = this.value === 'V' ? '12345678' : '123456789012';
         });
 
-        document.querySelector('form').addEventListener('submit', function() {
+        // 2) Filtro al escribir: solo dígitos, respetando el maxLength actual
+        digitLogin.addEventListener('input', function () {
+            const max = parseInt(this.maxLength, 10) || 12;
+            this.value = this.value.replace(/\D/g, '').slice(0, max);
+        });
+
+        // 3) Bloqueo de teclas no numéricas (ni siquiera se escriben)
+        digitLogin.addEventListener('keypress', function (e) {
+            if (!/[0-9]/.test(e.key)) e.preventDefault();
+        });
+
+        // 4) Pegado: inserta solo los dígitos del portapapeles
+        digitLogin.addEventListener('paste', function (e) {
+            e.preventDefault();
+            const max = parseInt(this.maxLength, 10) || 12;
+            const pegado = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
+            const inicio = this.selectionStart;
+            const fin    = this.selectionEnd;
+            this.value = (this.value.slice(0, inicio) + pegado + this.value.slice(fin)).slice(0, max);
+        });
+
+        // 5) Submit: guarda solo los dígitos en el hidden (TU LÓGICA ORIGINAL)
+        document.querySelector('form').addEventListener('submit', function () {
             hiddenLogin.value = digitLogin.value.trim();
         });
+
+        // 6) Inicializar estado al cargar (por si el navegador restauró valores)
+        tipoLogin.dispatchEvent(new Event('change'));
+    });
     </script>
 </body>
 </html>
