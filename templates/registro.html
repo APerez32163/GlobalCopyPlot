@@ -80,15 +80,17 @@
             border-color: #dc3545 !important;
         }
 
-        /* Prefijo V/E integrado en la barra */
+        /* ===== Contenedor flex que reemplaza al position-relative ===== */
+        .cedula-group {
+            display: flex;
+            align-items: stretch;   /* misma altura para select e input */
+            width: 100%;
+        }
+
+        /* Prefijo V/E integrado en la barra (mismas medidas, sin absolute) */
         .cedula-prefijo {
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 5;
-            width: 55px;                     /* ~10 % de la barra */
-            height: calc(100% - 4px);        /* casi toda la altura */
+            width: 55px;                     /* conservado: ~10 % de la barra */
+            flex: 0 0 55px;                  /* no se encoge ni crece */
             border: none !important;
             background: transparent !important;
             font-weight: 700;
@@ -96,6 +98,7 @@
             color: var(--azul-oscuro, #2F5496);
             padding: 0;
             text-align: center;
+            text-align-last: center;         /* centra la V/E en todos los navegadores */
             cursor: pointer;
             appearance: none;
             -webkit-appearance: none;
@@ -103,6 +106,8 @@
             /* Línea divisoria sutil */
             border-right: 1px solid rgba(0,0,0,0.1) !important;
             border-radius: 0 !important;
+            /* Ya no es absolute, pero mantenemos el look */
+            z-index: 1;
         }
 
         .cedula-prefijo:hover {
@@ -115,9 +120,14 @@
             box-shadow: none !important;
         }
 
-        /* Input de dígitos: reservamos espacio para el prefijo */
+        /* Input de dígitos: sin padding-left porque flex ya reserva el espacio */
         .cedula-input {
-            padding-left: 65px !important;   /* un poco más que el ancho del prefijo */
+            flex: 1 1 auto;
+            min-width: 0;                    /* evita desbordes en pantallas pequeñas */
+            padding-left: 12px;              /* padding normal de un input */
+            border-left: none !important;    /* unión limpia con el select */
+            border-top-left-radius: 0 !important;
+            border-bottom-left-radius: 0 !important;
         }
         /* =====================================================
            FORMULARIOS ANCHOS – CAMPOS UNIFORMES
