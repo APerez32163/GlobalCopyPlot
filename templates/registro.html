@@ -80,40 +80,47 @@
             border-color: #dc3545 !important;
         }
 
-        /* ===== Contenedor flex: dueño del contorno y del fondo de la barra ===== */
+        /* ===== Cédula: barra glass unificada (prefijo V/E + dígitos) ===== */
         .cedula-group {
             display: flex;
-            align-items: stretch;                       /* misma altura exacta */
+            align-items: stretch;                        /* misma altura exacta (bug resuelto) */
             width: 100%;
-            background: var(--bs-body-bg, #fff);        /* mismo fondo del input */
-            border: 1px solid var(--bs-border-color, #ced4da);  /* mismo borde del input */
-            border-radius: var(--bs-border-radius, 0.375rem);   /* mismo radio del input */
-            overflow: hidden;                           /* recorta las esquinas de los hijos */
-            transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+            background: rgba(255, 255, 255, 0.3);        /* mismo fondo glass que .form-control */
+            border: 1px solid rgba(255, 255, 255, 0.6);  /* mismo borde glass */
+            border-radius: 30px;                         /* mismo radio que .form-control */
+            overflow: hidden;                            /* recorta esquinas de los hijos */
+            transition: all 0.3s ease;
         }
 
-        /* Focus unificado: se ilumina toda la barra como si fuera un input */
+        /* Focus unificado: toda la barra se ilumina como el resto del formulario */
         .cedula-group:focus-within {
-            border-color: #86b7fe;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+            background: rgba(255, 255, 255, 0.6);
+            border-color: var(--azul-claro);
+            box-shadow: 0 0 10px rgba(91, 155, 213, 0.3);
         }
 
-        /* Prefijo V/E integrado dentro de la barra (sin borde ni fondo propios) */
+        /* Estado de error: propaga el borde rojo al contenedor */
+        .cedula-group:has(.is-invalid),
+        .cedula-group:has(.border-danger) {
+            border-color: #dc3545 !important;
+        }
+
+        /* Prefijo V/E dentro de la barra glass */
         .cedula-prefijo {
-            width: 55px;                                /* ~10 % de la barra */
-            flex: 0 0 55px;                             /* no se encoge ni crece */
+            width: 55px;                                 /* ~10 % de la barra */
+            flex: 0 0 55px;                              /* no se encoge ni crece */
             border: none !important;
-            border-right: 1px solid rgba(0, 0, 0, 0.1) !important; /* línea divisoria */
+            border-right: 1px solid rgba(255, 255, 255, 0.6) !important; /* divisoria glass */
             border-radius: 0 !important;
             background: transparent !important;
-            background-image: none !important;          /* quita la flecha de Bootstrap */
+            background-image: none !important;           /* quita la flecha de Bootstrap */
             box-shadow: none !important;
             font-weight: 700;
             font-size: 0.95rem;
             color: var(--azul-oscuro, #2F5496);
             padding: 0;
             text-align: center;
-            text-align-last: center;                    /* centra V/E en todos los navegadores */
+            text-align-last: center;                     /* centra V/E en todos los navegadores */
             cursor: pointer;
             appearance: none;
             -webkit-appearance: none;
@@ -130,7 +137,7 @@
             box-shadow: none !important;
         }
 
-        /* Input de dígitos: sin borde ni fondo propios (los pone el contenedor) */
+        /* Input de dígitos: transparente, el contorno lo da .cedula-group */
         .cedula-input {
             flex: 1 1 auto;
             min-width: 0;
@@ -138,12 +145,15 @@
             border-radius: 0 !important;
             background: transparent !important;
             box-shadow: none !important;
-            padding-left: 12px;                         /* padding normal de un input */
+            padding: 12px 20px 12px 14px !important;     /* mismo padding vertical que .form-control */
+            color: #333;
         }
 
         .cedula-input:focus {
             outline: none !important;
-            box-shadow: none !important;                /* el anillo lo da :focus-within */
+            border-color: transparent !important;
+            background: transparent !important;
+            box-shadow: none !important;                 /* el anillo lo da :focus-within */
         }
         /* =====================================================
            FORMULARIOS ANCHOS – CAMPOS UNIFORMES
