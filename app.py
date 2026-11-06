@@ -539,6 +539,70 @@ def confirmar_email(token):
     return redirect(url_for('login', confirmed=1))
 
 # ------------------------------------------------------------
+# Recuperar acceso
+# ------------------------------------------------------------
+
+@app.route('/recuperar', methods=['GET', 'POST'])
+def recuperar():
+    if request.method == 'POST':
+        # Detectar si venimos del PASO 1 (formulario con campo "cedula")
+        # o del PASO 2 (botón "Enviar enlace al correo", sin campo "cedula")
+        cedula_form = request.form.get('cedula', '').strip()
+
+        # --- PASO 2: el usuario eligió "Enviar enlace al correo" ---
+        # El form del paso 2 NO tiene campo "cedula", así que lo distinguimos así
+        if not cedula_form and session.get('recuperar_cedula'):
+            cedula = session['recuperar_cedula']
+            user = Usuario.query.filter_by(ID_USUARIO=cedula).first()
+            if user:
+                try:
+                    user.EMAIL.encode('ascii')
+                except UnicodeEncodeError:
+                    flash('El correo asociado contiene caracteres no permitidos.', 'danger')
+                    return redirect(url_for('recuperar'))
+                token = serializer.dumps(user.ID, salt='recuperar-contrasena')
+                exito, error_msg = enviar_correo_restablecimiento(user.EMAIL, token)
+                if exito:
+                    flash('Te hemos enviado un enlace de recuperación a tu correo.', 'success')
+                else:
+                    flash(f'No se pudo enviar el correo: {error_msg}', 'danger')
+                session.pop('recuperar_cedula', None)
+                return redirect(url_for('login'))
+            else:
+                flash('Usuario no encontrado.', 'danger')
+                return redirect(url_for('recuperar'))
+
+        # --- PASO 1: ingreso de cédula ---
+        cedula = re.sub(r'^[VEve]-', '', cedula_form).strip()
+        error_cedula = validar_cedula(cedula)
+        if error_cedula:
+            flash(error_cedula, 'danger')
+            return redirect(url_for('recuperar'))
+
+        user = Usuario.query.filter_by(ID_USUARIO=cedula).first()
+        if not user:
+            flash('No existe una cuenta con esa cédula.', 'danger')
+            return redirect(url_for('recuperar'))
+
+        try:
+            user.EMAIL.encode('ascii')
+        except UnicodeEncodeError:
+            flash('El correo asociado contiene caracteres no permitidos.', 'danger')
+            return redirect(url_for('recuperar'))
+
+        # Guardar cédula en sesión y mostrar opciones (paso 2)
+        session['recuperar_cedula'] = cedula
+        tiene_preguntas = bool(user.PREGUNTA1 and user.PREGUNTA2)
+        return render_template('recuperar.html', paso=2, cedula=cedula, tiene_preguntas=tiene_preguntas)
+
+    # GET: al entrar de nuevo (incluye "volver" o navegar a /recuperar),
+    # limpiamos el estado previo para que el paso 1 siempre empiece limpio
+    session.pop('recuperar_cedula', None)
+    session.pop('pregunta_aleatoria', None)
+    session.pop('intentos_pregunta', None)
+    return render_template('recuperar.html', paso=1)
+
+# ------------------------------------------------------------
 # recuperar por preguntas
 # ------------------------------------------------------------
 
@@ -603,62 +667,6 @@ def recuperar_preguntas():
     pregunta = user.PREGUNTA1 if idx == 0 else user.PREGUNTA2
 
     return render_template('preguntas_seguridad.html', pregunta=pregunta)
-
-# ------------------------------------------------------------
-# Recuperar acceso
-# ------------------------------------------------------------
-
-@app.route('/recuperar', methods=['GET', 'POST'])
-def recuperar():
-    if request.method == 'POST':
-        # --- SI YA HAY CÉDULA EN SESIÓN (usuario eligió "Enviar enlace al correo") ---
-        if session.get('recuperar_cedula'):
-            cedula = session['recuperar_cedula']
-            user = Usuario.query.filter_by(ID_USUARIO=cedula).first()
-            if user:
-                try:
-                    user.EMAIL.encode('ascii')
-                except UnicodeEncodeError:
-                    flash('El correo asociado contiene caracteres no permitidos.', 'danger')
-                    return redirect(url_for('recuperar'))
-                token = serializer.dumps(user.ID, salt='recuperar-contrasena')
-                exito, error_msg = enviar_correo_restablecimiento(user.EMAIL, token)
-                if exito:
-                    flash('Te hemos enviado un enlace de recuperación a tu correo.', 'success')
-                else:
-                    flash(f'No se pudo enviar el correo: {error_msg}', 'danger')
-                session.pop('recuperar_cedula', None)
-                return redirect(url_for('login'))
-            else:
-                flash('Usuario no encontrado.', 'danger')
-                return redirect(url_for('recuperar'))
-
-        # --- PASO 1: Ingreso de cédula ---
-        cedula = request.form.get('cedula', '').strip()
-        cedula = re.sub(r'^[VEve]-', '', cedula).strip()
-        error_cedula = validar_cedula(cedula)
-        if error_cedula:
-            flash(error_cedula, 'danger')
-            return redirect(url_for('recuperar'))
-
-        user = Usuario.query.filter_by(ID_USUARIO=cedula).first()
-        if not user:
-            flash('No existe una cuenta con esa cédula.', 'danger')
-            return redirect(url_for('recuperar'))
-
-        try:
-            user.EMAIL.encode('ascii')
-        except UnicodeEncodeError:
-            flash('El correo asociado contiene caracteres no permitidos.', 'danger')
-            return redirect(url_for('recuperar'))
-
-        # Guardar cédula en sesión y mostrar opciones (SIEMPRE)
-        session['recuperar_cedula'] = cedula
-        tiene_preguntas = bool(user.PREGUNTA1 and user.PREGUNTA2)
-        return render_template('recuperar.html', paso=2, cedula=cedula, tiene_preguntas=tiene_preguntas)
-
-    # GET
-    return render_template('recuperar.html', paso=1)
 
 # ------------------------------------------------------------
 # reset-password/<token
