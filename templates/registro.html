@@ -80,38 +80,48 @@
             border-color: #dc3545 !important;
         }
 
-        /* ===== Contenedor flex que reemplaza al position-relative ===== */
+        /* ===== Contenedor flex: dueño del contorno y del fondo de la barra ===== */
         .cedula-group {
             display: flex;
-            align-items: stretch;   /* misma altura para select e input */
+            align-items: stretch;                       /* misma altura exacta */
             width: 100%;
+            background: var(--bs-body-bg, #fff);        /* mismo fondo del input */
+            border: 1px solid var(--bs-border-color, #ced4da);  /* mismo borde del input */
+            border-radius: var(--bs-border-radius, 0.375rem);   /* mismo radio del input */
+            overflow: hidden;                           /* recorta las esquinas de los hijos */
+            transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
         }
 
-        /* Prefijo V/E integrado en la barra (mismas medidas, sin absolute) */
+        /* Focus unificado: se ilumina toda la barra como si fuera un input */
+        .cedula-group:focus-within {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+
+        /* Prefijo V/E integrado dentro de la barra (sin borde ni fondo propios) */
         .cedula-prefijo {
-            width: 55px;                     /* conservado: ~10 % de la barra */
-            flex: 0 0 55px;                  /* no se encoge ni crece */
+            width: 55px;                                /* ~10 % de la barra */
+            flex: 0 0 55px;                             /* no se encoge ni crece */
             border: none !important;
+            border-right: 1px solid rgba(0, 0, 0, 0.1) !important; /* línea divisoria */
+            border-radius: 0 !important;
             background: transparent !important;
+            background-image: none !important;          /* quita la flecha de Bootstrap */
+            box-shadow: none !important;
             font-weight: 700;
             font-size: 0.95rem;
             color: var(--azul-oscuro, #2F5496);
             padding: 0;
             text-align: center;
-            text-align-last: center;         /* centra la V/E en todos los navegadores */
+            text-align-last: center;                    /* centra V/E en todos los navegadores */
             cursor: pointer;
             appearance: none;
             -webkit-appearance: none;
             -moz-appearance: none;
-            /* Línea divisoria sutil */
-            border-right: 1px solid rgba(0,0,0,0.1) !important;
-            border-radius: 0 !important;
-            /* Ya no es absolute, pero mantenemos el look */
-            z-index: 1;
         }
 
         .cedula-prefijo:hover {
-            background: rgba(91,155,213,0.08) !important;
+            background: rgba(91, 155, 213, 0.08) !important;
         }
 
         .cedula-prefijo:focus,
@@ -120,14 +130,20 @@
             box-shadow: none !important;
         }
 
-        /* Input de dígitos: sin padding-left porque flex ya reserva el espacio */
+        /* Input de dígitos: sin borde ni fondo propios (los pone el contenedor) */
         .cedula-input {
             flex: 1 1 auto;
-            min-width: 0;                    /* evita desbordes en pantallas pequeñas */
-            padding-left: 12px;              /* padding normal de un input */
-            border-left: none !important;    /* unión limpia con el select */
-            border-top-left-radius: 0 !important;
-            border-bottom-left-radius: 0 !important;
+            min-width: 0;
+            border: none !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            padding-left: 12px;                         /* padding normal de un input */
+        }
+
+        .cedula-input:focus {
+            outline: none !important;
+            box-shadow: none !important;                /* el anillo lo da :focus-within */
         }
         /* =====================================================
            FORMULARIOS ANCHOS – CAMPOS UNIFORMES
