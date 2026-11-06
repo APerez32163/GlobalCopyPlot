@@ -360,36 +360,121 @@
         }
     </script>
     <script>
-        const tipoReg = document.getElementById('tipoCedulaReg');
-        const digitReg = document.getElementById('cedulaDigitsReg');
+    document.addEventListener('DOMContentLoaded', function () {
+        // ============================================================
+        // 1) CÉDULA: prefijo V/E + solo dígitos (TU LÓGICA + FILTRO)
+        // ============================================================
+        const tipoReg   = document.getElementById('tipoCedulaReg');
+        const digitReg  = document.getElementById('cedulaDigitsReg');
         const hiddenReg = document.getElementById('usuarioReg');
 
-        // Actualizar longitud máxima y placeholder al cambiar el tipo
         function actualizarTipo() {
             const esE = tipoReg.value === 'E';
             digitReg.value = '';
             digitReg.maxLength = esE ? 12 : 8;
             digitReg.placeholder = esE ? '123456789012' : '12345678';
         }
-
         tipoReg.addEventListener('change', actualizarTipo);
+        actualizarTipo();
 
-        // Al enviar, llenar el campo oculto solo con los dígitos (sin el prefijo)
+        digitReg.addEventListener('input', function () {
+            const max = parseInt(this.maxLength, 10) || 12;
+            this.value = this.value.replace(/\D/g, '').slice(0, max);
+        });
+        digitReg.addEventListener('keypress', function (e) {
+            if (!/[0-9]/.test(e.key)) e.preventDefault();
+        });
+        digitReg.addEventListener('paste', function (e) {
+            e.preventDefault();
+            const max = parseInt(this.maxLength, 10) || 12;
+            const pegado = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
+            const inicio = this.selectionStart;
+            const fin    = this.selectionEnd;
+            this.value = (this.value.slice(0, inicio) + pegado + this.value.slice(fin)).slice(0, max);
+        });
+
+        // ============================================================
+        // 2) SUBMIT: llenar hidden solo con dígitos (TU LÓGICA ORIGINAL)
+        // ============================================================
         const form = document.querySelector('form');
-        form.addEventListener('submit', function(e) {
-            // Validación extra: si el campo está vacío, evitamos envío
+        form.addEventListener('submit', function (e) {
             const digitos = digitReg.value.trim();
             if (digitos === '') {
                 e.preventDefault();
                 alert('Debes escribir el número de cédula.');
                 return;
             }
-            // Enviar solo los dígitos (el backend limpiará cualquier prefijo si hiciera falta)
             hiddenReg.value = digitos;
         });
 
-        // Inicializar el estado por si el navegador recuerda la selección
-        actualizarTipo();
+        // ============================================================
+        // 3) NOMBRE Y APELLIDO: solo letras y espacios (con tildes/ñ)
+        // ============================================================
+        const regexSoloLetras = /[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g;
+        ['nombre', 'apellido'].forEach(function (name) {
+            const input = document.querySelector('input[name="' + name + '"]');
+            if (!input) return;
+            input.addEventListener('input', function () {
+                this.value = this.value.replace(regexSoloLetras, '');
+            });
+            input.addEventListener('keypress', function (e) {
+                if (e.ctrlKey || e.metaKey || e.altKey) return; // permitir atajos
+                if (!/[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/.test(e.key)) e.preventDefault();
+            });
+            input.addEventListener('paste', function (e) {
+                e.preventDefault();
+                const txt = (e.clipboardData || window.clipboardData).getData('text')
+                            .replace(regexSoloLetras, '');
+                const max = parseInt(this.maxLength, 10) || 50;
+                const inicio = this.selectionStart;
+                const fin    = this.selectionEnd;
+                this.value = (this.value.slice(0, inicio) + txt + this.value.slice(fin)).slice(0, max);
+            });
+        });
+
+        // ============================================================
+        // 4) CORREO: letras, números y símbolos comunes (@ . _ - +)
+        // ============================================================
+        const emailInput = document.querySelector('input[name="email"]');
+        if (emailInput) {
+            const regexEmail = /[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ@._+\-]/g;
+            emailInput.addEventListener('input', function () {
+                this.value = this.value.replace(regexEmail, '');
+            });
+            // No bloqueamos keypress para permitir escribir @ y símbolos sin fricción
+            emailInput.addEventListener('paste', function (e) {
+                e.preventDefault();
+                const txt = (e.clipboardData || window.clipboardData).getData('text')
+                            .replace(regexEmail, '');
+                const max = parseInt(this.maxLength, 10) || 40;
+                const inicio = this.selectionStart;
+                const fin    = this.selectionEnd;
+                this.value = (this.value.slice(0, inicio) + txt + this.value.slice(fin)).slice(0, max);
+            });
+        }
+
+        // ============================================================
+        // 5) TELÉFONO: solo números
+        // ============================================================
+        const telefonoInput = document.querySelector('input[name="telefono"]');
+        if (telefonoInput) {
+            telefonoInput.addEventListener('input', function () {
+                const max = parseInt(this.maxLength, 10) || 11;
+                this.value = this.value.replace(/\D/g, '').slice(0, max);
+            });
+            telefonoInput.addEventListener('keypress', function (e) {
+                if (!/[0-9]/.test(e.key)) e.preventDefault();
+            });
+            telefonoInput.addEventListener('paste', function (e) {
+                e.preventDefault();
+                const max = parseInt(this.maxLength, 10) || 11;
+                const pegado = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
+                const inicio = this.selectionStart;
+                const fin    = this.selectionEnd;
+                this.value = (this.value.slice(0, inicio) + pegado + this.value.slice(fin)).slice(0, max);
+            });
+        }
+    });
     </script>
 </body>
 </html>
