@@ -262,8 +262,8 @@
             <div class="mb-3">
                 <div class="cedula-group">
                     <select class="form-select cedula-prefijo" id="tipoCedulaReg">
-                        <option value="V" {% if not form_data or form_data.get('tipo_cedula', 'V') != 'E' %}selected{% endif %}>V</option>
-                        <option value="E" {% if form_data and form_data.get('tipo_cedula') == 'E' %}selected{% endif %}>E</option>
+                        <option value="V" {% if not form_data or form_data.get('tipo_cedula', 'V') != 'E' %}selected{% endif %}>V -</option>
+                        <option value="E" {% if form_data and form_data.get('tipo_cedula') == 'E' %}selected{% endif %}>E -</option>
                     </select>
                     <input type="text" id="cedulaDigitsReg" class="form-control cedula-input"
                            placeholder="12345678" required maxlength="8" inputmode="numeric" pattern="\d+"
