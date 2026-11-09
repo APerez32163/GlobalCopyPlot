@@ -491,6 +491,10 @@ def registro():
             flash('El número de teléfono ya está registrado.', 'danger')
             return render_template('registro.html', form_data=request.form, field_errors={})
 
+        # Validar aceptación de términos y condiciones
+        if not request.form.get('acepta_terminos'):
+            field_errors['acepta_terminos'] = 'Debes aceptar los términos y condiciones.'
+
         nuevo = Usuario(
             ID_USUARIO=cedula,
             NOMBRE=nombre,

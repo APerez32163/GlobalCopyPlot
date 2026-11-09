@@ -983,700 +983,717 @@
 </head>
 <body>
 
-<!-- ===================== NAVBAR ===================== -->
-<nav class="site-nav" id="site-nav">
-    <div class="nav-inner">
-        <a class="nav-brand" href="/">
-            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo GlobalCopyPlot">
-            <span class="nav-brand-name">GlobalCopyPlot</span>
-        </a>
-        <ul class="nav-links">
-            <li><a href="#servicios">Servicios</a></li>
-            <li><a href="#por-que">Nosotros</a></li>
-            <li><a href="#contacto">Contacto</a></li>
-            <li><a href="/politicas">Politicas</a></li>
+    <!-- ===================== NAVBAR ===================== -->
+    <nav class="site-nav" id="site-nav">
+        <div class="nav-inner">
+            <a class="nav-brand" href="/">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo GlobalCopyPlot">
+                <span class="nav-brand-name">GlobalCopyPlot</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="#servicios">Servicios</a></li>
+                <li><a href="#por-que">Nosotros</a></li>
+                <li><a href="#contacto">Contacto</a></li>
+                <li><a href="/politicas">Politicas</a></li>
 
-            {% if current_user.is_authenticated %}
-                <a class="btn btn-imprimir-nav" href="/imprimir">
-                    <i class="fas fa-print"></i> Imprimir
-                </a>
-
-                {% if current_user.ES_ADMIN %}
-                    <li><a href="/admin"><i class="fas fa-cog me-1"></i>Admin</a></li>
-                {% endif %}
-                {% if current_user.ES_OPERADOR or current_user.ES_ADMIN %}
-                    <li><a href="/operador"><i class="fas fa-print me-1"></i>Operador</a></li>
-                {% endif %}
-
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fas fa-user-circle me-1"></i> {{ current_user.NOMBRE }}
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <li><a class="dropdown-item" href="/mis-solicitudes"><i class="fas fa-list-check me-2"></i>Mis Solicitudes</a></li>
-                        <li><a class="dropdown-item" href="/mi-perfil"><i class="fas fa-user-edit me-2"></i>Mi Perfil</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger" href="/logout"><i class="fas fa-sign-out-alt me-2"></i>Cerrar sesión</a></li>
-                    </ul>
-                </li>
-            {% else %}
-                <li>
-                    <a href="/login" class="nav-login">
-                        <i class="fas fa-sign-in-alt me-1"></i> Iniciar sesión
-                    </a>
-                </li>
-            {% endif %}
-        </ul>
-        <button class="nav-hamburger" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuOffcanvas" aria-label="Menú">
-            <i class="fas fa-bars"></i>
-        </button>
-    </div>
-</nav>
-
-<!-- ================== OFFCANVAS MÓVIL ================== -->
-<div class="offcanvas offcanvas-end" tabindex="-1" id="menuOffcanvas" 
-     style="background: rgba(47, 84, 150, 0.15); backdrop-filter: blur(24px); 
-            -webkit-backdrop-filter: blur(24px); border-left: 1px solid rgba(255,255,255,0.4);
-            width: 280px !important; border-radius: 28px 0 0 28px; box-shadow: -10px 0 30px rgba(0,0,0,0.25);">
-    
-    <!-- Cabecera -->
-    <div class="d-flex flex-column align-items-center pt-3 px-3">
-        <button type="button" class="btn-close btn-close-white align-self-end mb-2" data-bs-dismiss="offcanvas"></button>
-        <h5 class="fw-bold text-white mb-2" style="font-size: 1.5rem; letter-spacing: 0.5px;">Menú</h5>
-        <div style="width: 50px; height: 3px; background: #5B9BD5; border-radius: 2px; margin-bottom: 16px;"></div>
-    </div>
-
-    <!-- Cuerpo -->
-    <div class="offcanvas-body d-flex flex-column pt-0 px-3">
-        <ul class="list-unstyled flex-grow-1">
-            <!-- 1. Centro de Impresión (Destacado) -->
-            <li>
-                <a class="menu-offcanvas-link menu-offcanvas-link-destacado" href="/imprimir">
-                    <i class="fas fa-print me-3" style="color: #ffffff;"></i>Centro de Impresión
-                </a>
-            </li>
-            <!-- Enlaces normales -->
-            <li>
-                <a class="menu-offcanvas-link" href="#servicios">
-                    <i class="fas fa-th-large me-3" style="color: #5B9BD5;"></i>Servicios
-                </a>
-            </li>
-            <li>
-                <a class="menu-offcanvas-link" href="#por-que">
-                    <i class="fas fa-star me-3" style="color: #5B9BD5;"></i>Nosotros
-                </a>
-            </li>
-            <li>
-                <a class="menu-offcanvas-link" href="#contacto">
-                    <i class="fas fa-envelope me-3" style="color: #5B9BD5;"></i>Contacto
-                </a>
-            </li>
-            <li>
-                <a class="menu-offcanvas-link" href="/politicas">
-                    <i class="fas fa-file-alt me-3" style="color: #5B9BD5;"></i>Políticas y Términos
-                </a>
-            </li>
-            {% if current_user.is_authenticated %}
-                <li>
-                    <a class="menu-offcanvas-link" href="/mis-solicitudes">
-                        <i class="fas fa-list-check me-3" style="color: #5B9BD5;"></i>Mis Solicitudes
-                    </a>
-                </li>
-                {% if current_user.ES_ADMIN %}
-                <li>
-                    <a class="menu-offcanvas-link" href="/admin">
-                        <i class="fas fa-cog me-3" style="color: #5B9BD5;"></i>Panel Admin
-                    </a>
-                </li>
-                {% endif %}
-                {% if current_user.ES_OPERADOR or current_user.ES_ADMIN %}
-                <li>
-                    <a class="menu-offcanvas-link" href="/operador">
-                        <i class="fas fa-print me-3" style="color: #5B9BD5;"></i>Panel Operador
-                    </a>
-                </li>
-                {% endif %}
-                <li>
-                    <a class="menu-offcanvas-link" href="/mi-perfil">
-                        <i class="fas fa-user-edit me-3" style="color: #5B9BD5;"></i>Mi Perfil
-                    </a>
-                </li>
-            {% endif %}
-        </ul>
-
-        <!-- Zona inferior (perfil o login) -->
-        <div class="mt-auto pt-3 border-top" style="border-color: rgba(255,255,255,0.3) !important;">
-            {% if current_user.is_authenticated %}
-                <p class="text-white fw-semibold mb-2 text-center" style="font-size:0.9rem;">
-                    <i class="fas fa-user-circle me-1" style="color:#ffffff;"></i> {{ current_user.NOMBRE }} {{ current_user.APELLIDO }}
-                </p>
-                <a href="/logout" class="btn-offcanvas-logout">
-                    <i class="fas fa-sign-out-alt me-2"></i>Cerrar sesión
-                </a>
-            {% else %}
-                <a href="/login" class="btn-offcanvas-login">
-                    <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
-                </a>
-            {% endif %}
-        </div>
-    </div>
-</div>
-
-<!-- ===================== HERO ===================== -->
-<header class="hero">
-    <div class="hero-overlay"></div>
-    <div class="hero-content">
-        <!-- Mensajes controlados del index -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            <div class="flash-container">
-              {% for category, message in messages %}
-                {% if category in ('success', 'info') %}
-                  <div class="flash-alert flash-{{ category }}">
-                    <div class="flash-icon">
-                      {% if category == 'success' %}
-                        <i class="fas fa-check-circle"></i>
-                      {% else %}
-                        <i class="fas fa-info-circle"></i>
-                      {% endif %}
-                    </div>
-                    <div class="flash-content">{{ message }}</div>
-                    <span class="flash-close-btn" onclick="this.closest('.flash-alert').remove()">
-                      <i class="fas fa-times"></i>
-                    </span>
-                  </div>
-                {% endif %}
-              {% endfor %}
-            </div>
-          {% endif %}
-        {% endwith %}
-
-        {% if request.args.get('bloqueado') == '1' %}
-        <div class="flash-container">
-            <div class="flash-alert flash-danger">
-                <div class="flash-icon">
-                    <i class="fas fa-lock"></i>
-                </div>
-                <div class="flash-content">Demasiados intentos fallidos. Debes esperar 1 minuto antes de volver a intentar.</div>
-                <span class="flash-close-btn" onclick="this.closest('.flash-alert').remove()">
-                    <i class="fas fa-times"></i>
-                </span>
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- Mensaje de cancelación de pedido -->
-        {% if request.args.get('cancelado') == '1' %}
-          <div class="flash-container">
-            <div class="flash-alert flash-danger">
-              <div class="flash-icon"><i class="fas fa-times-circle"></i></div>
-              <div class="flash-content">Pedido cancelado correctamente.</div>
-              <span class="flash-close-btn" onclick="this.closest('.flash-alert').remove()">
-                <i class="fas fa-times"></i>
-              </span>
-            </div>
-          </div>
-        {% endif %}
-        <div class="row align-items-center gy-5">
-            <div class="col-lg-6">
-                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="GlobalCopyPlot" class="hero-logo d-block">
-                <p class="hero-eyebrow">Centro de Copiado e Impresión</p>
-                <h1 class="hero-title">GLOBALCOPYPLOT</h1>
-                <p class="hero-subtitle">Soluciones impresas con calidad profesional,<br>rápidas y a tu medida.</p>
                 {% if current_user.is_authenticated %}
-                    <a href="/imprimir" class="btn-hero">
-                        Comenzar ahora <i class="fas fa-arrow-right"></i>
+                    <a class="btn btn-imprimir-nav" href="/imprimir">
+                        <i class="fas fa-print"></i> Imprimir
+                    </a>
+
+                    {% if current_user.ES_ADMIN %}
+                        <li><a href="/admin"><i class="fas fa-cog me-1"></i>Admin</a></li>
+                    {% endif %}
+                    {% if current_user.ES_OPERADOR or current_user.ES_ADMIN %}
+                        <li><a href="/operador"><i class="fas fa-print me-1"></i>Operador</a></li>
+                    {% endif %}
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle me-1"></i> {{ current_user.NOMBRE }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="/mis-solicitudes"><i class="fas fa-list-check me-2"></i>Mis Solicitudes</a></li>
+                            <li><a class="dropdown-item" href="/mi-perfil"><i class="fas fa-user-edit me-2"></i>Mi Perfil</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="/logout"><i class="fas fa-sign-out-alt me-2"></i>Cerrar sesión</a></li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li>
+                        <a href="/login" class="nav-login">
+                            <i class="fas fa-sign-in-alt me-1"></i> Iniciar sesión
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+            <button class="nav-hamburger" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuOffcanvas" aria-label="Menú">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ================== OFFCANVAS MÓVIL ================== -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="menuOffcanvas" 
+         style="background: rgba(47, 84, 150, 0.15); backdrop-filter: blur(24px); 
+                -webkit-backdrop-filter: blur(24px); border-left: 1px solid rgba(255,255,255,0.4);
+                width: 280px !important; border-radius: 28px 0 0 28px; box-shadow: -10px 0 30px rgba(0,0,0,0.25);">
+        
+        <!-- Cabecera -->
+        <div class="d-flex flex-column align-items-center pt-3 px-3">
+            <button type="button" class="btn-close btn-close-white align-self-end mb-2" data-bs-dismiss="offcanvas"></button>
+            <h5 class="fw-bold text-white mb-2" style="font-size: 1.5rem; letter-spacing: 0.5px;">Menú</h5>
+            <div style="width: 50px; height: 3px; background: #5B9BD5; border-radius: 2px; margin-bottom: 16px;"></div>
+        </div>
+
+        <!-- Cuerpo -->
+        <div class="offcanvas-body d-flex flex-column pt-0 px-3">
+            <ul class="list-unstyled flex-grow-1">
+                <!-- 1. Centro de Impresión (Destacado) -->
+                <li>
+                    <a class="menu-offcanvas-link menu-offcanvas-link-destacado" href="/imprimir">
+                        <i class="fas fa-print me-3" style="color: #ffffff;"></i>Centro de Impresión
+                    </a>
+                </li>
+                <!-- Enlaces normales -->
+                <li>
+                    <a class="menu-offcanvas-link" href="#servicios">
+                        <i class="fas fa-th-large me-3" style="color: #5B9BD5;"></i>Servicios
+                    </a>
+                </li>
+                <li>
+                    <a class="menu-offcanvas-link" href="#por-que">
+                        <i class="fas fa-star me-3" style="color: #5B9BD5;"></i>Nosotros
+                    </a>
+                </li>
+                <li>
+                    <a class="menu-offcanvas-link" href="#contacto">
+                        <i class="fas fa-envelope me-3" style="color: #5B9BD5;"></i>Contacto
+                    </a>
+                </li>
+                <li>
+                    <a class="menu-offcanvas-link" href="/politicas">
+                        <i class="fas fa-file-alt me-3" style="color: #5B9BD5;"></i>Políticas y Términos
+                    </a>
+                </li>
+                {% if current_user.is_authenticated %}
+                    <li>
+                        <a class="menu-offcanvas-link" href="/mis-solicitudes">
+                            <i class="fas fa-list-check me-3" style="color: #5B9BD5;"></i>Mis Solicitudes
+                        </a>
+                    </li>
+                    {% if current_user.ES_ADMIN %}
+                    <li>
+                        <a class="menu-offcanvas-link" href="/admin">
+                            <i class="fas fa-cog me-3" style="color: #5B9BD5;"></i>Panel Admin
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if current_user.ES_OPERADOR or current_user.ES_ADMIN %}
+                    <li>
+                        <a class="menu-offcanvas-link" href="/operador">
+                            <i class="fas fa-print me-3" style="color: #5B9BD5;"></i>Panel Operador
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li>
+                        <a class="menu-offcanvas-link" href="/mi-perfil">
+                            <i class="fas fa-user-edit me-3" style="color: #5B9BD5;"></i>Mi Perfil
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+
+            <!-- Zona inferior (perfil o login) -->
+            <div class="mt-auto pt-3 border-top" style="border-color: rgba(255,255,255,0.3) !important;">
+                {% if current_user.is_authenticated %}
+                    <p class="text-white fw-semibold mb-2 text-center" style="font-size:0.9rem;">
+                        <i class="fas fa-user-circle me-1" style="color:#ffffff;"></i> {{ current_user.NOMBRE }} {{ current_user.APELLIDO }}
+                    </p>
+                    <a href="/logout" class="btn-offcanvas-logout">
+                        <i class="fas fa-sign-out-alt me-2"></i>Cerrar sesión
                     </a>
                 {% else %}
-                    <a href="/login" class="btn-hero">
-                        Comenzar ahora <i class="fas fa-arrow-right"></i>
+                    <a href="/login" class="btn-offcanvas-login">
+                        <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
                     </a>
                 {% endif %}
             </div>
-            <div class="col-lg-5 ms-auto">
-                <div class="glass-panel hero-info-card">
-                    <p style="margin-bottom: 12px; font-size:0.88rem; opacity:0.85;">
-                        <i class="fas fa-map-marker-alt me-1"></i> {{ config.get('direccion', '') }}
-                    </p>
-                    <h5><i class="far fa-clock me-2"></i>Horarios de Atención</h5>
-                    <p><strong>Lunes a Viernes</strong><br>6:40 a.m. – 5:30 p.m.</p>
-                    <p><strong>Sábados</strong><br>8:00 a.m. – 1:00 p.m.</p>
-                </div>
-            </div>
         </div>
     </div>
-    <div class="hero-scroll">
-        <span>Explorar</span>
-        <div class="scroll-dot"></div>
-        <div class="scroll-dot"></div>
-        <div class="scroll-dot"></div>
-    </div>
-</header>
 
-<!-- ===================== STATS STRIP ===================== -->
-<section class="stats-strip">
-    <div class="container">
-        <div class="row justify-content-center align-items-stretch g-0">
-            <div class="col-6 col-md-3">
-                <div class="stat-item">
-                    <div class="stat-number">+10<span style="font-size:1.5rem">k</span></div>
-                    <div class="stat-label">Trabajos entregados</div>
-                </div>
-            </div>
-            <div class="col-auto d-none d-md-block"><div class="stat-divider"></div></div>
-            <div class="col-6 col-md-3">
-                <div class="stat-item">
-                    <div class="stat-number">A3+</div>
-                    <div class="stat-label">Formatos disponibles</div>
-                </div>
-            </div>
-            <div class="col-auto d-none d-md-block"><div class="stat-divider"></div></div>
-            <div class="col-auto d-none d-md-block"><div class="stat-divider"></div></div>
-            <div class="col-6 col-md-3">
-                <div class="stat-item">
-                    <div class="stat-number">100%</div>
-                    <div class="stat-label">Clientes satisfechos</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ===================== CATÁLOGO / CARRUSEL ===================== -->
-<section id="servicios">
-    <div class="container">
-        <div class="row align-items-end mb-0">
-            <div class="col-lg-7">
-                <span class="section-eyebrow">Catálogo</span>
-                <h2 class="section-title">Nuestros Servicios</h2>
-                <p class="section-subtitle">Impresión, ploteo, encuadernado y más — todo en un solo lugar.</p>
-            </div>
-            <div class="col-lg-5 text-lg-end mt-3 mt-lg-0">
-                <span style="font-size:0.85rem;color:var(--ink-mid);">Desliza para explorar</span>
-            </div>
-        </div>
-
-        <div class="carousel-wrapper mt-5" id="servicios-carousel">
-            <button class="carousel-btn carousel-prev" id="prev-btn" aria-label="Anterior">
-                <i class="fas fa-chevron-left"></i>
-            </button>
-            <div class="carousel-track-outer">
-                <div class="carousel-track" id="carousel-track">
-                    <!-- Las tarjetas se generan aquí con Jinja -->
-                    {% if imagenes %}
-                        {% for img in imagenes %}
-                        <div class="carousel-slide">
-                            <div class="servicio-card" data-img="{{ url_for('static', filename='img/' + img) }}">
-                                <div style="overflow:hidden;">
-                                    <img class="servicio-card-img" 
-                                         src="{{ url_for('static', filename='img/' + img) }}" 
-                                         alt="Servicio {{ loop.index }}" 
-                                         loading="lazy">
-                                </div>
-                                <div class="servicio-card-overlay">
-                                    <span class="servicio-ver-btn">
-                                        <i class="fas fa-expand-alt"></i> Ver servicio
-                                    </span>
-                                </div>
-                            </div>
+    <!-- ===================== HERO ===================== -->
+    <header class="hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <!-- Mensajes controlados del index -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                <div class="flash-container">
+                  {% for category, message in messages %}
+                    {% if category in ('success', 'info') %}
+                      <div class="flash-alert flash-{{ category }}">
+                        <div class="flash-icon">
+                          {% if category == 'success' %}
+                            <i class="fas fa-check-circle"></i>
+                          {% else %}
+                            <i class="fas fa-info-circle"></i>
+                          {% endif %}
                         </div>
-                        {% endfor %}
+                        <div class="flash-content">{{ message }}</div>
+                        <span class="flash-close-btn" onclick="this.closest('.flash-alert').remove()">
+                          <i class="fas fa-times"></i>
+                        </span>
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endwith %}
+
+            {% if request.args.get('bloqueado') == '1' %}
+            <div class="flash-container">
+                <div class="flash-alert flash-danger">
+                    <div class="flash-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <div class="flash-content">Demasiados intentos fallidos. Debes esperar 1 minuto antes de volver a intentar.</div>
+                    <span class="flash-close-btn" onclick="this.closest('.flash-alert').remove()">
+                        <i class="fas fa-times"></i>
+                    </span>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Mensaje de cancelación de pedido -->
+            {% if request.args.get('cancelado') == '1' %}
+              <div class="flash-container">
+                <div class="flash-alert flash-danger">
+                  <div class="flash-icon"><i class="fas fa-times-circle"></i></div>
+                  <div class="flash-content">Pedido cancelado correctamente.</div>
+                  <span class="flash-close-btn" onclick="this.closest('.flash-alert').remove()">
+                    <i class="fas fa-times"></i>
+                  </span>
+                </div>
+              </div>
+            {% endif %}
+            <div class="row align-items-center gy-5">
+                <div class="col-lg-6">
+                    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="GlobalCopyPlot" class="hero-logo d-block">
+                    <p class="hero-eyebrow">Centro de Copiado e Impresión</p>
+                    <h1 class="hero-title">GLOBALCOPYPLOT</h1>
+                    <p class="hero-subtitle">Soluciones impresas con calidad profesional,<br>rápidas y a tu medida.</p>
+                    {% if current_user.is_authenticated %}
+                        <a href="/imprimir" class="btn-hero">
+                            Comenzar ahora <i class="fas fa-arrow-right"></i>
+                        </a>
                     {% else %}
-                        <!-- Placeholders de demostración cuando no hay imágenes -->
-                        {% for n in range(1, 7) %}
-                        <div class="carousel-slide">
-                            <div class="servicio-card">
-                                <div style="overflow:hidden;background:var(--beige);aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;">
-                                    <i class="fas fa-image fa-3x" style="color:var(--azul-pale);"></i>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
+                        <a href="/login" class="btn-hero">
+                            Comenzar ahora <i class="fas fa-arrow-right"></i>
+                        </a>
                     {% endif %}
                 </div>
+                <div class="col-lg-5 ms-auto">
+                    <div class="glass-panel hero-info-card">
+                        <p style="margin-bottom: 12px; font-size:0.88rem; opacity:0.85;">
+                            <i class="fas fa-map-marker-alt me-1"></i> {{ config.get('direccion', '') }}
+                        </p>
+                        <h5><i class="far fa-clock me-2"></i>Horarios de Atención</h5>
+                        <p><strong>Lunes a Viernes</strong><br>6:40 a.m. – 5:30 p.m.</p>
+                        <p><strong>Sábados</strong><br>8:00 a.m. – 1:00 p.m.</p>
+                    </div>
+                </div>
             </div>
-            <button class="carousel-btn carousel-next" id="next-btn" aria-label="Siguiente">
-                <i class="fas fa-chevron-right"></i>
-            </button>
         </div>
-        <div class="carousel-dots" id="carousel-dots"></div>
+        <div class="hero-scroll">
+            <span>Explorar</span>
+            <div class="scroll-dot"></div>
+            <div class="scroll-dot"></div>
+            <div class="scroll-dot"></div>
+        </div>
+    </header>
+
+    <!-- ===================== STATS STRIP ===================== -->
+    <section class="stats-strip">
+        <div class="container">
+            <div class="row justify-content-center align-items-stretch g-0">
+                <div class="col-6 col-md-3">
+                    <div class="stat-item">
+                        <div class="stat-number">+10<span style="font-size:1.5rem">k</span></div>
+                        <div class="stat-label">Trabajos entregados</div>
+                    </div>
+                </div>
+                <div class="col-auto d-none d-md-block"><div class="stat-divider"></div></div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-item">
+                        <div class="stat-number">A3+</div>
+                        <div class="stat-label">Formatos disponibles</div>
+                    </div>
+                </div>
+                <div class="col-auto d-none d-md-block"><div class="stat-divider"></div></div>
+                <div class="col-auto d-none d-md-block"><div class="stat-divider"></div></div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-item">
+                        <div class="stat-number">100%</div>
+                        <div class="stat-label">Clientes satisfechos</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== CATÁLOGO / CARRUSEL ===================== -->
+    <section id="servicios">
+        <div class="container">
+            <div class="row align-items-end mb-0">
+                <div class="col-lg-7">
+                    <span class="section-eyebrow">Catálogo</span>
+                    <h2 class="section-title">Nuestros Servicios</h2>
+                    <p class="section-subtitle">Impresión, ploteo, encuadernado y más — todo en un solo lugar.</p>
+                </div>
+                <div class="col-lg-5 text-lg-end mt-3 mt-lg-0">
+                    <span style="font-size:0.85rem;color:var(--ink-mid);">Desliza para explorar</span>
+                </div>
+            </div>
+
+            <div class="carousel-wrapper mt-5" id="servicios-carousel">
+                <button class="carousel-btn carousel-prev" id="prev-btn" aria-label="Anterior">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <div class="carousel-track-outer">
+                    <div class="carousel-track" id="carousel-track">
+                        <!-- Las tarjetas se generan aquí con Jinja -->
+                        {% if imagenes %}
+                            {% for img in imagenes %}
+                            <div class="carousel-slide">
+                                <div class="servicio-card" data-img="{{ url_for('static', filename='img/' + img) }}">
+                                    <div style="overflow:hidden;">
+                                        <img class="servicio-card-img" 
+                                             src="{{ url_for('static', filename='img/' + img) }}" 
+                                             alt="Servicio {{ loop.index }}" 
+                                             loading="lazy">
+                                    </div>
+                                    <div class="servicio-card-overlay">
+                                        <span class="servicio-ver-btn">
+                                            <i class="fas fa-expand-alt"></i> Ver servicio
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <!-- Placeholders de demostración cuando no hay imágenes -->
+                            {% for n in range(1, 7) %}
+                            <div class="carousel-slide">
+                                <div class="servicio-card">
+                                    <div style="overflow:hidden;background:var(--beige);aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;">
+                                        <i class="fas fa-image fa-3x" style="color:var(--azul-pale);"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+                <button class="carousel-btn carousel-next" id="next-btn" aria-label="Siguiente">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+            <div class="carousel-dots" id="carousel-dots"></div>
+        </div>
+    </section>
+
+    <!-- ===================== POR QUÉ ELEGIRNOS ===================== -->
+    <section id="por-que">
+        <div class="container">
+            <div class="text-center mb-5">
+                <span class="section-eyebrow">¿Por qué nosotros?</span>
+                <h2 class="section-title">Calidad que habla por sí sola</h2>
+                <p class="section-subtitle mx-auto" style="color:rgba(255,255,255,0.65);">Cada trabajo se trata con atención al detalle y compromiso real.</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-glass">
+                        <div class="feature-icon"><i class="fas fa-bolt"></i></div>
+                        <div class="feature-title">Entrega Rápida</div>
+                        <div class="feature-desc">Tiempo de respuesta ágil para que nunca pierdas plazos importantes.</div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-glass">
+                        <div class="feature-icon"><i class="fas fa-palette"></i></div>
+                        <div class="feature-title">Alta Calidad</div>
+                        <div class="feature-desc">Impresión en color real y escala de grises con materiales de primera.</div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-glass">
+                        <div class="feature-icon"><i class="fas fa-upload"></i></div>
+                        <div class="feature-title">Envío Digital</div>
+                        <div class="feature-desc">Sube tu archivo desde donde estés y recoge tu pedido listo.</div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-glass">
+                        <div class="feature-icon"><i class="fas fa-headset"></i></div>
+                        <div class="feature-title">Atención Directa</div>
+                        <div class="feature-desc">Equipo disponible para orientarte en cada detalle de tu proyecto.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== CONTACTO ===================== -->
+    <section id="contacto">
+        <div class="container">
+            <div class="text-center mb-5">
+                <span class="section-eyebrow">Contáctanos</span>
+                <h2 class="section-title">Estamos para ayudarte</h2>
+            </div>
+            <div class="row g-4 justify-content-center">
+                <div class="col-md-4">
+                    {% set whatsapp_num = config.get('whatsapp', '584122826746') %}
+                    <div class="contact-card">
+                        <a href="https://wa.me/{{ whatsapp_num }}" target="_blank">
+                            <div class="contact-icon"><i class="fab fa-whatsapp"></i></div>
+                            <div class="contact-label">WhatsApp</div>
+                            <div class="contact-value">{{ config.get('telefono_negocio', '0412-282.67.46') }}</div>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    {% set insta_user = config.get('instagram', 'globalcopyplot') %}
+                    <div class="contact-card">
+                        <a href="https://www.instagram.com/{{ insta_user }}" target="_blank">
+                            <div class="contact-icon"><i class="fab fa-instagram"></i></div>
+                            <div class="contact-label">Instagram</div>
+                            <div class="contact-value">@{{ insta_user }}</div>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    {% set email_contacto = config.get('email_negocio', 'globalcopyplot@gmail.com') %}
+                    <div class="contact-card">
+                        <a href="mailto:{{ email_contacto }}">
+                            <div class="contact-icon"><i class="far fa-envelope"></i></div>
+                            <div class="contact-label">Correo</div>
+                            <div class="contact-value">{{ email_contacto }}</div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-5">
+                <a href="https://maps.app.goo.gl/XuExLNPFnD3BXF1x6?g_st=ac" target="_blank" class="btn-maps">
+                    <i class="fas fa-map-marker-alt"></i> Ver en Google Maps
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== FOOTER ===================== -->
+    <footer>
+        <div class="footer-inner">
+            <span class="footer-brand">GlobalCopyPlot</span>
+            <p class="footer-copy mb-0">&copy; 2026 – Soluciones Impresas</p>
+            <div class="footer-links">
+                <a href="#servicios">Servicios</a>
+                <a href="#contacto">Contacto</a>
+                <a href="/politicas">Políticas y Términos</a>
+            </div>
+        </div>
+    </footer>
+    <!-- ===================== LIGHTBOX ===================== -->
+    <div id="lightbox" class="lightbox" role="dialog" aria-modal="true">
+        <div class="lightbox-inner">
+            <img class="lightbox-img" id="lightbox-img" src="" alt="Imagen del servicio">
+        </div>
     </div>
-</section>
 
-<!-- ===================== POR QUÉ ELEGIRNOS ===================== -->
-<section id="por-que">
-    <div class="container">
-        <div class="text-center mb-5">
-            <span class="section-eyebrow">¿Por qué nosotros?</span>
-            <h2 class="section-title">Calidad que habla por sí sola</h2>
-            <p class="section-subtitle mx-auto" style="color:rgba(255,255,255,0.65);">Cada trabajo se trata con atención al detalle y compromiso real.</p>
-        </div>
-        <div class="row g-4">
-            <div class="col-md-6 col-lg-3">
-                <div class="feature-glass">
-                    <div class="feature-icon"><i class="fas fa-bolt"></i></div>
-                    <div class="feature-title">Entrega Rápida</div>
-                    <div class="feature-desc">Tiempo de respuesta ágil para que nunca pierdas plazos importantes.</div>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="feature-glass">
-                    <div class="feature-icon"><i class="fas fa-palette"></i></div>
-                    <div class="feature-title">Alta Calidad</div>
-                    <div class="feature-desc">Impresión en color real y escala de grises con materiales de primera.</div>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="feature-glass">
-                    <div class="feature-icon"><i class="fas fa-upload"></i></div>
-                    <div class="feature-title">Envío Digital</div>
-                    <div class="feature-desc">Sube tu archivo desde donde estés y recoge tu pedido listo.</div>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="feature-glass">
-                    <div class="feature-icon"><i class="fas fa-headset"></i></div>
-                    <div class="feature-title">Atención Directa</div>
-                    <div class="feature-desc">Equipo disponible para orientarte en cada detalle de tu proyecto.</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+    <!-- ===================== SCRIPTS ===================== -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        /* ---- Navbar scroll shadow ---- */
+        const nav = document.getElementById('site-nav');
+        window.addEventListener('scroll', () => {
+            nav.classList.toggle('scrolled', window.scrollY > 30);
+        });
 
-<!-- ===================== CONTACTO ===================== -->
-<section id="contacto">
-    <div class="container">
-        <div class="text-center mb-5">
-            <span class="section-eyebrow">Contáctanos</span>
-            <h2 class="section-title">Estamos para ayudarte</h2>
-        </div>
-        <div class="row g-4 justify-content-center">
-            <div class="col-md-4">
-                {% set whatsapp_num = config.get('whatsapp', '584122826746') %}
-                <div class="contact-card">
-                    <a href="https://wa.me/{{ whatsapp_num }}" target="_blank">
-                        <div class="contact-icon"><i class="fab fa-whatsapp"></i></div>
-                        <div class="contact-label">WhatsApp</div>
-                        <div class="contact-value">{{ config.get('telefono_negocio', '0412-282.67.46') }}</div>
-                    </a>
-                </div>
-            </div>
-            <div class="col-md-4">
-                {% set insta_user = config.get('instagram', 'globalcopyplot') %}
-                <div class="contact-card">
-                    <a href="https://www.instagram.com/{{ insta_user }}" target="_blank">
-                        <div class="contact-icon"><i class="fab fa-instagram"></i></div>
-                        <div class="contact-label">Instagram</div>
-                        <div class="contact-value">@{{ insta_user }}</div>
-                    </a>
-                </div>
-            </div>
-            <div class="col-md-4">
-                {% set email_contacto = config.get('email_negocio', 'globalcopyplot@gmail.com') %}
-                <div class="contact-card">
-                    <a href="mailto:{{ email_contacto }}">
-                        <div class="contact-icon"><i class="far fa-envelope"></i></div>
-                        <div class="contact-label">Correo</div>
-                        <div class="contact-value">{{ email_contacto }}</div>
-                    </a>
-                </div>
-            </div>
-        </div>
-        <div class="text-center mt-5">
-            <a href="https://maps.app.goo.gl/XuExLNPFnD3BXF1x6?g_st=ac" target="_blank" class="btn-maps">
-                <i class="fas fa-map-marker-alt"></i> Ver en Google Maps
-            </a>
-        </div>
-    </div>
-</section>
+        /* ---- Offcanvas logic ---- */
+        const offcanvasEl = document.getElementById('menuOffcanvas');
+        const offcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl) || new bootstrap.Offcanvas(offcanvasEl);
 
-<!-- ===================== FOOTER ===================== -->
-<footer>
-    <div class="footer-inner">
-        <span class="footer-brand">GlobalCopyPlot</span>
-        <p class="footer-copy mb-0">&copy; 2026 – Soluciones Impresas</p>
-        <div class="footer-links">
-            <a href="#servicios">Servicios</a>
-            <a href="#contacto">Contacto</a>
-            <a href="/politicas">Políticas y Términos</a>
-        </div>
-    </div>
-</footer>
-<!-- ===================== LIGHTBOX ===================== -->
-<div id="lightbox" class="lightbox" role="dialog" aria-modal="true">
-    <div class="lightbox-inner">
-        <img class="lightbox-img" id="lightbox-img" src="" alt="Imagen del servicio">
-    </div>
-</div>
-
-<!-- ===================== SCRIPTS ===================== -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    /* ---- Navbar scroll shadow ---- */
-    const nav = document.getElementById('site-nav');
-    window.addEventListener('scroll', () => {
-        nav.classList.toggle('scrolled', window.scrollY > 30);
-    });
-
-    /* ---- Offcanvas logic ---- */
-    const offcanvasEl = document.getElementById('menuOffcanvas');
-    const offcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl) || new bootstrap.Offcanvas(offcanvasEl);
-
-    document.querySelectorAll('.menu-link').forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const targetId = this.getAttribute('href').substring(1);
-            const target = document.getElementById(targetId);
-            offcanvas.hide();
-            offcanvasEl.addEventListener('hidden.bs.offcanvas', function handler() {
-                offcanvasEl.removeEventListener('hidden.bs.offcanvas', handler);
-                if (target) target.scrollIntoView({ behavior: 'smooth' });
+        document.querySelectorAll('.menu-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href').substring(1);
+                const target = document.getElementById(targetId);
+                offcanvas.hide();
+                offcanvasEl.addEventListener('hidden.bs.offcanvas', function handler() {
+                    offcanvasEl.removeEventListener('hidden.bs.offcanvas', handler);
+                    if (target) target.scrollIntoView({ behavior: 'smooth' });
+                });
             });
         });
-    });
 
-    document.querySelectorAll('[data-offcanvas-link]').forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const href = this.getAttribute('href');
-            offcanvas.hide();
-            offcanvasEl.addEventListener('hidden.bs.offcanvas', function handler() {
-                offcanvasEl.removeEventListener('hidden.bs.offcanvas', handler);
-                window.location.href = href;
+        document.querySelectorAll('[data-offcanvas-link]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const href = this.getAttribute('href');
+                offcanvas.hide();
+                offcanvasEl.addEventListener('hidden.bs.offcanvas', function handler() {
+                    offcanvasEl.removeEventListener('hidden.bs.offcanvas', handler);
+                    window.location.href = href;
+                });
             });
         });
-    });
 
-    /* ---- Carrusel ---- */
-    (function () {
-        const track   = document.getElementById('carousel-track');
-        const prevBtn = document.getElementById('prev-btn');
-        const nextBtn = document.getElementById('next-btn');
-        const dotsContainer = document.getElementById('carousel-dots');
-        if (!track) return;
+        /* ---- Carrusel ---- */
+        (function () {
+            const track   = document.getElementById('carousel-track');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const dotsContainer = document.getElementById('carousel-dots');
+            if (!track) return;
 
-        const slides = Array.from(track.querySelectorAll('.carousel-slide'));
-        if (!slides.length) return;
+            const slides = Array.from(track.querySelectorAll('.carousel-slide'));
+            if (!slides.length) return;
 
-        let currentIndex = 0;
+            let currentIndex = 0;
 
-        function getSlidesVisible() {
-            const w = window.innerWidth;
-            if (w < 600) return 1;
-            if (w < 992) return 2;
-            return 3;
-        }
-
-        function totalPages() {
-            return Math.ceil(slides.length / getSlidesVisible());
-        }
-
-        function buildDots() {
-            dotsContainer.innerHTML = '';
-            const pages = totalPages();
-            for (let i = 0; i < pages; i++) {
-                const dot = document.createElement('button');
-                dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
-                dot.setAttribute('aria-label', 'Página ' + (i + 1));
-                dot.addEventListener('click', () => goTo(i));
-                dotsContainer.appendChild(dot);
+            function getSlidesVisible() {
+                const w = window.innerWidth;
+                if (w < 600) return 1;
+                if (w < 992) return 2;
+                return 3;
             }
-        }
 
-        function updateDots() {
-            const page = Math.round(currentIndex / getSlidesVisible());
-            dotsContainer.querySelectorAll('.carousel-dot').forEach((dot, i) => {
-                dot.classList.toggle('active', i === page);
-            });
-        }
-
-        function goTo(pageIndex) {
-            const visible = getSlidesVisible();
-            currentIndex = pageIndex * visible;
-            if (currentIndex > slides.length - visible) {
-                currentIndex = slides.length - visible;
+            function totalPages() {
+                return Math.ceil(slides.length / getSlidesVisible());
             }
-            const slideWidth = slides[0].offsetWidth + 24; // 24 = gap
-            track.style.transform = `translateX(-${currentIndex * slideWidth}px)`;
-            prevBtn.disabled = currentIndex === 0;
-            nextBtn.disabled = currentIndex >= slides.length - visible;
-            updateDots();
-        }
 
-        prevBtn.addEventListener('click', () => {
-            const visible = getSlidesVisible();
-            const currentPage = Math.round(currentIndex / visible);
-            goTo(Math.max(0, currentPage - 1));
-        });
-
-        nextBtn.addEventListener('click', () => {
-            const visible = getSlidesVisible();
-            const currentPage = Math.round(currentIndex / visible);
-            goTo(Math.min(totalPages() - 1, currentPage + 1));
-        });
-
-        buildDots();
-        goTo(0);
-
-        window.addEventListener('resize', () => { buildDots(); goTo(0); });
-    })();
-
-    /* ---- Lightbox ---- */
-    (function () {
-        const lightbox = document.getElementById('lightbox');
-        const lightboxImg = document.getElementById('lightbox-img');
-        const closeBtn = document.getElementById('lightbox-close');
-        if (!lightbox) return;
-
-        document.querySelectorAll('.servicio-card').forEach(card => {
-            card.addEventListener('click', function () {
-                const src = this.getAttribute('data-img');
-                if (src) {
-                    lightboxImg.src = src;
-                    lightbox.classList.add('active');
-                    document.body.style.overflow = 'hidden';
+            function buildDots() {
+                dotsContainer.innerHTML = '';
+                const pages = totalPages();
+                for (let i = 0; i < pages; i++) {
+                    const dot = document.createElement('button');
+                    dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+                    dot.setAttribute('aria-label', 'Página ' + (i + 1));
+                    dot.addEventListener('click', () => goTo(i));
+                    dotsContainer.appendChild(dot);
                 }
+            }
+
+            function updateDots() {
+                const page = Math.round(currentIndex / getSlidesVisible());
+                dotsContainer.querySelectorAll('.carousel-dot').forEach((dot, i) => {
+                    dot.classList.toggle('active', i === page);
+                });
+            }
+
+            function goTo(pageIndex) {
+                const visible = getSlidesVisible();
+                currentIndex = pageIndex * visible;
+                if (currentIndex > slides.length - visible) {
+                    currentIndex = slides.length - visible;
+                }
+                const slideWidth = slides[0].offsetWidth + 24; // 24 = gap
+                track.style.transform = `translateX(-${currentIndex * slideWidth}px)`;
+                prevBtn.disabled = currentIndex === 0;
+                nextBtn.disabled = currentIndex >= slides.length - visible;
+                updateDots();
+            }
+
+            prevBtn.addEventListener('click', () => {
+                const visible = getSlidesVisible();
+                const currentPage = Math.round(currentIndex / visible);
+                goTo(Math.max(0, currentPage - 1));
             });
-        });
 
-        function closeLightbox() {
-            lightbox.classList.remove('active');
-            document.body.style.overflow = '';
+            nextBtn.addEventListener('click', () => {
+                const visible = getSlidesVisible();
+                const currentPage = Math.round(currentIndex / visible);
+                goTo(Math.min(totalPages() - 1, currentPage + 1));
+            });
+
+            buildDots();
+            goTo(0);
+
+            window.addEventListener('resize', () => { buildDots(); goTo(0); });
+        })();
+
+        /* ---- Lightbox ---- */
+        (function () {
+            const lightbox = document.getElementById('lightbox');
+            const lightboxImg = document.getElementById('lightbox-img');
+            const closeBtn = document.getElementById('lightbox-close');
+            if (!lightbox) return;
+
+            document.querySelectorAll('.servicio-card').forEach(card => {
+                card.addEventListener('click', function () {
+                    const src = this.getAttribute('data-img');
+                    if (src) {
+                        lightboxImg.src = src;
+                        lightbox.classList.add('active');
+                        document.body.style.overflow = 'hidden';
+                    }
+                });
+            });
+
+            function closeLightbox() {
+                lightbox.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+            if (closeBtn) closeBtn.addEventListener('click', closeLightbox);
+            lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+            document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+        })();
+
+        /* ---- Calculadora flotante ---- */
+        (function () {
+            const fab = document.getElementById('calc-fab');
+            const panel = document.getElementById('calc-panel');
+            const closeBtn = document.getElementById('calc-close');
+            let isOpen = false;
+
+            fab.addEventListener('click', () => {
+                isOpen = !isOpen;
+                panel.classList.toggle('open', isOpen);
+            });
+            if (closeBtn) closeBtn.addEventListener('click', () => {
+                isOpen = false;
+                panel.classList.remove('open');
+            });
+        })();
+
+        /* ---- Calculadora básica ---- */
+        let calcExpression = '';
+        function calcInput(val) {
+            calcExpression += val;
+            document.getElementById('calc-display').textContent = calcExpression.replace(/\*/g,'×').replace(/\//g,'÷');
         }
-        if (closeBtn) closeBtn.addEventListener('click', closeLightbox);
-        lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
-    })();
-
-    /* ---- Calculadora flotante ---- */
-    (function () {
-        const fab = document.getElementById('calc-fab');
-        const panel = document.getElementById('calc-panel');
-        const closeBtn = document.getElementById('calc-close');
-        let isOpen = false;
-
-        fab.addEventListener('click', () => {
-            isOpen = !isOpen;
-            panel.classList.toggle('open', isOpen);
-        });
-        if (closeBtn) closeBtn.addEventListener('click', () => {
-            isOpen = false;
-            panel.classList.remove('open');
-        });
-    })();
-
-    /* ---- Calculadora básica ---- */
-    let calcExpression = '';
-    function calcInput(val) {
-        calcExpression += val;
-        document.getElementById('calc-display').textContent = calcExpression.replace(/\*/g,'×').replace(/\//g,'÷');
-    }
-    function calcClear() {
-        calcExpression = '';
-        document.getElementById('calc-display').textContent = '0';
-    }
-    function calcCalculate() {
-        try {
-            const result = eval(calcExpression.replace(/×/g,'*').replace(/÷/g,'/'));
-            document.getElementById('calc-display').textContent = result;
-            calcExpression = result.toString();
-        } catch (e) {
-            document.getElementById('calc-display').textContent = 'Error';
+        function calcClear() {
             calcExpression = '';
+            document.getElementById('calc-display').textContent = '0';
         }
-    }
-
-    /* ---- Presupuesto ---- */
-    function actualizarPresupuesto() {
-        const totalSpan = document.getElementById('calc-presupuesto-total');
-        const msg = document.querySelector('#calc-presupuesto-content p');
-        if (!totalSpan || !msg) return;
-
-        if (!window.paginasDetectadas) {
-            msg.style.display = 'block';
-            totalSpan.style.display = 'none';
-            return;
-        }
-        const paginas = window.paginasDetectadas;
-        const precios = window.preciosFrontend;
-        if (!precios) return;
-
-        const color = document.getElementById('colorSelect')?.value;
-        const tamanoSelect = document.getElementById('tamanoSelect');
-        const tamanoOption = tamanoSelect?.options[tamanoSelect?.selectedIndex];
-        const multiplicador = tamanoOption ? parseFloat(tamanoOption.text.match(/\(([\d.]+)x\)/)[1]) : 1.0;
-
-        let total = 0;
-        if (color === 'bn') {
-            total = precios.bn * paginas * multiplicador;
-        } else if (color === 'color') {
-            total = precios.color * paginas * multiplicador;
-        } else if (color === 'mixto') {
-            const input = document.getElementById('paginasColor')?.value;
-            if (input) {
-                const arr = parsePaginas(input, paginas);
-                if (arr) {
-                    const totalColor = arr.length;
-                    const totalBN = paginas - totalColor;
-                    total = (precios.color * totalColor + precios.bn * totalBN) * multiplicador;
-                }
+        function calcCalculate() {
+            try {
+                const result = eval(calcExpression.replace(/×/g,'*').replace(/÷/g,'/'));
+                document.getElementById('calc-display').textContent = result;
+                calcExpression = result.toString();
+            } catch (e) {
+                document.getElementById('calc-display').textContent = 'Error';
+                calcExpression = '';
             }
         }
 
-        let costoExtras = 0;
-        document.querySelectorAll('input[name="extras[]"]:checked').forEach(cb => {
-            costoExtras += parseFloat(cb.getAttribute('data-precio') || 0);
+        /* ---- Presupuesto ---- */
+        function actualizarPresupuesto() {
+            const totalSpan = document.getElementById('calc-presupuesto-total');
+            const msg = document.querySelector('#calc-presupuesto-content p');
+            if (!totalSpan || !msg) return;
+
+            if (!window.paginasDetectadas) {
+                msg.style.display = 'block';
+                totalSpan.style.display = 'none';
+                return;
+            }
+            const paginas = window.paginasDetectadas;
+            const precios = window.preciosFrontend;
+            if (!precios) return;
+
+            const color = document.getElementById('colorSelect')?.value;
+            const tamanoSelect = document.getElementById('tamanoSelect');
+            const tamanoOption = tamanoSelect?.options[tamanoSelect?.selectedIndex];
+            const multiplicador = tamanoOption ? parseFloat(tamanoOption.text.match(/\(([\d.]+)x\)/)[1]) : 1.0;
+
+            let total = 0;
+            if (color === 'bn') {
+                total = precios.bn * paginas * multiplicador;
+            } else if (color === 'color') {
+                total = precios.color * paginas * multiplicador;
+            } else if (color === 'mixto') {
+                const input = document.getElementById('paginasColor')?.value;
+                if (input) {
+                    const arr = parsePaginas(input, paginas);
+                    if (arr) {
+                        const totalColor = arr.length;
+                        const totalBN = paginas - totalColor;
+                        total = (precios.color * totalColor + precios.bn * totalBN) * multiplicador;
+                    }
+                }
+            }
+
+            let costoExtras = 0;
+            document.querySelectorAll('input[name="extras[]"]:checked').forEach(cb => {
+                costoExtras += parseFloat(cb.getAttribute('data-precio') || 0);
+            });
+            total += costoExtras;
+
+            const papelSelect = document.getElementById('tipoPapelSelect');
+            const papelOption = papelSelect?.options[papelSelect?.selectedIndex];
+            const precioPapel = papelOption ? parseFloat(papelOption.getAttribute('data-precio') || 0) : 0;
+            total += precioPapel * paginas;
+
+            totalSpan.textContent = 'Bs. ' + total.toFixed(2);
+            msg.style.display = 'none';
+            totalSpan.style.display = 'block';
+        }
+    </script>
+
+    <!-- Botón Volver arriba -->
+    <div id="btn-scroll-top" style="
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background-color: rgba(91, 155, 213, 0.85);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        color: white;
+        font-size: 20px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 99999;
+        box-shadow: 0 6px 20px rgba(47, 84, 150, 0.35);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        transition: transform 0.3s, background-color 0.3s;
+    " onmouseover="this.style.backgroundColor='rgba(47, 84, 150, 0.9)'; this.style.transform='translateY(-3px)';" 
+       onmouseout="this.style.backgroundColor='rgba(91, 155, 213, 0.85)'; this.style.transform='translateY(0)';"
+       onclick="window.scrollTo({top:0,behavior:'smooth'})">
+        <i class="fas fa-chevron-up"></i>
+    </div>
+
+    <script>
+        (function() {
+            var btn = document.getElementById('btn-scroll-top');
+            if (!btn) return;
+            window.addEventListener('scroll', function() {
+                btn.style.display = (window.scrollY > 400) ? 'flex' : 'none';
+            });
+        })();
+    </script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const flashes = document.querySelectorAll('.flash-alert');
+        flashes.forEach(function (el) {
+            setTimeout(function () {
+                // Desvanecer suavemente y eliminar
+                el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(-6px)';
+                setTimeout(function () {
+                    el.remove(); // o el.closest('.flash-container').remove() si quieres quitar el contenedor
+                }, 500);
+            }, 5000); // 5 segundos
         });
-        total += costoExtras;
-
-        const papelSelect = document.getElementById('tipoPapelSelect');
-        const papelOption = papelSelect?.options[papelSelect?.selectedIndex];
-        const precioPapel = papelOption ? parseFloat(papelOption.getAttribute('data-precio') || 0) : 0;
-        total += precioPapel * paginas;
-
-        totalSpan.textContent = 'Bs. ' + total.toFixed(2);
-        msg.style.display = 'none';
-        totalSpan.style.display = 'block';
-    }
-</script>
-
-<!-- Botón Volver arriba -->
-<div id="btn-scroll-top" style="
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background-color: rgba(91, 155, 213, 0.85);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    color: white;
-    font-size: 20px;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 99999;
-    box-shadow: 0 6px 20px rgba(47, 84, 150, 0.35);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    transition: transform 0.3s, background-color 0.3s;
-" onmouseover="this.style.backgroundColor='rgba(47, 84, 150, 0.9)'; this.style.transform='translateY(-3px)';" 
-   onmouseout="this.style.backgroundColor='rgba(91, 155, 213, 0.85)'; this.style.transform='translateY(0)';"
-   onclick="window.scrollTo({top:0,behavior:'smooth'})">
-    <i class="fas fa-chevron-up"></i>
-</div>
-
-<script>
-    (function() {
-        var btn = document.getElementById('btn-scroll-top');
-        if (!btn) return;
-        window.addEventListener('scroll', function() {
-            btn.style.display = (window.scrollY > 400) ? 'flex' : 'none';
-        });
-    })();
-</script>
+    });
+    </script>
 
 </body>
 </html>

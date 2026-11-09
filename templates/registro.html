@@ -203,6 +203,54 @@
                 margin-top: 0.5rem;
             }
         }
+        /* Checkbox de términos y condiciones */
+        .terminos-check {
+            text-align: left;
+            max-width: 360px;      /* ancho cómodo en escritorio */
+            width: 100%;
+            padding-left: 1.9rem;  /* espacio para el checkbox */
+        }
+
+        .terminos-check .form-check-input {
+            width: 1.05rem;
+            height: 1.05rem;
+            margin-top: 0.15rem;
+            margin-left: -1.9rem;
+            cursor: pointer;
+        }
+
+        .terminos-check .form-check-label {
+            font-size: 0.85rem;
+            line-height: 1.35;
+            color: #4b5563;
+            cursor: pointer;
+        }
+
+        .terminos-check .form-check-label a {
+            color: var(--azul-claro);
+            text-decoration: underline;
+            font-weight: 600;
+        }
+
+        .terminos-check .form-check-label a:hover {
+            color: var(--azul-oscuro);
+        }
+
+        /* En pantallas pequeñas: texto un poco más pequeño y checkbox bien alineado */
+        @media (max-width: 480px) {
+            .terminos-check {
+                max-width: 100%;
+                padding-left: 1.75rem;
+            }
+            .terminos-check .form-check-label {
+                font-size: 0.8rem;
+            }
+            .terminos-check .form-check-input {
+                width: 1rem;
+                height: 1rem;
+                margin-left: -1.75rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -334,12 +382,43 @@
                        value="{{ form_data.respuesta2 if form_data else '' }}" required>
                 {% if field_errors.respuesta2 %}<div class="invalid-feedback">{{ field_errors.respuesta2 }}</div>{% endif %}
             </div>
+
+            <div class="mb-3 d-flex justify-content-center">
+                <div class="form-check terminos-check">
+                    <input class="form-check-input {% if field_errors.acepta_terminos %}is-invalid{% endif %}" 
+                           type="checkbox" name="acepta_terminos" id="aceptaTerminos" value="1" required>
+                    <label class="form-check-label small" for="aceptaTerminos">
+                        Acepto los
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#modalTerminos">términos y condiciones</a>
+                    </label>
+                    {% if field_errors.acepta_terminos %}
+                        <div class="text-danger small mt-1">{{ field_errors.acepta_terminos }}</div>
+                    {% endif %}
+                </div>
+            </div>
             
             <button type="submit" class="btn btn-primary w-100">Registrarse</button>
         </form>
 
         <div class="text-center mt-3">
             <a href="/login">¿Ya tienes cuenta? Inicia sesión</a><br>
+        </div>
+    </div>
+
+    <!-- Modal de Términos y Condiciones -->
+    <div class="modal fade" id="modalTerminos" tabindex="-1" aria-labelledby="modalTerminosLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body" style="min-height: 300px;">
+                    <iframe src="{{ url_for('politicas') }}?embed=1" 
+                        title="Términos y Condiciones"
+                        style="width:100%; height:60vh; border:none; border-radius:12px;">
+                    </iframe>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
         </div>
     </div>
 

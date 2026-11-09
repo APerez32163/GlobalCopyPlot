@@ -300,5 +300,22 @@
         tipoLogin.dispatchEvent(new Event('change'));
     });
     </script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const flashes = document.querySelectorAll('.flash-alert');
+        flashes.forEach(function (el) {
+            setTimeout(function () {
+                // Desvanecer suavemente y eliminar
+                el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(-6px)';
+                setTimeout(function () {
+                    el.remove(); // o el.closest('.flash-container').remove() si quieres quitar el contenedor
+                }, 500);
+            }, 5000); // 5 segundos
+        });
+    });
+    </script>
 </body>
 </html>

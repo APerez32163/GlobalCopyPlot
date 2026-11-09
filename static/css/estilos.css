@@ -293,3 +293,24 @@ a:hover { color: var(--azul-oscuro); }
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
 }
+/* ===== Ocultar el ojo nativo del navegador ===== */
+
+        /* Edge / IE */
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear {
+            display: none !important;
+        }
+
+        /* Chrome / Edge (Chromium) / Safari */
+        input[type="password"]::-webkit-credentials-auto-fill-button,
+        input[type="password"]::-webkit-strong-password-auto-fill-button,
+        input[type="password"]::-webkit-textfield-decoration-container {
+            visibility: hidden !important;
+            display: none !important;
+            pointer-events: none !important;
+        }
+
+        /* Asegurar que TU ojo quede por encima y clicable */
+        .position-relative > span.position-absolute {
+            z-index: 10;
+        }

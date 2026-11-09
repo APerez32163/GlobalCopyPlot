@@ -35,11 +35,13 @@
                                class="btn btn-outline-primary rounded-pill px-3" title="Ver detalle">
                                 <i class="fas fa-eye"></i>
                             </a>
+                            {% if pedido.ESTADO == 'Listo' %}
                             <button type="button" class="btn btn-success rounded-pill px-4 btn-entregar" 
                                     data-pedido-id="{{ pedido.ID }}" 
                                     onclick="event.stopPropagation(); marcarEntregado(this);">
                                 <i class="fas fa-check-circle me-1"></i> Listo
                             </button>
+                            {% endif %}
                         </div>
                     </div>
                 {% endfor %}
@@ -55,19 +57,25 @@
     <script>
     function marcarEntregado(btn) {
         const pedidoId = btn.getAttribute('data-pedido-id');
-        if (!confirm('¿Marcar este pedido como entregado?')) return;
-        
+
         fetch(`/admin/solicitud/${pedidoId}/actualizar`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: 'estado=Entregado'
         })
         .then(response => {
-            if (response.ok) {
-                const item = btn.closest('.list-group-item');
-                item.style.transition = 'opacity 0.3s';
-                item.style.opacity = '0';
-                setTimeout(() => item.remove(), 300);
+            if (response.ok || response.redirected) {
+                // Animación de salida y eliminación de la tarjeta
+                const item = btn.closest('.list-group-item') 
+                          || btn.closest('.glass-card') 
+                          || btn.closest('tr');
+                if (item) {
+                    item.style.transition = 'opacity 0.3s';
+                    item.style.opacity = '0';
+                    setTimeout(() => item.remove(), 300);
+                } else {
+                    window.location.reload();
+                }
             } else {
                 alert('Error al actualizar el estado.');
             }
